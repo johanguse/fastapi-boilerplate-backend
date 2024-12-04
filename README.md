@@ -4,6 +4,9 @@
 
 This is a FastAPI boilerplate that includes authentication, authorization, and pagination.
 
+> [!TIP]
+> If your project going to be bigger I've suggest read the [FastAPI Beyond CRUD](https://jod35.github.io/fastapi-beyond-crud-docs/site/chapter4/)
+
 ## Technologies
 
 - FastAPI
