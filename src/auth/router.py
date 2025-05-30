@@ -22,7 +22,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def register(
     user_data: UserRegister,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> User:
     """Register a new user."""
     # Check if user already exists
     existing_user = await AuthService.get_user_by_email(db, user_data.email)
@@ -46,7 +46,7 @@ async def register(
 async def login(
     user_credentials: UserLogin,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> dict[str, str]:
     """Authenticate user and return tokens."""
     user = await AuthService.authenticate_user(
         db, user_credentials.email, user_credentials.password
@@ -77,7 +77,7 @@ async def login(
 @router.get("/me", response_model=UserProfile)
 async def get_current_user_profile(
     current_user: User = Depends(get_current_active_user),
-):
+) -> User:
     """Get current user profile."""
     return current_user
 
@@ -87,7 +87,7 @@ async def update_current_user_profile(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> User:
     """Update current user profile."""
     update_data = user_update.model_dump(exclude_unset=True)
 

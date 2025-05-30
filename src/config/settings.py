@@ -1,5 +1,5 @@
 from functools import cache
-from typing import Optional
+import os
 
 from pydantic import EmailStr, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -28,8 +28,8 @@ class BaseConfig(BaseSettings):
     RESET_TOKEN_EXPIRE_MINUTES: int = 15
 
     # Email
-    RESEND_API_KEY: Optional[str] = Field(
-        None, description="Resend API key for email sending"
+    RESEND_API_KEY: str | None = Field(
+        default=None, description="Resend API key for email sending"
     )
     FROM_EMAIL: EmailStr = "noreply@example.com"
 
@@ -61,7 +61,7 @@ class TestConfig(BaseConfig):
     SECRET_KEY: str = "test-secret-key"
     LOG_LEVEL: str = "DEBUG"
     DEBUG: bool = True
-    RESEND_API_KEY: Optional[str] = None  # Don't send real emails in tests
+    RESEND_API_KEY: str | None = None  # Don't send real emails in tests
 
 
 class DevConfig(BaseConfig):
@@ -89,9 +89,10 @@ class ProdConfig(BaseConfig):
 
 
 @cache
-def get_config(env: str = "dev") -> TestConfig | DevConfig | ProdConfig:
+def get_config(env: str = "dev") -> BaseConfig:
     configs = {"test": TestConfig, "dev": DevConfig, "prod": ProdConfig}
-    return configs[env](ENV_STATE=env)
+    return configs[env]()
 
 
-config = get_config(env=BaseConfig().ENV_STATE)
+# Get ENV_STATE from environment or default to "dev"
+config = get_config(env=os.getenv("ENV_STATE", "dev"))

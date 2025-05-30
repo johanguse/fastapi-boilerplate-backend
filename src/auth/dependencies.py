@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -76,11 +74,11 @@ async def get_current_superuser(
 
 
 async def get_optional_current_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
+    credentials: HTTPAuthorizationCredentials | None = Depends(
         HTTPBearer(auto_error=False)
     ),
     db: AsyncSession = Depends(get_async_session),
-) -> Optional[User]:
+) -> User | None:
     """Get the current user if authenticated, otherwise None."""
     if credentials is None:
         return None

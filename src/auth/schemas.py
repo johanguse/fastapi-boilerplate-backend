@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -82,7 +80,7 @@ class UserProfile(BaseModel):
 class UserUpdate(BaseModel):
     """Schema for user profile update."""
 
-    name: Optional[str] = Field(
+    name: str | None = Field(
         None, min_length=1, max_length=255, description="User full name"
     )
-    email: Optional[EmailStr] = Field(None, description="User email address")
+    email: EmailStr | None = Field(None, description="User email address")

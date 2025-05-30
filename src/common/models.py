@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, ClassVar
 import uuid
 
 from sqlalchemy import DateTime, String
@@ -11,7 +11,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 class Base(DeclarativeBase):
     """Base class for all database models."""
 
-    type_annotation_map = {
+    type_annotation_map: ClassVar = {
         str: String(255),
     }
 
@@ -41,7 +41,8 @@ class TimestampedModel(Base):
         nullable=False,
     )
 
-    @declared_attr
+    @declared_attr  # type: ignore[arg-type]
+    @classmethod
     def __tablename__(cls) -> str:
         """Generate table name from class name."""
         return cls.__name__.lower()

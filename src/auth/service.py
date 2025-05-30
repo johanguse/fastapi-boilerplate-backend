@@ -1,5 +1,4 @@
 from datetime import UTC, datetime, timedelta
-from typing import Optional
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -27,9 +26,7 @@ class AuthService:
         return pwd_context.hash(password)
 
     @staticmethod
-    def create_access_token(
-        data: dict, expires_delta: Optional[timedelta] = None
-    ) -> str:
+    def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
         """Create a JWT access token."""
         to_encode = data.copy()
         if expires_delta:
@@ -48,9 +45,7 @@ class AuthService:
     def create_refresh_token(data: dict) -> str:
         """Create a JWT refresh token."""
         to_encode = data.copy()
-        expire = datetime.now(UTC) + timedelta(
-            days=config.REFRESH_TOKEN_EXPIRE_DAYS
-        )
+        expire = datetime.now(UTC) + timedelta(days=config.REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire, "type": "refresh"})
         encoded_jwt = jwt.encode(
             to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM
@@ -71,7 +66,7 @@ class AuthService:
         return encoded_jwt
 
     @staticmethod
-    def verify_token(token: str, token_type: Optional[str] = None) -> Optional[dict]:
+    def verify_token(token: str, token_type: str | None = None) -> dict | None:
         """Verify and decode a JWT token."""
         try:
             payload = jwt.decode(
@@ -86,7 +81,7 @@ class AuthService:
     @staticmethod
     async def authenticate_user(
         db: AsyncSession, email: str, password: str
-    ) -> Optional[User]:
+    ) -> User | None:
         """Authenticate a user with email and password."""
         result = await db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
@@ -98,7 +93,7 @@ class AuthService:
         return user
 
     @staticmethod
-    async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
+    async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
         """Get a user by email."""
         result = await db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()

@@ -5,26 +5,31 @@ Creates the initial database migration and sets up the admin user.
 """
 
 import asyncio
+import logging
 from pathlib import Path
 import sys
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Add the project root to the Python path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from src.auth.service import AuthService  # noqa: E402
+from src.common.database import engine  # noqa: E402
+from src.common.models import Base  # noqa: E402
+from src.config.settings import config  # noqa: E402
 
-from src.auth.service import AuthService
-from src.common.database import engine
-from src.common.models import Base
-from src.config.settings import config
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
 
 
 async def create_tables():
     """Create all database tables."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("✅ Database tables created successfully")
+    logger.info("✅ Database tables created successfully")
 
 
 async def create_admin_user():
@@ -36,7 +41,7 @@ async def create_admin_user():
         )
 
         if existing_admin:
-            print(f"ℹ️  Admin user already exists: {config.ADMIN_EMAIL}")
+            logger.info("i  Admin user already exists: %s", config.ADMIN_EMAIL)
             return
 
         # Create admin user
@@ -52,20 +57,20 @@ async def create_admin_user():
         admin_user.is_verified = True
         await session.commit()
 
-        print(f"✅ Admin user created successfully: {config.ADMIN_EMAIL}")
+        logger.info("✅ Admin user created successfully: %s", config.ADMIN_EMAIL)
 
 
 async def main():
     """Main initialization function."""
-    print("🚀 Initializing database...")
+    logger.info("🚀 Initializing database...")
 
     try:
         await create_tables()
         await create_admin_user()
-        print("✅ Database initialization completed successfully!")
+        logger.info("✅ Database initialization completed successfully!")
 
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
+        logger.error("❌ Database initialization failed: %s", e)
         sys.exit(1)
 
     finally:

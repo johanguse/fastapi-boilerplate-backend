@@ -56,7 +56,7 @@ lint = "ruff check ."
 lint-fix = "ruff check . --fix"
 format = "ruff format ."
 format-check = "ruff format . --check"
-type-check = "mypy src"
+type-check = "cd src && mypy ."
 quality = "task lint && task format-check && task type-check"
 quality-fix = "task lint-fix && task format"
 db-upgrade = "alembic upgrade head"
@@ -143,6 +143,10 @@ strict_optional = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_decorators = true
+exclude = [
+    "scripts/",
+    "alembic/",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

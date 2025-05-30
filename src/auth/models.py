@@ -8,8 +8,6 @@ from src.common.models import TimestampedModel
 class User(TimestampedModel):
     """User model for authentication and user management."""
 
-    __tablename__ = "users"
-
     email: Mapped[str] = mapped_column(
         String(255), unique=True, index=True, nullable=False
     )
