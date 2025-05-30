@@ -57,7 +57,7 @@ class BaseConfig(BaseSettings):
 class TestConfig(BaseConfig):
     model_config = SettingsConfigDict(env_file=".env.test", extra="ignore")
 
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5433/test_db"
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db"
     SECRET_KEY: str = "test-secret-key"
     LOG_LEVEL: str = "DEBUG"
     DEBUG: bool = True

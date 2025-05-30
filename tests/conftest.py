@@ -1,10 +1,10 @@
 import asyncio
 from collections.abc import AsyncGenerator
 
-from app import app
-from app.config import get_config
-from app.database.base import Base
-from app.database.session import get_async_session
+from src.main import app
+from src.config.settings import get_config
+from src.common.models import Base
+from src.common.database import get_async_session
 from httpx import AsyncClient
 import pytest
 import pytest_asyncio

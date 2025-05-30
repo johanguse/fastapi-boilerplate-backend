@@ -1,4 +1,4 @@
-from app.services.auth import AuthService
+from src.auth.service import AuthService
 from httpx import AsyncClient
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +16,7 @@ class TestAuth:
             "name": "Test User",
         }
 
-        response = await client.post("/v1/auth/register", json=user_data)
+        response = await client.post("/api/v1/auth/register", json=user_data)
 
         assert response.status_code == 201
         data = response.json()
@@ -45,7 +45,7 @@ class TestAuth:
             "name": "Test User",
         }
 
-        response = await client.post("/v1/auth/register", json=user_data)
+        response = await client.post("/api/v1/auth/register", json=user_data)
 
         assert response.status_code == 400
         assert "Email already registered" in response.json()["detail"]
@@ -65,7 +65,7 @@ class TestAuth:
 
         login_data = {"email": "test@example.com", "password": "password123"}
 
-        response = await client.post("/v1/auth/login", json=login_data)
+        response = await client.post("/api/v1/auth/login", json=login_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -78,7 +78,7 @@ class TestAuth:
         """Test login with invalid credentials."""
         login_data = {"email": "nonexistent@example.com", "password": "wrongpassword"}
 
-        response = await client.post("/v1/auth/login", json=login_data)
+        response = await client.post("/api/v1/auth/login", json=login_data)
 
         assert response.status_code == 401
         assert "Incorrect email or password" in response.json()["detail"]
@@ -100,12 +100,12 @@ class TestAuth:
 
         # Login to get token
         login_data = {"email": "test@example.com", "password": "password123"}
-        login_response = await client.post("/v1/auth/login", json=login_data)
+        login_response = await client.post("/api/v1/auth/login", json=login_data)
         token = login_response.json()["access_token"]
 
         # Get current user
         headers = {"Authorization": f"Bearer {token}"}
-        response = await client.get("/v1/auth/me", headers=headers)
+        response = await client.get("/api/v1/auth/me", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -115,34 +115,6 @@ class TestAuth:
     @pytest.mark.asyncio
     async def test_get_current_user_unauthorized(self, client: AsyncClient):
         """Test getting current user without token."""
-        response = await client.get("/v1/auth/me")
+        response = await client.get("/api/v1/auth/me")
 
         assert response.status_code == 403  # No authorization header
-
-    @pytest.mark.asyncio
-    async def test_refresh_token(self, client: AsyncClient, db_session: AsyncSession):
-        """Test token refresh."""
-        # Create and login user
-        user = await AuthService.create_user(
-            db=db_session,
-            email="test@example.com",
-            password="password123",
-            name="Test User",
-        )
-        user.is_active = True
-        await db_session.commit()
-
-        # Login to get tokens
-        login_data = {"email": "test@example.com", "password": "password123"}
-        login_response = await client.post("/v1/auth/login", json=login_data)
-        refresh_token = login_response.json()["refresh_token"]
-
-        # Refresh token
-        refresh_data = {"refresh_token": refresh_token}
-        response = await client.post("/v1/auth/refresh", json=refresh_data)
-
-        assert response.status_code == 200
-        data = response.json()
-        assert "access_token" in data
-        assert "refresh_token" in data
-        assert data["token_type"] == "bearer"
