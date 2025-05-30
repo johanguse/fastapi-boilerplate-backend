@@ -1,4 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# This workflow will install Python dependencies, run tests and lint with Poetry
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
 name: Python application
@@ -13,19 +13,56 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
       with:
-        python-version: "3.12"
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+    
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+    
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        ./reset.sh
-    - name: Test with pytest
-      run: |
-        ./test.sh
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root --with dev,test
+    
+    - name: Install project
+      run: poetry install --no-interaction
+    
+    - name: Run linting
+      run: poetry run task lint
+    
+    - name: Run format check
+      run: poetry run task format-check
+    
+    - name: Run type checking
+      run: poetry run task type-check
+    
+    - name: Run tests with coverage
+      run: poetry run task test-cov
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./htmlcov/index.html
+        fail_ci_if_error: false
