@@ -1,0 +1,8 @@
+# Ruff configuration file
+# https://docs.astral.sh/ruff/configuration/
+
+# Extend the pyproject.toml configuration
+extend = "pyproject.toml"
+
+# Additional configuration can be added here if needed
+# This file allows for more granular control over Ruff settings 
