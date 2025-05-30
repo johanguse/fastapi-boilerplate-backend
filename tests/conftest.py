@@ -1,15 +1,16 @@
 import asyncio
 from collections.abc import AsyncGenerator
 
-from src.main import app
-from src.config.settings import get_config
-from src.common.models import Base
-from src.common.database import get_async_session
 from httpx import AsyncClient
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+
+from src.common.database import get_async_session
+from src.common.models import Base
+from src.config.settings import get_config
+from src.main import app
 
 # Use test configuration
 test_config = get_config("test")

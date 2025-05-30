@@ -1,7 +1,8 @@
-from src.auth.service import AuthService
 from httpx import AsyncClient
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth.service import AuthService
 
 
 class TestAuth:
