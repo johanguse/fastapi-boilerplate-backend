@@ -1,0 +1,9 @@
+---
+description: Best practices for dependency management with Poetry
+globs: **/poetry.lock, **/pyproject.toml
+---
+- Use `poetry add` to add dependencies and keep `pyproject.toml` up-to-date.
+- Regularly run `poetry update` to ensure you have the latest compatible versions.
+- Use `poetry lock` to generate a `poetry.lock` file for consistent environments.
+- Use `poetry export` to generate requirements files for deployment.
+- Keep your `pyproject.toml` organized and use clear dependency groups.

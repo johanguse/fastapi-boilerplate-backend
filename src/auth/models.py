@@ -1,24 +1,59 @@
-from sqlalchemy import Boolean, Enum, String
-from sqlalchemy.orm import Mapped, mapped_column
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Optional
 
-from src.common.enums import UserRole
-from src.common.models import TimestampedModel
+from fastapi_users.db import SQLAlchemyBaseUserTable
+from sqlalchemy import DateTime, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.common.database import Base
+
+if TYPE_CHECKING:
+    # These are still needed because they're used in relationship annotations
+    from src.activity_log.models import ActivityLog
+    from src.teams.models import Invitation, TeamMember
 
 
-class User(TimestampedModel):
-    """User model for authentication and user management."""
+class User(SQLAlchemyBaseUserTable[int], Base):
+    __tablename__ = 'users'
 
-    email: Mapped[str] = mapped_column(
-        String(255), unique=True, index=True, nullable=False
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=True)
+    role: Mapped[str] = mapped_column(String(50), default='member')
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
     )
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole), default=UserRole.USER, nullable=False
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        onupdate=lambda: datetime.now(UTC),
     )
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    max_teams: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+
+    # Relationships
+    activities: Mapped[list['ActivityLog']] = relationship(
+        'ActivityLog',
+        back_populates='user',
+        cascade='all, delete-orphan',
+    )
+    team_memberships: Mapped[list['TeamMember']] = relationship(
+        'TeamMember',
+        back_populates='user',
+        cascade='all, delete-orphan',
+    )
+    sent_invitations: Mapped[list['Invitation']] = relationship(
+        'Invitation',
+        back_populates='invited_by',
+        foreign_keys='[Invitation.invited_by_id]',
+        cascade='all, delete-orphan',
+    )
+    received_invitations: Mapped[list['Invitation']] = relationship(
+        'Invitation',
+        back_populates='invitee',
+        foreign_keys='[Invitation.invitee_id]',
+        cascade='all, delete-orphan',
+    )
 
     def __repr__(self) -> str:
-        return f"<User(id={self.id}, email={self.email})>"
+        return f'<User {self.email}>'

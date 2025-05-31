@@ -1,35 +1,12 @@
-from collections.abc import AsyncGenerator
+from sqlalchemy.orm import declarative_base
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+Base = declarative_base()
 
-from src.config.settings import config
-
-# Create async engine
-engine = create_async_engine(
-    config.DATABASE_URL,
-    echo=config.DEBUG,
-    future=True,
-)
-
-# Create async session factory
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
-
-
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency to get async database session."""
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
-
-
-# Alias for backward compatibility
-get_db = get_async_session
+# Import all models here to ensure they are registered with Base
+# before any operations that need them are performed.
+# The noqa comments are to prevent linters from complaining about unused imports,
+# as their primary purpose here is to ensure the model classes are registered.
+from src.activity_log import models as activity_log_models  # noqa
+from src.auth import models as auth_models  # noqa
+from src.projects import models as project_models  # noqa
+from src.teams import models as team_models  # noqa

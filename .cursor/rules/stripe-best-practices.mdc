@@ -1,0 +1,86 @@
+---
+description: Best practices for payment processing with Stripe
+globs: **/*.{py}
+alwaysApply: false
+---
+# Stripe Integration Best Practices
+
+## API Usage
+
+- Use the latest version of the Stripe API
+- Implement proper error handling for API calls
+- Use idempotency keys for all POST requests
+- Implement request retries with exponential backoff
+- Keep the Stripe library updated
+
+## Security
+
+- Store API keys securely using environment variables
+- Never expose secret keys in client-side code
+- Use restricted API keys with minimal permissions
+- Implement webhook signature verification
+- Follow PCI compliance guidelines for card data
+
+## Subscription Management
+
+- Design flexible subscription plans with clear tiers
+- Implement proper trial period handling
+- Use webhooks for subscription lifecycle events
+- Handle subscription upgrades/downgrades gracefully
+- Implement proper prorating for plan changes
+
+## Payment Processing
+
+- Use Stripe Checkout for simplified payment flows
+- Implement 3D Secure authentication where required
+- Handle card declines gracefully with user-friendly messages
+- Use payment intents for complex payment flows
+- Consider implementing Strong Customer Authentication (SCA)
+
+## Webhooks
+
+- Implement all relevant webhook events
+- Use webhook signatures to verify authenticity
+- Implement idempotent webhook handling
+- Set up proper error handling for webhook processing
+- Create a webhook endpoint that responds quickly
+
+## Testing
+
+- Use Stripe's test mode and test API keys
+- Implement test fixtures for common Stripe objects
+- Test all webhook event types
+- Simulate payment failures and edge cases
+- Use Stripe CLI for local webhook testing
+
+## Integration with FastAPI
+
+- Create a dedicated Stripe service module
+- Implement proper separation of payment logic
+- Use background tasks for webhook processing
+- Implement proper validation for payment data
+- Create clear API endpoints for payment operations
+
+## Error Handling
+
+- Implement specific error handling for common Stripe errors
+- Provide user-friendly error messages
+- Log detailed error information for debugging
+- Handle network failures gracefully
+- Consider implementing circuit breakers for Stripe API calls
+
+## Reporting and Analytics
+
+- Track key metrics for subscription business
+- Implement proper reporting for revenue and churn
+- Use Stripe's reporting APIs for reconciliation
+- Consider implementing custom analytics for business metrics
+- Monitor failed payments and recovery rates
+
+## Compliance and Legal
+
+- Implement proper tax handling based on customer location
+- Create clear terms of service and privacy policies
+- Handle customer data in compliance with GDPR and other regulations
+- Implement proper invoice and receipt generation
+- Consider legal requirements for different regions

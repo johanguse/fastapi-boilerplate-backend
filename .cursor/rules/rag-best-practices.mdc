@@ -1,0 +1,86 @@
+---
+description: Best practices for RAG implementation with LlamaIndex
+globs: **/*.{py}
+alwaysApply: false
+---
+# Retrieval-Augmented Generation (RAG) Best Practices
+
+## Document Processing
+
+- Implement chunking strategies that preserve semantic meaning
+- Use overlap between chunks to maintain context
+- Process metadata alongside content for better retrieval
+- Implement document hierarchies (document → section → chunk)
+- Extract and store metadata like titles, headers, and source information
+
+## Embeddings
+
+- Choose embedding models appropriate for your domain
+- Use sentence/paragraph-level embeddings rather than document-level
+- Consider dimensionality vs. performance tradeoffs
+- Implement batching for efficient embedding generation
+- Use embedding caching to reduce API costs
+
+## Vector Storage
+
+- Choose appropriate vector index type (HNSW, IVF, etc.) based on scale
+- Implement metadata filtering alongside vector search
+- Use hybrid search combining semantic and keyword approaches
+- Consider index refresh strategies for dynamic content
+- Implement proper distance metrics (cosine, dot product, euclidean)
+
+## Retrieval Strategies
+
+- Implement semantic-based reranking of initial results
+- Use relevance thresholds to filter low-quality results
+- Consider multi-query approaches for complex questions
+- Implement query expansion techniques
+- Store and use retrieval statistics for optimization
+
+## Prompt Engineering
+
+- Design prompts that effectively incorporate retrieved context
+- Implement prompt templates with clear instructions
+- Include source attribution requirements in prompts
+- Handle context window limitations with prioritization
+- Use prompt versioning for tracking and improvement
+
+## Context Management
+
+- Implement intelligent context truncation when exceeding limits
+- Prioritize more relevant chunks when context size is limited
+- Consider recursive retrieval for complex queries
+- Track token usage to optimize context utilization
+- Implement sliding context windows for chat applications
+
+## LLM Integration
+
+- Use appropriate temperature settings for different use cases
+- Implement structured output parsing for consistent results
+- Use appropriate model for the task (size vs. performance tradeoff)
+- Implement fallback strategies for model errors
+- Consider fine-tuning for domain-specific applications
+
+## Evaluation and Metrics
+
+- Implement retrieval accuracy metrics (precision, recall, NDCG)
+- Track and evaluate response quality metrics
+- Use human feedback to improve retrieval quality
+- Implement A/B testing for retrieval strategies
+- Use benchmark datasets for consistent evaluation
+
+## Performance Optimization
+
+- Implement caching for frequent queries
+- Use batching for vector operations
+- Consider quantization for vector storage efficiency
+- Optimize index parameters based on dataset size
+- Implement async processing for background tasks
+
+## Production Considerations
+
+- Implement monitoring for embedding and LLM API costs
+- Consider privacy and security in data storage
+- Implement versioning for embeddings and indexes
+- Design for incremental updates to knowledge base
+- Implement proper error handling and fallbacks

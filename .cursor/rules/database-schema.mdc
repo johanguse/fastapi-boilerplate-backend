@@ -1,0 +1,239 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# UserCenter Backend - Database Schema
+
+## Core Entity Relationships
+
+The UserCenter Backend implements a multi-tenant architecture with the following key relationships:
+
+1. **Users can be members of multiple teams (organizations)**
+2. **Teams can have multiple members with different roles**
+3. **Teams can own multiple projects**
+4. **Projects belong to exactly one team**
+
+This design enables a flexible SaaS platform where:
+- Teams represent customer organizations
+- Projects represent workspaces within those organizations
+- Users can collaborate across multiple organizations
+- Different permission levels control access
+
+## Schema Details
+
+### Users
+
+```
+Table: users
+```
+
+- Primary key: `id` (integer)
+- Authentication fields inherited from FastAPI Users
+  - `email` (string, unique)
+  - `hashed_password` (string)
+  - `is_active` (boolean)
+  - `is_verified` (boolean)
+  - `is_superuser` (boolean)
+- Additional fields:
+  - `name` (string, nullable)
+  - `role` (string, default: 'member')
+  - `created_at` (datetime with timezone)
+  - `updated_at` (datetime with timezone, nullable)
+  - `max_teams` (integer, default: 3) - Subscription tier limit
+
+**Relationships:**
+- `team_memberships` - List of teams the user belongs to (TeamMember)
+- `sent_invitations` - Invitations sent by the user (Invitation)
+- `received_invitations` - Invitations received by the user (Invitation)
+- `activities` - User activity logs (ActivityLog)
+- `training_data` - Training data uploaded by the user (TrainingData)
+- `knowledge_items` - Knowledge items created by the user (KnowledgeItem)
+
+### Teams
+
+```
+Table: teams
+```
+
+- Primary key: `id` (integer)
+- Fields:
+  - `name` (string, not nullable)
+  - `stripe_customer_id` (text, unique, nullable)
+  - `stripe_subscription_id` (text, unique, nullable)
+  - `stripe_product_id` (text, nullable)
+  - `plan_name` (string, nullable)
+  - `subscription_status` (string, nullable)
+  - `created_at` (datetime with timezone)
+  - `updated_at` (datetime with timezone, nullable)
+  - `max_projects` (integer, default: 3) - Subscription tier limit
+  - `active_projects` (integer, default: 0) - Current usage counter
+
+**Relationships:**
+- `team_members` - List of users in the team (TeamMember)
+- `projects` - Projects owned by the team (Project)
+- `activity_logs` - Team activity logs (ActivityLog)
+- `invitations` - Pending invitations (Invitation)
+
+### Team Members
+
+```
+Table: team_members
+```
+
+- Primary key: `id` (integer)
+- Fields:
+  - `role` (enum: 'owner', 'admin', 'member', 'viewer')
+  - `created_at` (datetime with timezone)
+  - `updated_at` (datetime with timezone, nullable)
+  - `user_id` (integer, foreign key to users.id)
+  - `team_id` (integer, foreign key to teams.id)
+
+**Relationships:**
+- `user` - The user (User)
+- `team` - The team (Team)
+
+### Projects
+
+```
+Table: projects
+```
+
+- Primary key: `id` (integer)
+- Fields:
+  - `name` (string, not nullable)
+  - `description` (text, nullable)
+  - `created_at` (datetime with timezone)
+  - `updated_at` (datetime with timezone, nullable)
+  - `team_id` (integer, foreign key to teams.id)
+
+**Relationships:**
+- `team` - The owning team (Team)
+- `activity_logs` - Project activity logs (ActivityLog)
+- `training_data` - Training data for the project (TrainingData)
+- `chats` - Chat sessions in the project (Chat)
+- `knowledge_items` - Knowledge items in the project (KnowledgeItem)
+
+### Invitations
+
+```
+Table: invitations
+```
+
+- Primary key: `id` (integer)
+- Fields:
+  - `email` (string, not nullable)
+  - `role` (string, not nullable)
+  - `status` (string, default: 'pending')
+  - `created_at` (datetime with timezone)
+  - `team_id` (integer, foreign key to teams.id)
+  - `invited_by_id` (integer, foreign key to users.id)
+  - `invitee_id` (integer, foreign key to users.id, nullable)
+
+**Relationships:**
+- `team` - The team the invitation is for (Team)
+- `invited_by` - The user who sent the invitation (User)
+- `invitee` - The user who received the invitation (User, nullable)
+
+### Activity Logs
+
+```
+Table: activity_logs
+```
+
+- Primary key: `id` (integer)
+- Fields:
+  - `action` (string, not nullable)
+  - `action_type` (string, not nullable)
+  - `description` (text, not nullable)
+  - `action_metadata` (JSON, nullable)
+  - `ip_address` (string, nullable)
+  - `user_agent` (text, nullable)
+  - `created_at` (datetime with timezone)
+  - `user_id` (integer, foreign key to users.id, nullable)
+  - `team_id` (integer, foreign key to teams.id, nullable)
+  - `project_id` (integer, foreign key to projects.id, nullable)
+
+**Relationships:**
+- `user` - The user who performed the action (User)
+- `team` - The related team (Team)
+- `project` - The related project (Project)
+
+**Indexes:**
+- `ix_activity_logs_created_at`
+- `ix_activity_logs_action_type`
+- `ix_activity_logs_team_user`
+
+### Knowledge Items
+
+```
+Table: knowledge_items
+```
+
+- Primary key: `id` (integer)
+- Fields:
+  - `source_type` (string) - 'text', 'file', 'url'
+  - `content` (text)
+  - `vector_ids` (text) - JSON array of vector IDs
+  - `created_at` (datetime with timezone)
+  - `user_id` (integer, foreign key to users.id)
+  - `project_id` (integer, foreign key to projects.id)
+
+**Relationships:**
+- `user` - The user who created the item (User)
+- `project` - The project the item belongs to (Project)
+
+## Workflow and Business Logic
+
+### User Registration and Team Creation
+1. User registers an account
+2. User can create teams up to their `max_teams` limit
+3. When creating a team, user automatically becomes an admin
+4. Activity is logged for audit trail
+
+### Team Membership
+1. Team admins can invite users via email
+2. Invitations are tracked in the database
+3. Users can accept invitations to join teams
+4. Team members have specific roles controlling permissions
+
+### Project Management
+1. Team members can create projects within a team
+2. Projects are limited by the team's `max_projects` value
+3. Each project belongs to exactly one team
+4. Projects can contain knowledge items, training data, and chat sessions
+
+### Knowledge Base
+1. Users can add knowledge items to projects
+2. Knowledge items store vector IDs for RAG retrieval
+3. Items are linked to both the creating user and the project
+
+## Cascade Behavior
+
+- When a user is deleted:
+  - All their team memberships are deleted
+  - All their sent and received invitations are deleted
+  - All their activity logs are unlinked (SET NULL)
+  - All their training data is deleted
+  - All their knowledge items are deleted
+
+- When a team is deleted:
+  - All team memberships are deleted
+  - All projects owned by the team are deleted
+  - All invitations for the team are deleted
+  - All activity logs for the team are deleted
+
+- When a project is deleted:
+  - All knowledge items in the project are deleted
+  - All training data in the project is deleted
+  - All chat sessions in the project are deleted
+  - All activity logs for the project are deleted
+
+## Subscription and Limits
+
+- Users have a `max_teams` limit (default: 3)
+- Teams have a `max_projects` limit (default: 3)
+- Teams track subscription information via Stripe integration
+- Teams maintain an `active_projects` counter for usage tracking
+
+

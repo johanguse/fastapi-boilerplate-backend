@@ -1,0 +1,125 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# SaaS Pricing Strategy
+
+## Tiered Pricing Structure
+
+### Starter Tier
+- **Price**: $19/month
+- **Message Credits**: 1,000 per month
+- **Features**:
+  - Pre-built RAG Components + API
+  - Limited Data Sources (up to 5)
+  - Basic Analytics
+  - Standard Models (GPT-3.5, Gemini Flash)
+  - Basic Data Connectors (Web URLs, PDF)
+  - Community Support
+
+### Pro Tier
+- **Price**: $49/month
+- **Message Credits**: 2,000 per month
+- **Features**:
+  - All Free features
+  - Unlimited Data Sources
+  - Advanced Analytics Platform
+  - Model Customization
+  - Data Connectors (Notion, Zendesk, Google Drive, etc.)
+  - Email Support
+
+### Business Tier
+- **Price**: $199/month
+- **Message Credits**: 10,000 per month
+- **Features**:
+  - All Pro features
+  - Custom Fine-tuning
+  - White Label Components
+  - Data Export
+  - Priority Support
+  - Admin Dashboard
+  - Team Collaboration (up to 5 users)
+  - Advanced Model Access (GPT-4, Claude-3.7, Gemini Pro)
+
+### Enterprise Tier
+- **Price**: Custom
+- **Message Credits**: Custom (Starting at 20,000+ per month)
+- **Features**:
+  - All Business features
+  - Bring Your Own Key (BYOK)
+  - SSO Integration
+  - Advanced Analytics & Data Export
+  - Custom Data Connectors
+  - SLA & Premium Support
+  - Dedicated Account Manager
+  - Unlimited Team Members
+  - Custom Model Development
+  - Premium Model Access (GPT-O, Claude-3 Opus)
+
+## Message Credit System
+
+### Credit Consumption (per message)
+| Model / Feature | Credits per message |
+|-----------------|---------------------|
+| GPT-O           | 5                   |
+| GPT-4           | 3                   |
+| Tool Usage      | 3                   |
+| Claude-3 Opus   | 4                   |
+| Claude-3 Sonnet | 2                   |
+| Gemini Pro      | 2                   |
+| GPT-3.5-Turbo   | 1                   |
+| Gemini Flash    | 1                   |
+| GPT-mini        | 1                   |
+| Custom Models   | Custom pricing      |
+
+### Credit Pack Add-ons
+- 1,000 additional credits: $15
+- 5,000 additional credits: $65
+- 10,000 additional credits: $120
+- 50,000 additional credits: $500
+- Custom volume: Contact sales
+
+## Annual Billing Discount
+- 20% discount when billed annually
+
+## Competitive Differentiators
+
+1. **Multi-Model Flexibility**: Switch between leading AI models at any time (OpenAI, Anthropic, Google)
+2. **Cost-Effective Entry Point**: Affordable Starter tier with generous credit allocation
+3. **Transparent Usage-Based Pricing**: Clear credit system with no hidden costs
+4. **Rollover Credits**: Unused credits roll over for one month (Pro tier and above)
+5. **Custom Fine-tuning**: Available at Business tier (competitors often restrict to Enterprise)
+
+## Implementation Notes
+
+- Credit usage monitoring dashboard for all tiers
+- Automatic notifications at 80% credit usage
+- Seamless tier upgrades without service interruption
+- Grace period of 3 days when credits are depleted
+- Option to pause service instead of overcharging
+- Model switching capability within the same tier (subject to credit costs)
+
+## Market Positioning
+
+Position as the most developer-friendly and cost-effective multi-model RAG solution with transparent pricing that scales with usage. Emphasize flexibility to choose the right model for each use case, balancing performance and cost.
+
+## Launch Strategy
+
+1. Introductory pricing with 30% discount for early adopters (first 3 months)
+2. Referral program: Give 500 free credits when referring a new paid customer
+3. Special pricing for startups and educational institutions
+4. Free migration assistance from competing platforms
+5. 14-day full-featured trial (no credit card required)
+6. Limited-time model testing promotion (try premium models at standard credit costs)
+
+
+
+
+
+
+
+
+
+
+

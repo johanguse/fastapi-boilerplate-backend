@@ -1,0 +1,9 @@
+---
+description: Best practices for authentication with FastAPI Users
+globs: **/*.{py}
+---
+- Use FastAPI Users' built-in authentication schemes for consistency.
+- Implement proper password hashing and storage practices.
+- Use JWT tokens for stateless authentication where appropriate.
+- Implement proper user session management and logout functionality.
+- Regularly update FastAPI Users to benefit from security improvements.

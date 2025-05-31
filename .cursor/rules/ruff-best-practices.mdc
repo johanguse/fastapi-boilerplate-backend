@@ -1,0 +1,9 @@
+---
+description: Best practices for linting with Ruff
+globs: **/*.{py}
+---
+- Configure Ruff to enforce consistent code style across the project.
+- Use Ruff's autofix feature to automatically correct common issues.
+- Regularly update Ruff to benefit from new rules and improvements.
+- Integrate Ruff into your CI/CD pipeline for automated code quality checks.
+- Customize Ruff's configuration to fit your project's specific needs.

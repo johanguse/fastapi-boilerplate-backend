@@ -1,1 +1,1 @@
-# Teams domain package
+"""Teams module."""

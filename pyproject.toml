@@ -1,182 +1,95 @@
 [tool.poetry]
-name = "fastapi-boilerplate"
+name = "user-center-backend"
 version = "0.1.0"
-description = "A modern FastAPI boilerplate with Poetry, Alembic, Docker, and comprehensive auth"
-authors = ["Your Name <your.email@example.com>"]
+description = ""
+authors = ["Johan Guse <johanguse@gmail.com>"]
 readme = "README.md"
 packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.104.1"
-uvicorn = {extras = ["standard"], version = "^0.24.0"}
-pydantic = "^2.5.0"
-pydantic-settings = "^2.1.0"
-sqlalchemy = "^2.0.23"
-alembic = "^1.13.0"
-asyncpg = "^0.29.0"
+python = "3.11.*"
+charset-normalizer = "^3.1.0"  # Needed cause of a bug in poetry
+urllib3 = "^2.0"  # Needed cause of a bug in poetry
+fastapi = {extras = ["standard"], version = "^0.115.7"}
+fastapi-users = {extras = ["oauth", "sqlalchemy"], version = "^14.0.1"}
+fastapi-pagination = {extras = ["sqlalchemy"], version = "^0.12.34"}
+sqlalchemy = "^2.0.36"
 psycopg2-binary = "^2.9.9"
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-python-multipart = "^0.0.6"
-email-validator = "^2.1.0"
-resend = "^0.7.0"
-python-dateutil = "^2.8.2"
-rich = "^13.7.0"
-asgi-correlation-id = "^4.3.0"
-python-json-logger = "^2.0.7"
-jinja2 = "^3.1.2"
+pydantic = {extras = ["email"], version = "^2.8.2"}
+alembic = "^1.14.1"
+uvicorn = "^0.34.0"
+pyjwt = {extras = ["crypto"], version = "^2.9.0"}
+passlib = {extras = ["argon2"], version = "^1.7.4"}
+python-dotenv = "^1.0.1"
+pydantic-settings = "^2.4.0"
+python-multipart = "^0.0.20"
+pandas = "^2.2.2"
+chardet = "^5.2.0"
+celery = "^5.4.0"
+resend = "^2.4.0"
+asyncpg = "^0.30.0"
+boto3 = "^1.36.4"
+httpx-oauth = "^0.16.1"
+sqlalchemy-utils = "^0.41.2"
+loguru = "^0.7.3"
+python-json-logger = "^3.2.1"
+ua-parser = "^1.0.0"
+user-agents = "^2.2.0"
+python-terraform = "^0.10.1"
+cachetools = "^5.5.1"
+stripe = "^11.4.1"
+cryptography = "^44.0.0"
+python-magic = "^0.4.27"
+langchain = "^0.3.15"
+llama-index = "^0.12.14"
+openai = "^1.60.1"
+llama-index-core = "^0.12.14"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.3"
-pytest-asyncio = "^0.21.1"
-pytest-cov = "^4.1.0"
-httpx = "^0.25.2"
-ruff = "^0.1.6"
-mypy = "^1.7.1"
-pre-commit = "^3.6.0"
-taskipy = "^1.12.2"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^7.4.3"
-pytest-asyncio = "^0.21.1"
-pytest-cov = "^4.1.0"
-httpx = "^0.25.2"
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+taskipy = "^1.13.0"
+ruff = "^0.5.7"
+httpx = "^0.27.0"
+testcontainers = {version = "^4.8.0", extras = ["postgresql"]}
 factory-boy = "^3.3.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.taskipy.tasks]
-dev = "uvicorn src.main:app --reload --host 0.0.0.0 --port 8000"
-test = "pytest"
-test-cov = "pytest --cov=src --cov-report=term-missing --cov-report=html"
-lint = "ruff check ."
-lint-fix = "ruff check . --fix"
-format = "ruff format ."
-format-check = "ruff format . --check"
-type-check = "cd src && mypy ."
-quality = "task lint && task format-check && task type-check"
-quality-fix = "task lint-fix && task format"
-db-upgrade = "alembic upgrade head"
-db-downgrade = "alembic downgrade -1"
-db-revision = "alembic revision --autogenerate"
-init-db = "python scripts/init_db.py"
-clean = "python -c \"import shutil, pathlib; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]; [p.unlink(missing_ok=True) for p in pathlib.Path('.').rglob('*.pyc')]\""
-pre-commit-install = "pre-commit install"
+pytest-asyncio = "^0.23.5"
+aiosqlite = "^0.19.0"
+asyncpg = "^0.30.0"
 
 [tool.ruff]
-target-version = "py311"
-line-length = 88
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes (includes F401 for unused imports)
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-    "ARG", # flake8-unused-arguments
-    "SIM", # flake8-simplify
-    "PTH", # flake8-use-pathlib
-    "ERA", # eradicate (finds commented-out code)
-    "PL",  # pylint
-    "RUF", # ruff-specific rules
-    "N",   # pep8-naming
-    "T20", # flake8-print (finds print statements)
-]
-ignore = [
-    "E501",   # line too long, handled by formatter
-    "B008",   # do not perform function calls in argument defaults
-    "PLR0913", # too many arguments to function call
-    "PLR0915", # too many statements
-    "PLR2004", # magic value used in comparison
-]
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
-    ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "alembic/versions",
-]
+line-length = 79
+extend-exclude = ['migrations']
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+ignore = ["E203", "E501", "PLC0415"]
 
 [tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
+preview = true
+quote-style = 'single'
 
-[tool.ruff.isort]
-known-first-party = ["src"]
-force-sort-within-sections = true
-
-[tool.ruff.per-file-ignores]
-"tests/*" = ["ARG", "PLR2004"]
-"alembic/versions/*" = ["ALL"]
-
-[tool.mypy]
-python_version = "3.11"
-check_untyped_defs = true
-ignore_missing_imports = true
-warn_unused_ignores = true
-warn_redundant_casts = true
-warn_unused_configs = true
-strict_optional = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-disallow_untyped_decorators = true
-exclude = [
-    "scripts/",
-    "alembic/",
-]
+[tool.ruff.lint.per-file-ignores]
+"src/activity_log/service.py" = ["PLC0415"]
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q --strict-markers --strict-config"
-testpaths = ["tests"]
-asyncio_mode = "auto"
-markers = [
-    "unit: marks tests as unit tests",
-    "integration: marks tests as integration tests",
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-]
+pythonpath = "."
+addopts = '-p no:warnings'
 
-[tool.coverage.run]
-source = ["src"]
-omit = [
-    "*/tests/*",
-    "*/migrations/*",
-    "*/__pycache__/*",
-]
+[tool.taskipy.tasks]
+lint = 'ruff check src && ruff check src --diff'
+format = 'ruff check src --fix && ruff format src'
+run = 'uvicorn src.main:app --reload --port 8001'
+dev = 'uvicorn src.main:app --reload --port 8001'
+pre_test = 'task lint'
+test = 'pytest -s -x --cov=src -vv'
+post_test = 'coverage run -m pytest --cov=src'
+test-auth = 'pytest tests/test_auth.py -v'
+test-watch = 'pytest -xvs --watch'
+migrations = 'alembic revision --autogenerate -m'
+migrate = 'alembic upgrade head'
 
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-] 
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

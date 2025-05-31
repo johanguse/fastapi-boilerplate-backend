@@ -1,0 +1,248 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# RAG SaaS Platform Project Plan
+
+## Project Overview
+
+This project involves developing a SaaS platform that provides Retrieval-Augmented Generation (RAG) capabilities for creating AI-powered chatbots trained on custom data. The platform will allow users to upload their own documents, create customized chatbots, embed them into their websites, and analyze usage patterns.
+
+## Core Features
+
+1. **Document Management System**
+   - Document upload and processing
+   - Content extraction from various file formats
+   - Document versioning and organization
+   - Metadata management
+   
+2. **Vector Database & Embedding System**
+   - Document chunking and preprocessing
+   - Embedding generation
+   - Vector storage and retrieval
+   - Similarity search
+   
+3. **LLM Integration**
+   - Support for multiple LLM providers (OpenAI, Anthropic, etc.)
+   - Model selection and customization
+   - Prompt engineering tools
+   - BYOK (Bring Your Own Key) capabilities
+   
+4. **Chat Interface Builder**
+   - Customizable chat UI components
+   - Widget styling and theming
+   - Embedding code generation
+   - Mobile-responsive design
+   
+5. **Analytics Dashboard**
+   - Usage statistics and metrics
+   - Conversation logs and history
+   - Performance analytics
+   - Cost tracking
+   
+6. **User Management**
+   - Team collaboration features
+   - Role-based access control
+   - SSO integration
+   - User activity logging
+   
+7. **Billing System**
+   - Credit-based usage tracking
+   - Subscription management
+   - Payment processing
+   - Invoicing and reporting
+
+## Technical Architecture
+
+### Backend
+- **FastAPI**: Main application framework
+- **SQLAlchemy**: ORM for relational data
+- **PostgreSQL**: Primary database
+- **Celery**: Background task processing
+- **Redis**: Caching and message broker
+- **LangChain/LlamaIndex**: RAG processing framework
+- **ChromaDB/Pinecone**: Vector database
+- **Stripe**: Payment processing
+
+### Frontend
+- **React/Next.js**: Web application
+- **Shadcn UI**: Component library
+- **TailwindCSS**: Styling
+- **React Query**: Data fetching
+- **Zustand**: State management
+
+### Infrastructure
+- **Docker**: Containerization
+- **Kubernetes**: Orchestration (for scaling)
+- **CloudFlare R2/AWS S3**: File storage
+- **Fly.io/Vercel**: Deployment
+- **GitHub Actions**: CI/CD
+- **Prometheus/Grafana**: Monitoring
+
+## Development Phases
+
+### Phase 1: Core RAG Functionality (Weeks 1-4)
+- Setup project structure and development environment
+- Implement document upload and processing
+- Build embedding generation pipeline
+- Create basic vector storage and retrieval system
+- Develop simple chat interface for testing
+
+### Phase 2: Platform Foundation (Weeks 5-8)
+- Implement user authentication and management
+- Build team and project management features
+- Develop document organization system
+- Create basic analytics for RAG performance
+- Establish API endpoints for core functionality
+
+### Phase 3: Chat Builder & Customization (Weeks 9-12)
+- Build chat interface customization tools
+- Develop widget embedding functionality
+- Implement style and theme customization
+- Create widget preview system
+- Build chat history and conversation management
+
+### Phase 4: Advanced Features & Scaling (Weeks 13-16)
+- Implement multiple LLM provider support
+- Build fine-tuning and customization features
+- Develop advanced analytics dashboard
+- Create billing and subscription system
+- Implement credit usage tracking
+
+### Phase 5: Polish & Launch (Weeks 17-20)
+- Conduct comprehensive testing and QA
+- Optimize performance and scalability
+- Create documentation and help center
+- Develop onboarding flows
+- Prepare marketing materials and launch plan
+
+## Technology Implementation Details
+
+### Document Processing Pipeline
+1. **Upload Handler**: Process file uploads securely
+2. **Content Extraction**: Extract text from various file formats
+3. **Chunking Service**: Split documents into appropriate chunks
+4. **Embedding Generation**: Generate embeddings using selected models
+5. **Vector Storage**: Store embeddings in vector database
+
+### RAG Implementation
+1. **Query Processing**: Process user queries into embeddings
+2. **Retrieval System**: Perform vector similarity search
+3. **Context Assembly**: Build context from retrieved documents
+4. **Prompt Construction**: Construct effective prompts with context
+5. **LLM Integration**: Send to appropriate LLM and process response
+
+### Chat Widget System
+1. **Widget Builder**: Visual interface for customizing widgets
+2. **Code Generator**: Generate embedding code for websites
+3. **API Gateway**: Handle incoming chat requests
+4. **Response Processor**: Process and return LLM responses
+5. **Session Manager**: Maintain chat context and history
+
+## Database Schema
+
+### Core Tables
+- `users`: User account information
+- `teams`: Team organization
+- `team_members`: Team membership and roles
+- `projects`: RAG projects
+- `documents`: Uploaded documents
+- `document_chunks`: Processed document segments
+- `embeddings`: Vector embeddings for chunks
+- `chat_widgets`: Configured chat interfaces
+- `conversations`: Chat conversation logs
+- `messages`: Individual messages in conversations
+- `subscriptions`: User subscription information
+- `credit_usage`: Tracking of credit consumption
+- `api_keys`: API keys for programmatic access
+
+## API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/register`: Register new user
+- `POST /api/v1/auth/login`: Login existing user
+- `POST /api/v1/auth/refresh`: Refresh authentication token
+
+### Documents
+- `POST /api/v1/documents/upload`: Upload new documents
+- `GET /api/v1/documents`: List documents
+- `GET /api/v1/documents/{id}`: Get document details
+- `DELETE /api/v1/documents/{id}`: Delete document
+
+### Projects
+- `POST /api/v1/projects`: Create new project
+- `GET /api/v1/projects`: List projects
+- `GET /api/v1/projects/{id}`: Get project details
+- `PUT /api/v1/projects/{id}`: Update project
+- `DELETE /api/v1/projects/{id}`: Delete project
+
+### Chat Widgets
+- `POST /api/v1/widgets`: Create new widget
+- `GET /api/v1/widgets`: List widgets
+- `GET /api/v1/widgets/{id}`: Get widget details
+- `PUT /api/v1/widgets/{id}`: Update widget
+- `DELETE /api/v1/widgets/{id}`: Delete widget
+
+### Chat API
+- `POST /api/v1/chat/{widget_id}`: Send message to chatbot
+- `GET /api/v1/chat/{conversation_id}/history`: Get conversation history
+
+### Analytics
+- `GET /api/v1/analytics/usage`: Get usage statistics
+- `GET /api/v1/analytics/performance`: Get performance metrics
+- `GET /api/v1/analytics/conversations`: Get conversation analytics
+
+## Deployment Strategy
+
+### Development Environment
+- Local Docker setup for development
+- CI/CD pipeline for testing and staging deployment
+- Automated testing for all core components
+
+### Production Environment
+- Kubernetes cluster for scalable deployment
+- Separate environments for web app, API, and worker processes
+- Autoscaling based on demand
+- Regular backups and disaster recovery planning
+
+### Monitoring and Maintenance
+- Centralized logging system
+- Performance monitoring dashboard
+- Automated alerts for system issues
+- Regular security audits and updates
+
+## Success Metrics
+
+1. **Technical Metrics**
+   - System uptime: 99.9%
+   - Average response time: <500ms
+   - Chat completion time: <3 seconds
+   - Retrieval accuracy: >90%
+
+2. **Business Metrics**
+   - User acquisition rate
+   - Conversion rate (free to paid)
+   - Monthly recurring revenue
+   - Customer retention rate
+   - Feature adoption rate
+
+## Risk Management
+
+### Technical Risks
+- **LLM API Reliability**: Implement fallback providers and caching strategies
+- **Scaling Challenges**: Design for horizontal scaling from the beginning
+- **Data Security**: Implement strict access controls and encryption
+
+### Business Risks
+- **Cost Management**: Carefully track LLM API usage and optimize retrieval
+- **Competitor Analysis**: Regularly analyze competitor features and pricing
+- **Market Fit**: Establish feedback loops with early users
+
+## Next Steps
+
+1. Establish development environment and project structure
+2. Build core document processing pipeline
+3. Implement basic RAG functionality
+4. Develop simple chat interface for testing
+5. Create initial user authentication system 

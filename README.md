@@ -1,378 +1,374 @@
-# FastAPI Boilerplate
+# Project Management API
 
-A modern, production-ready FastAPI boilerplate with Poetry, Alembic, Docker, PostgreSQL, and comprehensive authentication using Domain-Driven Design (DDD) architecture.
+## Description
 
-> [!TIP]
-> If your project is going to be bigger, I suggest reading the [FastAPI Beyond CRUD](https://jod35.github.io/fastapi-beyond-crud-docs/site/chapter4/)
+This is a project management API that allows you to create, read, update, and delete projects, teams, and team members.
 
-## Features
+## Technologies
 
-- **FastAPI** - Modern, fast web framework for building APIs
-- **Domain-Driven Design** - Clean architecture with domain separation
-- **Poetry** - Dependency management and packaging
-- **Alembic** - Database migrations
-- **PostgreSQL** - Production-ready database with async support
-- **Docker & Docker Compose** - Containerization for development and deployment
-- **JWT Authentication** - Secure token-based authentication
-- **Email Services** - Email verification and password reset using Resend
-- **Comprehensive Testing** - Pytest with async support
-- **Code Quality** - Ruff for linting and formatting, mypy for type checking
-- **Task Management** - Taskipy for common development tasks
-- **Database Models** - Users, Teams, and Projects with relationships
-- **CORS Support** - Cross-origin resource sharing
-- **Logging & Monitoring** - Structured logging with correlation IDs
-
-## Project Structure
-
-```
-FastAPI-Boilerplate/
-├── src/
-│   ├── main.py                      # Application entry point
-│   ├── config/
-│   │   ├── __init__.py
-│   │   └── settings.py              # Configuration management
-│   ├── common/                      # Shared utilities
-│   │   ├── __init__.py
-│   │   ├── models.py                # Base models (TimestampedModel, Base)
-│   │   ├── database.py              # Database session management
-│   │   └── enums.py                 # Shared enumerations
-│   ├── auth/                        # Authentication domain
-│   │   ├── __init__.py
-│   │   ├── models.py                # User model
-│   │   ├── schemas.py               # Pydantic schemas
-│   │   ├── service.py               # Business logic
-│   │   ├── dependencies.py          # FastAPI dependencies
-│   │   └── router.py                # API endpoints
-│   ├── teams/                       # Teams domain
-│   │   ├── __init__.py
-│   │   └── router.py                # Team endpoints (placeholder)
-│   └── projects/                    # Projects domain
-│       ├── __init__.py
-│       └── router.py                # Project endpoints (placeholder)
-├── alembic/                         # Database migrations
-├── scripts/
-│   └── init_db.py                   # Database initialization script
-├── tests/                           # Test suite
-├── docker-compose.yml               # Docker services
-├── Dockerfile                       # Application container
-├── pyproject.toml                   # Poetry configuration
-├── alembic.ini                      # Alembic configuration
-└── .pre-commit-config.yaml          # Pre-commit hooks
-```
-
-## Quick Start
-
-### Prerequisites
-
-- Python 3.11+
+- FastAPI
+- FastAPI Users
+- FastAPI Security
+- FastAPI Pagination
+- SQLAlchemy
+- Alembic
+- PostgreSQL
+- Uvicorn
+- Pytest
 - Poetry
-- Docker and Docker Compose (optional)
-- PostgreSQL (if not using Docker)
+- Ruff
+- Docker
 
-### Installation
+## Local Development Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd FastAPI-Boilerplate
-   ```
+### Using Poetry (without Docker)
 
-2. **Install dependencies with Poetry**
-   ```bash
-   poetry install
-   ```
+1. Clone the repository
+2. Copy `.env.example` to `.env` and update the values
+3. Run `poetry shell`
+4. Run `poetry install`
+5. Run `task run`
 
-3. **Set up environment variables**
-   ```bash
-   cp example.env .env
-   # Edit .env with your configuration
-   ```
+### Using Docker
 
-4. **Start the database (using Docker)**
-   ```bash
-   docker-compose up -d db
-   ```
+#### Development Environment
 
-5. **Run database migrations**
-   ```bash
-   poetry run task db-upgrade
-   ```
-
-6. **Initialize database with admin user (optional)**
-   ```bash
-   poetry run task init-db
-   ```
-
-7. **Start the application**
-   ```bash
-   poetry run task dev
-   ```
-
-The API will be available at `http://localhost:8000` with interactive documentation at `http://localhost:8000/docs`.
-
-### Using Docker Compose
-
-For a complete development environment:
+1. Copy environment files:
 
 ```bash
-docker-compose up
+# From project root
+cp docker/.env.example ./.env.docker.dev
+cp docker/.env.example ./.env.docker.prod
 ```
 
-This will start:
-- FastAPI application on port 8000
-- PostgreSQL database on port 5432
-- Test database on port 5433
+2. Review and update the environment files with your values
 
-## Configuration
+3. Run development environment:
 
-Key environment variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_db` |
-| `SECRET_KEY` | JWT secret key | `your-secret-key-here` |
-| `RESEND_API_KEY` | Resend API key for emails | Optional |
-| `FROM_EMAIL` | From email address | `noreply@example.com` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token expiration | `30` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `["http://localhost:3000"]` |
-
-## Development Commands
-
-This project uses Taskipy for common development tasks. Here are the available commands:
-
-### Application
 ```bash
-poetry run task dev              # Start development server with hot reload
+# Start the services
+docker-compose -f docker/docker-compose.yml --project-directory . up --build
+
+# Run in detached mode
+docker-compose -f docker/docker-compose.yml --project-directory . up -d --build
+
+# View logs
+docker-compose -f docker/docker-compose.yml --project-directory . logs -f
+
+# Stop services
+docker-compose -f docker/docker-compose.yml --project-directory . down
+
+# Access the application:
+# - API: http://localhost:8000
+# - Documentation: http://localhost:8000/docs
+# - ReDoc: http://localhost:8000/redoc
 ```
 
-### Testing
+#### Production Environment
+
+1. Run production environment:
+
 ```bash
-poetry run task test             # Run tests
-poetry run task test-cov         # Run tests with coverage report
+# Start the services
+docker-compose -f docker/docker-compose.prod.yml up -d --build
+
+# View logs
+docker-compose -f docker/docker-compose.prod.yml logs -f
+
+# Stop services
+docker-compose -f docker/docker-compose.prod.yml down
 ```
 
-### Code Quality
+### Docker Commands
+
+#### Basic Commands
+
+Monitor containers:
+
 ```bash
-poetry run task lint             # Check code with Ruff
-poetry run task lint-fix         # Fix auto-fixable issues with Ruff
-poetry run task format           # Format code with Ruff
-poetry run task format-check     # Check if code is formatted
-poetry run task type-check       # Run mypy type checking
-poetry run task quality          # Run all quality checks
-poetry run task quality-fix      # Fix all auto-fixable issues
+# View logs
+docker logs -f fastapi-dev
+
+# Check container status
+docker ps
+
+# Stop container
+docker stop fastapi-dev
+
+# Remove container
+docker rm fastapi-dev
+
+# Remove image
+docker rmi fastapi-app-dev
 ```
 
-### Database
+#### Database Commands
+
 ```bash
-poetry run task db-upgrade       # Apply database migrations
-poetry run task db-downgrade     # Rollback last migration
-poetry run task db-revision      # Create new migration
-poetry run task init-db          # Initialize database with admin user
+# Access database
+docker-compose -f docker/docker-compose.yml exec db psql -U postgres
+
+# Run migrations
+docker-compose -f docker/docker-compose.yml exec web poetry run alembic upgrade head
 ```
 
-### Utilities
+#### Stop and Clean Up
+
+Stop all containers:
+
 ```bash
-poetry run task clean            # Clean Python cache files
-poetry run task pre-commit-install # Install pre-commit hooks
+# Stop all running containers
+docker stop $(docker ps -a -q)
+
+# Remove all stopped containers
+docker rm $(docker ps -a -q)
+
+# Remove all volumes
+docker volume prune -f
 ```
 
-## Database Migrations
+Stop project containers:
 
-Create a new migration:
 ```bash
-poetry run task db-revision -m "Description of changes"
+# Development environment
+COMPOSE_PROJECT_NAME=usercenter docker compose -f docker/docker-compose.yml down -v
+
+# Production environment
+COMPOSE_PROJECT_NAME=usercenter docker compose -f docker/docker-compose.prod.yml down -v
 ```
 
-Apply migrations:
+#### View Logs
+
 ```bash
-poetry run task db-upgrade
+# Development
+docker compose -f docker/docker-compose.yml logs -f
+
+# Production
+docker compose -f docker/docker-compose.prod.yml logs -f
 ```
 
-Rollback migrations:
-```bash
-poetry run task db-downgrade
-```
+### Notes
 
-## API Endpoints
-
-### Authentication
-
-- `POST /auth/register` - Register a new user
-- `POST /auth/login` - Login user
-- `GET /auth/me` - Get current user profile
-- `PUT /auth/me` - Update user profile
-
-### Teams (Placeholder)
-
-- Team management endpoints (to be implemented)
-
-### Projects (Placeholder)
-
-- Project management endpoints (to be implemented)
+- Development environment mounts your local code as a volume, so changes are reflected immediately
+- Production environment builds a new image with your code, so you need to rebuild to see changes
+- Database data is persisted in Docker volumes, so it survives container restarts
+- Always use secure passwords in production environment
 
 ## Testing
 
-Run the test suite:
+Run `task test`
+
+For running specific test files:
 ```bash
-poetry run task test
+# Run all auth tests
+task test-auth
+
+# Run a specific test
+poetry run pytest tests/test_auth.py::test_login_success -v
+
+# Run tests with watch mode (auto-rerun on file changes)
+task test-watch
 ```
 
-Run tests with coverage:
-```bash
-poetry run task test-cov
-```
+### Testing with SQLAlchemy ORM
 
-Run specific test categories:
-```bash
-poetry run pytest -m unit
-poetry run pytest -m integration
-```
+When writing tests for FastAPI endpoints that use SQLAlchemy models, you might encounter issues like `UnmappedClassError: Class 'typing.Any' is not mapped`. This is common when trying to instantiate SQLAlchemy models directly in tests.
+
+#### Solutions:
+
+1. **Use Mock Objects**: Instead of real SQLAlchemy models, create simple mock classes:
+   ```python
+   class MockUser:
+       def __init__(self, **kwargs):
+           for key, value in kwargs.items():
+               setattr(self, key, value)
+   ```
+
+2. **Mock Dependency Injection**: Override FastAPI dependencies:
+   ```python
+   async def override_dependency():
+       return mock_object
+   
+   app.dependency_overrides[original_dependency] = override_dependency
+   ```
+
+3. **Mock HTTP Responses**: For complete isolation, mock the HTTP client itself:
+   ```python
+   mock_response = Response(
+       status_code=200,
+       content=json.dumps(response_data).encode(),
+       headers={"Content-Type": "application/json"}
+   )
+   
+   # Store and restore the original method
+   original_request = client.get
+   client.get = mock_get_function
+   # ...test code...
+   client.get = original_request
+   ```
+
+4. **Clean Up After Tests**: Always restore original dependencies and methods:
+   ```python
+   try:
+       # Test code
+   finally:
+       # Restore original dependencies/methods
+   ```
 
 ## Code Quality
 
-The project uses Ruff for both linting and formatting, providing fast and comprehensive code quality checks.
+Format code:
 
-### Linting and Formatting
 ```bash
-# Check code quality
-poetry run task quality
-
-# Fix auto-fixable issues
-poetry run task quality-fix
-
-# Individual commands
-poetry run task lint             # Check for issues
-poetry run task lint-fix         # Fix auto-fixable issues
-poetry run task format           # Format code
-poetry run task format-check     # Check formatting
-poetry run task type-check       # Type checking with mypy
+task format
 ```
 
-### Ruff Configuration
+Lint code:
 
-Ruff is configured in `pyproject.toml` with the following features:
-- **Linting**: Comprehensive rule set including pycodestyle, pyflakes, isort, bugbear, comprehensions, pyupgrade, unused arguments, simplify, pathlib, eradicate, pylint, naming, and print detection
-- **Formatting**: Black-compatible code formatting
-- **Import sorting**: Automatic import organization
-- **Type checking**: Integration with mypy for static type analysis
-
-### Pre-commit Hooks
-
-Install pre-commit hooks for automatic code quality checks:
 ```bash
-poetry run task pre-commit-install
+task lint
 ```
 
-This will run Ruff linting and formatting on every commit.
+## Database Management
 
-## Domain-Driven Design Architecture
+### Clean Database
 
-This project follows DDD principles with clear domain separation:
+Delete all data from the database:
 
-### Common Domain
-- **Base Models**: Shared database models and utilities
-- **Database**: Session management and connection handling
-- **Enums**: Shared enumerations across domains
+```sql
+DROP TABLE "public"."activity_logs" CASCADE;
+DROP TABLE "public"."alembic_version" CASCADE;
+DROP TABLE "public"."invitations" CASCADE;
+DROP TABLE "public"."projects" CASCADE;
+DROP TABLE "public"."team_members" CASCADE;
+DROP TABLE "public"."teams" CASCADE;
+DROP TABLE "public"."training_data" CASCADE;
+DROP TABLE "public"."users" CASCADE;
 
-### Auth Domain
-- **Models**: User authentication and authorization
-- **Schemas**: Pydantic models for API requests/responses
-- **Service**: Business logic for authentication
-- **Dependencies**: FastAPI dependency injection
-- **Router**: API endpoints for authentication
+DROP TYPE IF EXISTS teammemberrole;
+DROP TYPE IF EXISTS modelstatus;
+DROP TYPE IF EXISTS invitationstatus;
+```
 
-### Teams Domain (Extensible)
-- Ready for team management functionality
-- Follows the same pattern as auth domain
+### Migrations
 
-### Projects Domain (Extensible)
-- Ready for project management functionality
-- Follows the same pattern as auth domain
+Remove all alembic migrations:
 
-## Database Models
+```bash
+rm -f alembic/versions/*.py
+```
 
-### User (Auth Domain)
-- Authentication and user management
-- Roles: USER, ADMIN
-- Email verification and password reset capabilities
-- Timestamped model with created_at and updated_at
+Create new migration:
 
-### Team (Teams Domain - To be implemented)
-- Team organization
-- Owner relationship with users
-- Team member management
+```bash
+alembic revision --autogenerate -m "initial"
+```
 
-### Project (Projects Domain - To be implemented)
-- Project management within teams
-- Belongs to a team
+Upgrade database:
 
-## Development
+```bash
+poetry run alembic upgrade head
+```
 
-### Adding New Domains
+## Environment Variables
 
-1. Create a new domain directory in `src/`
-2. Follow the established pattern:
-   ```
-   src/new_domain/
-   ├── __init__.py
-   ├── models.py          # SQLAlchemy models
-   ├── schemas.py         # Pydantic schemas
-   ├── service.py         # Business logic
-   ├── dependencies.py    # FastAPI dependencies
-   └── router.py          # API endpoints
-   ```
-3. Register the router in `src/main.py`
-4. Create database migration with Alembic
-5. Add tests in `tests/`
+Create a `.env` file in the root directory with the following variables:
 
-### Best Practices
+```env
+# App
+PROJECT_NAME=FastAPI App
+PROJECT_VERSION=0.1.0
+API_V1_STR=/api/v1
 
-- Use async/await for I/O operations
-- Implement proper error handling
-- Add comprehensive tests
-- Follow RESTful API design
-- Use dependency injection
-- Validate all inputs with Pydantic
-- Log important events
-- Use transactions for data consistency
-- Follow DDD principles with clear domain boundaries
+# Database
+DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+
+# Security
+SECRET_KEY=your-secret-key
+JWT_SECRET=your-jwt-secret
+JWT_LIFETIME_SECONDS=3600
+
+# Email
+RESEND_API_KEY=your-resend-api-key
+RESEND_FROM_EMAIL=your-email@domain.com
+
+# Frontend
+FRONTEND_URL=http://localhost:3000
+```
+
+## Todo
+
+- Add tests
+- Add documentation
+- Add <https://www.literalai.com/>
+
+## Notes
+
+- Never commit `.env` files to version control
+- Use different environment variables for development and production
+- Always use HTTPS in production
+- Regularly update dependencies and base images
+- Monitor container logs and health checks in production
 
 ## Deployment
 
-### Production Checklist
+### Fly.io Deployment
 
-- [ ] Set strong `SECRET_KEY`
-- [ ] Configure production database
-- [ ] Set up Resend API key
-- [ ] Configure CORS origins
-- [ ] Set up SSL/TLS
-- [ ] Configure logging
-- [ ] Set up monitoring
-- [ ] Run security audit
-- [ ] Set up pre-commit hooks
+1. Install the Fly.io CLI:
 
-### Docker Production
-
-Build production image:
 ```bash
-docker build -t fastapi-boilerplate .
+curl -L https://fly.io/install.sh | sh
 ```
 
-Run with production settings:
+2. Login to Fly.io:
+
 ```bash
-docker run -e ENV_STATE=prod -p 8000:8000 fastapi-boilerplate
+fly auth login
 ```
 
-## Contributing
+3. Create a new app:
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Run code quality checks: `poetry run task quality`
-6. Install and run pre-commit hooks: `poetry run task pre-commit-install`
-7. Submit a pull request
+```bash
+fly apps create your-app-name
+```
 
-## License
+4. Set up secrets:
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```bash
+flyctl secrets set DATABASE_URL="postgresql://user:pass@host:5432/db"
+flyctl secrets set SECRET_KEY="your-secret-key"
+flyctl secrets set JWT_SECRET="your-jwt-secret"
+flyctl secrets set RESEND_API_KEY="your-resend-api-key"
+flyctl secrets set RESEND_FROM_EMAIL="your-email@domain.com"
+```
+
+5. Deploy:
+
+```bash
+fly deploy
+```
+
+### Environment Variables
+
+- Production secrets are stored in Fly.io using `flyctl secrets set`
+- CI/CD secrets are stored in GitHub Actions Secrets
+- Development variables are in `.env.docker.dev`
+- Production variables template in `.env.docker.prod`
+
+## API Documentation
+
+The API documentation is available at the following endpoints:
+
+### Development
+
+- Swagger UI: <http://localhost:8000/docs>
+- ReDoc: <http://localhost:8000/redoc>
+- OpenAPI JSON: <http://localhost:8000/openapi.json>
+
+### Production
+
+- Swagger UI: <https://your-domain.com/docs>
+- ReDoc: <https://your-domain.com/redoc>
+- OpenAPI JSON: <https://your-domain.com/openapi.json>
+
+Note: Replace `your-domain.com` with your actual production domain.

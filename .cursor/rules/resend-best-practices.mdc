@@ -1,0 +1,86 @@
+---
+description: Best practices for email sending with Resend
+globs: **/*.{py}
+alwaysApply: false
+---
+# Resend Email Service Best Practices
+
+## API Integration
+
+- Use the official Python SDK for Resend
+- Implement proper error handling for API calls
+- Use environment variables for API keys
+- Implement retries with exponential backoff
+- Keep the SDK updated to the latest version
+
+## Email Templates
+
+- Create reusable email templates
+- Use dynamic content placeholders
+- Implement proper HTML and plaintext versions
+- Test templates across different email clients
+- Consider using a template engine for complex templates
+
+## Email Delivery
+
+- Implement asynchronous sending for better performance
+- Use batch sending for multiple recipients when appropriate
+- Track delivery status and handle failures
+- Implement proper queue management for high volume
+- Consider time zones when scheduling emails
+
+## Security
+
+- Securely store API keys in environment variables
+- Implement proper email validation
+- Use SPF, DKIM, and DMARC for authentication
+- Protect against email injection attacks
+- Implement proper access controls for sending capabilities
+
+## Analytics and Monitoring
+
+- Track email open and click rates
+- Monitor bounce and complaint rates
+- Implement proper logging for all email operations
+- Set up alerts for delivery issues
+- Use analytics to optimize email content
+
+## Content Best Practices
+
+- Follow anti-spam guidelines
+- Implement proper unsubscribe functionality
+- Keep emails responsive for mobile devices
+- Test emails for accessibility
+- Optimize images and content for loading speed
+
+## Testing
+
+- Implement test modes for development
+- Use dedicated test domains
+- Create test fixtures for email data
+- Validate email rendering before sending
+- Test delivery to various email providers
+
+## Integration with FastAPI
+
+- Create a dedicated email service module
+- Use background tasks for email sending
+- Implement proper validation for email content
+- Create clear error handling for email operations
+- Use dependency injection for email service
+
+## Rate Limiting and Quotas
+
+- Implement proper rate limiting to avoid API limits
+- Monitor daily and monthly sending quotas
+- Implement priority queues for important emails
+- Have fallback providers for critical communications
+- Handle rate limit errors gracefully
+
+## Compliance
+
+- Implement proper unsubscribe handling
+- Include physical address in marketing emails
+- Follow GDPR, CAN-SPAM, and other regulations
+- Maintain proper consent records
+- Implement data retention policies

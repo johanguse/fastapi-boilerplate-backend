@@ -1,0 +1,9 @@
+---
+description: Best practices for security with FastAPI Security
+globs: **/*.{py}
+---
+- Use FastAPI Security's built-in security headers for enhanced protection.
+- Implement proper CORS configuration to prevent unauthorized access.
+- Use OAuth2 for secure API authentication and authorization.
+- Regularly audit your API for common security vulnerabilities.
+- Keep FastAPI Security up-to-date to benefit from the latest security features.
