@@ -73,6 +73,12 @@ jobs:
     - name: Run type checking
       run: poetry run task type-check
     
+    - name: Run database migrations
+      env:
+        DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+        ENV_STATE: test
+      run: poetry run task migrate
+
     - name: Run tests with coverage
       env:
         DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
