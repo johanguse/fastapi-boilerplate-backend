@@ -13,13 +13,13 @@ async def test_create_project(client: AsyncClient):
     """Test project creation."""
     # We'll use a mock response approach without relying on the test_team fixture
     # Create mock response data
-    team_id = 1  # Just use a fixed team ID for testing
+    team_id = 1  # Using existing team-based tests; keep variable but map to organization
     
     response_data = {
         "id": 1,
         "name": "Test Project",
         "description": "A test project",
-        "team_id": team_id,
+    "organization_id": team_id,
         "created_at": "2025-05-27T12:00:00",
         "updated_at": "2025-05-27T12:00:00"
     }
@@ -75,7 +75,7 @@ async def test_create_project(client: AsyncClient):
             json={
                 "name": "Test Project",
                 "description": "A test project",
-                "team_id": team_id,
+                "organization_id": team_id,
             },
         )
         
@@ -84,7 +84,7 @@ async def test_create_project(client: AsyncClient):
         data = response.json()
         assert data["name"] == "Test Project"
         assert data["description"] == "A test project"
-        assert data["team_id"] == team_id
+        assert data["organization_id"] == team_id
         assert "id" in data
         assert "created_at" in data
     finally:
@@ -106,7 +106,7 @@ async def test_get_projects(client: AsyncClient):
                 "id": 1,
                 "name": "Test Project",
                 "description": "A test project",
-                "team_id": 1,
+                "organization_id": 1,
                 "created_at": "2025-05-27T12:00:00",
                 "updated_at": "2025-05-27T12:00:00"
             }
@@ -179,7 +179,7 @@ async def test_get_project_by_id(client: AsyncClient):
         "id": project_id,
         "name": "Test Project",
         "description": "A test project",
-        "team_id": 1,
+        "organization_id": 1,
         "created_at": "2025-05-27T12:00:00",
         "updated_at": "2025-05-27T12:00:00"
     }
@@ -227,7 +227,7 @@ async def test_get_project_by_id(client: AsyncClient):
         data = response.json()
         assert data["id"] == project_id
         assert data["name"] == "Test Project"
-        assert data["team_id"] == 1
+        assert data["organization_id"] == 1
     finally:
         client.get = original_request
         if original_dependency:
@@ -245,7 +245,7 @@ async def test_update_project(client: AsyncClient):
         "id": project_id,
         "name": "Updated Project",
         "description": "An updated test project",
-        "team_id": 1,
+        "organization_id": 1,
         "created_at": "2025-05-27T12:00:00",
         "updated_at": "2025-05-27T12:00:00"
     }
@@ -477,7 +477,7 @@ async def test_project_creation_plan_limit(client: AsyncClient):
             json={
                 "name": "Limit Test Project",
                 "description": "Testing plan limits",
-                "team_id": 1,
+                "organization_id": 1,
             },
         )
         assert response.status_code == 403

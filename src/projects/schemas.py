@@ -22,7 +22,7 @@ class ProjectBase(BaseSchema):
 class ProjectCreate(ProjectBase):
     """Schema for creating a Project"""
 
-    team_id: int
+    organization_id: int
 
 
 class ProjectUpdate(ProjectBase):
@@ -35,4 +35,4 @@ class Project(ProjectBase, TimestampMixin):
     """Schema for Project response"""
 
     id: int
-    team_id: int
+    organization_id: int

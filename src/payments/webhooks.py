@@ -5,8 +5,8 @@ from stripe import Webhook
 
 from src.common.config import settings
 from src.common.session import get_async_session
+from src.organizations.service import get_organization
 from src.payments.service import handle_subscription_update
-from src.teams.service import get_team
 
 router = APIRouter()
 
@@ -33,9 +33,10 @@ async def stripe_webhook(
 
     if event.type == 'checkout.session.completed':
         session = event.data.object
-        team = await get_team(db, session.metadata.team_id)
-        team.plan_name = session.metadata.plan_name
-        team.subscription_status = 'active'
-        await db.commit()
+        org = await get_organization(db, int(session.metadata.organization_id))
+        if org:
+            org.plan_name = session.metadata.plan_name
+            org.subscription_status = 'active'
+            await db.commit()
 
     return {'status': 'success'}

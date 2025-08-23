@@ -9,4 +9,4 @@ Base = declarative_base()
 from src.activity_log import models as activity_log_models  # noqa
 from src.auth import models as auth_models  # noqa
 from src.projects import models as project_models  # noqa
-from src.teams import models as team_models  # noqa
+from src.organizations import models as organization_models  # noqa

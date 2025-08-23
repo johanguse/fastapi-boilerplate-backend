@@ -7,21 +7,25 @@ if not TYPE_CHECKING:
     ActivityLog = Any
     User = Any
     Project = Any
-    Team = Any
-    TeamMember = Any
-    Invitation = Any
+    Organization = Any
+    OrganizationMember = Any
+    OrganizationInvitation = Any
 
 if TYPE_CHECKING:
     from src.activity_log.models import ActivityLog
     from src.auth.models import User
+    from src.organizations.models import (
+        Organization,
+        OrganizationInvitation,
+        OrganizationMember,
+    )
     from src.projects.models import Project
-    from src.teams.models import Invitation, Team, TeamMember
 
 __all__ = [
     'ActivityLog',
     'User',
     'Project',
-    'Team',
-    'TeamMember',
-    'Invitation',
+    'Organization',
+    'OrganizationMember',
+    'OrganizationInvitation',
 ]

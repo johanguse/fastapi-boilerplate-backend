@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.models import User
 from src.common.exceptions import NotFoundError, PermissionError
+from src.organizations.service import get_organization, is_org_member
 from src.projects.models import Project
 from src.projects.schemas import ProjectCreate, ProjectUpdate
-from src.teams.service import get_team, is_team_member
 
 MAX_PRO_PROJECTS = 5
 MAX_BUSINESS_PROJECTS = 20
@@ -16,11 +16,11 @@ async def create_project(
     db: AsyncSession, project: ProjectCreate, current_user: User
 ) -> Project:
     """Create a new project"""
-    # Verify team membership
-    if not await is_team_member(db, project.team_id, current_user):
-        raise PermissionError('User is not a member of this team')
+    # Verify organization membership
+    if not await is_org_member(db, project.organization_id, current_user):
+        raise PermissionError('User is not a member of this organization')
 
-    team = await get_team(db, project.team_id)
+    team = await get_organization(db, project.organization_id)
 
     if team.plan_name == 'starter' and team.active_projects >= 1:
         raise HTTPException(403, 'Starter plan limited to 1 project')
@@ -38,7 +38,7 @@ async def create_project(
     db_project = Project(
         name=project.name,
         description=project.description,
-        team_id=project.team_id,
+        organization_id=project.organization_id,
     )
     db.add(db_project)
     await db.commit()
@@ -60,9 +60,9 @@ async def get_project(
     if not project:
         raise NotFoundError('Project not found')
 
-    # Verify team membership
-    if not await is_team_member(db, project.team_id, current_user):
-        raise PermissionError('User is not a member of this team')
+    # Verify organization membership
+    if not await is_org_member(db, project.organization_id, current_user):
+        raise PermissionError('User is not a member of this organization')
 
     return project
 
@@ -71,8 +71,8 @@ async def get_projects(db: AsyncSession, current_user: User) -> list[Project]:
     """Get all projects for teams the user is a member of"""
     result = await db.execute(
         select(Project)
-        .join(Project.team)
-        .join('team_members')
+        .join(Project.organization)
+        .join('members')
         .filter_by(user_id=current_user.id)
     )
     return result.scalars().all()

@@ -35,15 +35,15 @@ poetry run pytest tests/test_auth.py::test_login_success -v
 
 ## Architecture Overview
 
-This is a FastAPI-based project management API using Domain-Driven Design (DDD) principles with the following structure:
+This is a FastAPI-based SaaS boilerplate using Domain-Driven Design (DDD) principles with the following structure:
 
 ### Core Architecture
 - **FastAPI** with async/await patterns
 - **SQLAlchemy 2.0** with async engine (PostgreSQL via asyncpg)
 - **Alembic** for database migrations
-- **FastAPI Users** for authentication and user management
+- **FastAPI Users** for authentication and user management (register, login, reset password, verify email)
 - **Pydantic** for data validation and settings management
-- **Domain-based module organization** (auth, teams, projects, activity_log, payments)
+- **Domain-based module organization** (auth, organizations, projects, activity_log, payments, uploads)
 
 ### Module Structure
 Each domain module follows this pattern:
@@ -72,8 +72,8 @@ src/{domain}/
 ### Authentication
 - **FastAPI Users** integration with OAuth support
 - JWT token-based authentication
-- User management with teams and projects relationship
-- Role-based access control via team membership
+- User management with organizations and projects relationship
+- Role-based access control via organization membership
 
 ### Testing Architecture
 - **pytest** with async support (pytest-asyncio)
@@ -89,21 +89,25 @@ Required environment variables (see README.md for full list):
 - `SECRET_KEY` - Application secret
 - `JWT_SECRET` - JWT signing key
 - `RESEND_API_KEY` - Email service key
-- `STRIPE_SECRET_KEY` - Payment processing (if using payments)
-- `OPENAI_API_KEY` - AI features (if using AI capabilities)
+- `STRIPE_SECRET_KEY` - Payment processing
+- `RESEND_API_KEY` and `RESEND_FROM_EMAIL` - Email service
+- `R2_*` - Cloudflare R2 storage
 
 ## Code Quality Standards
+
 - **Ruff** for linting and formatting (line length: 79 characters)
 - Single quotes preferred
 - Migrations excluded from linting
 - Preview features enabled in ruff configuration
 
 ## Docker Support
+
 - Development: `docker-compose -f docker/docker-compose.yml up --build`
 - Production: `docker-compose -f docker/docker-compose.prod.yml up -d --build`
 - Database access: `docker-compose -f docker/docker-compose.yml exec db psql -U postgres`
 
 ## Deployment
+
 - **Fly.io** ready with `fly.toml` configuration
 - Environment secrets managed via `flyctl secrets set`
 - Production builds use multi-stage Docker setup

@@ -14,16 +14,12 @@ from src.common.pagination import CustomParams
 #     pass
 
 
-async def validate_team_exists(db: AsyncSession, team_id: int):
-    # To avoid circular imports, we'll use a dynamic import with a clear comment
-    # This is an acceptable pattern when dealing with circular import issues
+async def validate_org_exists(db: AsyncSession, organization_id: int):
     # ruff: noqa: PLC0415
-    from src.teams.service import (
-        get_team,  # Import locally to avoid circular imports
-    )
+    from src.organizations.service import get_organization
 
-    if not await get_team(db, team_id):
-        raise HTTPException(404, 'Team not found')
+    if not await get_organization(db, organization_id):
+        raise HTTPException(404, 'Organization not found')
 
 
 async def validate_project_exists(db: AsyncSession, project_id: int):
@@ -46,6 +42,8 @@ async def log_activity(
         raise ValueError('Missing required log data fields')
 
     try:
+        # Backward-compat: map team_id -> organization_id if provided
+        org_id = log_data.get('organization_id') or log_data.get('team_id')
         activity = ActivityLog(
             action=log_data['action'],
             action_type=log_data.get('action_type', 'user'),
@@ -53,7 +51,7 @@ async def log_activity(
             user_id=log_data.get('user', {}).get('id')
             if log_data.get('user')
             else None,
-            team_id=log_data['team_id'],
+            organization_id=org_id,
             project_id=log_data['project_id'],
             action_metadata=log_data.get('metadata', {}),
             ip_address=log_data.get('ip_address'),
@@ -63,8 +61,8 @@ async def log_activity(
         await db.commit()
         await db.refresh(activity)
 
-        if log_data.get('team_id'):
-            await validate_team_exists(db, log_data['team_id'])
+        if org_id:
+            await validate_org_exists(db, org_id)
 
         if log_data.get('project_id'):
             await validate_project_exists(db, log_data['project_id'])
@@ -88,7 +86,7 @@ async def get_activities(
     query = select(ActivityLog).order_by(desc(ActivityLog.created_at))
 
     if team_id:
-        query = query.where(ActivityLog.team_id == team_id)
+        query = query.where(ActivityLog.organization_id == team_id)
     if user_id:
         query = query.where(ActivityLog.user_id == user_id)
     if action_type:

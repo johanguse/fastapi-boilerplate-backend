@@ -3,17 +3,22 @@ from typing import Union
 
 from dotenv import load_dotenv
 from pydantic import PostgresDsn
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = os.getenv('PROJECT_NAME', 'AI Chat SaaS API')
+    model_config = SettingsConfigDict(
+        env_file='.env',
+        case_sensitive=True,
+        extra='ignore',
+    )
+    PROJECT_NAME: str = os.getenv('PROJECT_NAME', 'FastAPI SaaS Boilerplate')
     PROJECT_VERSION: str = os.getenv('PROJECT_VERSION', '0.0.1')
     PROJECT_DESCRIPTION: str = os.getenv(
         'PROJECT_DESCRIPTION',
-        'API for AI Chat SaaS application with team management and training capabilities',
+        'Boilerplate API for SaaS apps with auth, teams, projects, payments, logs, and uploads',
     )
     API_V1_STR: str = os.getenv('API_V1_STR', '/api/v1')
 
@@ -39,6 +44,16 @@ class Settings(BaseSettings):
     ]
 
     DATABASE_URL: Union[str, PostgresDsn]
+
+    # Better Auth (optional) JWT acceptance alongside FastAPI Users
+    BETTER_AUTH_ENABLED: bool = bool(os.getenv('BETTER_AUTH_ENABLED', ''))
+    BETTER_AUTH_ALGORITHM: str = os.getenv('BETTER_AUTH_ALGORITHM', 'RS256')
+    BETTER_AUTH_JWKS_URL: str | None = os.getenv('BETTER_AUTH_JWKS_URL')
+    BETTER_AUTH_SHARED_SECRET: str | None = os.getenv('BETTER_AUTH_SHARED_SECRET')
+    BETTER_AUTH_ISSUER: str | None = os.getenv('BETTER_AUTH_ISSUER')
+    BETTER_AUTH_AUDIENCE: str | None = os.getenv('BETTER_AUTH_AUDIENCE')
+    BETTER_AUTH_EMAIL_CLAIM: str = os.getenv('BETTER_AUTH_EMAIL_CLAIM', 'email')
+    BETTER_AUTH_SUB_IS_EMAIL: bool = os.getenv('BETTER_AUTH_SUB_IS_EMAIL', 'false').lower() == 'true'
 
     RESEND_API_KEY: str = os.getenv('RESEND_API_KEY')
     RESEND_FROM_EMAIL: str = os.getenv('RESEND_FROM_EMAIL')
@@ -96,26 +111,15 @@ class Settings(BaseSettings):
     PAYMENT_SUCCESS_URL: str = 'https://yourapp.com/success'
     PAYMENT_CANCEL_URL: str = 'https://yourapp.com/cancel'
 
-    # AI
-    OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY', '')
-    EMBEDDING_MODEL: str = 'text-embedding-3-small'
-    CHUNK_SIZE: int = 512
-    CHUNK_OVERLAP: int = 64
-    TOP_K_RESULTS: int = 5
-
+    # Uploads
     ALLOWED_FILE_TYPES: list = [
         'text/plain',
         'application/pdf',
         'application/msword',
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/markdown',
-        'text/x-markdown',
-        'text/mdx',
+        'image/png',
+        'image/jpeg',
     ]
-
-    class Config:
-        case_sensitive = True
-        env_file = '.env'
 
 
 settings = Settings()

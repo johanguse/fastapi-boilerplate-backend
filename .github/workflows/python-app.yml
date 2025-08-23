@@ -77,6 +77,13 @@ jobs:
       env:
         DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
         ENV_STATE: test
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+        R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
       run: poetry run task test-cov
     
     - name: Upload coverage reports

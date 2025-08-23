@@ -12,6 +12,12 @@ from src.auth.models import User
 from src.common.config import settings
 from src.common.session import get_async_session
 
+try:
+    # Optional dependency for JWKS
+    from jwt import PyJWKClient  # type: ignore
+except Exception:  # pragma: no cover
+    PyJWKClient = None  # type: ignore
+
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=f'{settings.API_V1_STR}/auth/jwt/login'
 )
@@ -51,6 +57,61 @@ def create_refresh_token(data: dict):
     return create_access_token(data, expires_delta)
 
 
+def _decode_fastapi_users_token(token: str) -> Optional[dict]:
+    try:
+        return jwt.decode(
+            token,
+            settings.JWT_SECRET,
+            algorithms=['HS256'],
+            audience='fastapi-users:auth',
+        )
+    except Exception:
+        return None
+
+
+def _decode_better_auth_token(token: str) -> Optional[dict]:
+    if not settings.BETTER_AUTH_ENABLED:
+        return None
+    alg = (settings.BETTER_AUTH_ALGORITHM or 'RS256').upper()
+    audience = settings.BETTER_AUTH_AUDIENCE
+    issuer = settings.BETTER_AUTH_ISSUER
+    try:
+        if alg == 'RS256':
+            if not PyJWKClient or not settings.BETTER_AUTH_JWKS_URL:
+                return None
+            jwks_client = PyJWKClient(settings.BETTER_AUTH_JWKS_URL)
+            signing_key = jwks_client.get_signing_key_from_jwt(token).key
+            return jwt.decode(
+                token,
+                signing_key,
+                algorithms=['RS256'],
+                audience=audience,
+                issuer=issuer,
+            )
+        if alg == 'HS256' and settings.BETTER_AUTH_SHARED_SECRET:
+            return jwt.decode(
+                token,
+                settings.BETTER_AUTH_SHARED_SECRET,
+                algorithms=['HS256'],
+                audience=audience,
+                issuer=issuer,
+            )
+    except Exception:
+        return None
+    return None
+
+
+def _resolve_email_from_payload(payload: dict) -> Optional[str]:
+    if not payload:
+        return None
+    # Prefer explicit email claim if present; fall back to sub
+    email_claim = payload.get(settings.BETTER_AUTH_EMAIL_CLAIM or 'email')
+    sub_claim = payload.get('sub')
+    if settings.BETTER_AUTH_ENABLED and settings.BETTER_AUTH_SUB_IS_EMAIL:
+        return sub_claim or email_claim
+    return email_claim or sub_claim
+
+
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_async_session),
@@ -60,27 +121,19 @@ async def get_current_user(
         detail='Could not validate credentials',
         headers={'WWW-Authenticate': 'Bearer'},
     )
-    try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
-            audience='fastapi-users:auth',
-        )
-        username: str = payload.get('sub')
-        if username is None:
-            raise credentials_exception
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=401,
-            detail='Token expired',
-            headers={'WWW-Authenticate': 'Bearer'},
-        )
-    except jwt.InvalidTokenError:
+
+    payload = _decode_fastapi_users_token(token)
+    if payload is None:
+        payload = _decode_better_auth_token(token)
+    if payload is None:
         raise credentials_exception
 
-    user = await db.execute(select(User).filter(User.email == username))
-    user = user.scalar_one_or_none()
+    email = _resolve_email_from_payload(payload)
+    if not email:
+        raise credentials_exception
+
+    result = await db.execute(select(User).filter(User.email == str(email)))
+    user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
     return user

@@ -4,16 +4,14 @@ globs:
 alwaysApply: false
 ---
 # RAG SaaS Platform Database Schema
+---
+description: Deprecated RAG database schema doc (not used in this project)
+globs: []
+alwaysApply: false
+---
+# Deprecated
 
-## Core Tables
-
-### users
-```sql
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    hashed_password VARCHAR(255) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+This repository does not use RAG. This rule file is intentionally left blank.
     is_superuser BOOLEAN NOT NULL DEFAULT FALSE,
     is_verified BOOLEAN NOT NULL DEFAULT FALSE,
     first_name VARCHAR(100),

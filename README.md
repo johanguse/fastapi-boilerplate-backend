@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a project management API that allows you to create, read, update, and delete projects, teams, and team members.
+This is a project management API that allows you to manage users, organizations, and projects.
 
 ## Technologies
 
@@ -236,15 +236,15 @@ task lint
 Delete all data from the database:
 
 ```sql
-DROP TABLE "public"."activity_logs" CASCADE;
-DROP TABLE "public"."alembic_version" CASCADE;
-DROP TABLE "public"."invitations" CASCADE;
-DROP TABLE "public"."projects" CASCADE;
-DROP TABLE "public"."team_members" CASCADE;
-DROP TABLE "public"."teams" CASCADE;
-DROP TABLE "public"."training_data" CASCADE;
-DROP TABLE "public"."users" CASCADE;
+DROP TABLE IF EXISTS "public"."activity_logs" CASCADE;
+DROP TABLE IF EXISTS "public"."alembic_version" CASCADE;
+DROP TABLE IF EXISTS "public"."organization_invitations" CASCADE;
+DROP TABLE IF EXISTS "public"."organization_members" CASCADE;
+DROP TABLE IF EXISTS "public"."organizations" CASCADE;
+DROP TABLE IF EXISTS "public"."projects" CASCADE;
+DROP TABLE IF EXISTS "public"."users" CASCADE;
 
+-- If your DB has legacy types from earlier versions
 DROP TYPE IF EXISTS teammemberrole;
 DROP TYPE IF EXISTS modelstatus;
 DROP TYPE IF EXISTS invitationstatus;
@@ -294,6 +294,63 @@ RESEND_FROM_EMAIL=your-email@domain.com
 
 # Frontend
 FRONTEND_URL=http://localhost:3000
+
+# Better Auth (optional)
+BETTER_AUTH_ENABLED=false
+BETTER_AUTH_ALGORITHM=RS256
+BETTER_AUTH_JWKS_URL=
+BETTER_AUTH_SHARED_SECRET=
+BETTER_AUTH_ISSUER=
+BETTER_AUTH_AUDIENCE=
+BETTER_AUTH_EMAIL_CLAIM=email
+BETTER_AUTH_SUB_IS_EMAIL=false
+```
+
+### Authentication
+
+By default, the API uses FastAPI Users (HS256 JWT, audience `fastapi-users:auth`).
+
+Optionally, you can accept Better Auth tokens side-by-side by configuring the env vars above. The unified dependency `get_current_active_user` in `src/common/security.py` will validate either:
+
+- FastAPI Users JWT using `JWT_SECRET`
+- Better Auth JWT via JWKS (RS256) or shared secret (HS256), with optional issuer/audience checks
+
+User lookup is performed by email (from `sub` if `BETTER_AUTH_SUB_IS_EMAIL=true`, else from `BETTER_AUTH_EMAIL_CLAIM`, default `email`).
+
+## Organizations API quickstart
+
+Base path: `/api/v1/organizations`
+
+Create organization:
+
+```http
+POST /api/v1/organizations
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+    "name": "Acme Inc"
+}
+```
+
+List my organizations (paginated):
+
+```http
+GET /api/v1/organizations?page=1&size=50
+Authorization: Bearer <token>
+```
+
+Invite a member:
+
+```http
+POST /api/v1/organizations/{organization_id}/invite
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+    "email": "teammate@example.com",
+    "role": "member"
+}
 ```
 
 ## Todo
@@ -302,7 +359,7 @@ FRONTEND_URL=http://localhost:3000
 - Add documentation
 - Add <https://www.literalai.com/>
 
-## Notes
+## Additional Notes
 
 - Never commit `.env` files to version control
 - Use different environment variables for development and production
@@ -320,19 +377,19 @@ FRONTEND_URL=http://localhost:3000
 curl -L https://fly.io/install.sh | sh
 ```
 
-2. Login to Fly.io:
+1. Login to Fly.io:
 
 ```bash
 fly auth login
 ```
 
-3. Create a new app:
+1. Create a new app:
 
 ```bash
 fly apps create your-app-name
 ```
 
-4. Set up secrets:
+1. Set up secrets:
 
 ```bash
 flyctl secrets set DATABASE_URL="postgresql://user:pass@host:5432/db"
@@ -342,13 +399,13 @@ flyctl secrets set RESEND_API_KEY="your-resend-api-key"
 flyctl secrets set RESEND_FROM_EMAIL="your-email@domain.com"
 ```
 
-5. Deploy:
+1. Deploy:
 
 ```bash
 fly deploy
 ```
 
-### Environment Variables
+### Environment Variables (Production)
 
 - Production secrets are stored in Fly.io using `flyctl secrets set`
 - CI/CD secrets are stored in GitHub Actions Secrets

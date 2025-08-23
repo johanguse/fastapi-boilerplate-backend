@@ -5,12 +5,11 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
-from src.common.types import ActivityLog, Team
 
 if TYPE_CHECKING:
     # Still needed for relationship annotations
     from src.activity_log.models import ActivityLog
-    from src.teams.models import Team
+    from src.organizations.models import Organization
 
 
 class Project(Base):
@@ -33,14 +32,14 @@ class Project(Base):
     )
 
     # Foreign Keys
-    team_id: Mapped[int] = mapped_column(
+    organization_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey('teams.id', ondelete='CASCADE'),
+        ForeignKey('organizations.id', ondelete='CASCADE'),
         nullable=False,
     )
 
     # Relationships
-    team: Mapped['Team'] = relationship('Team', back_populates='projects')
+    organization: Mapped['Organization'] = relationship('Organization', back_populates='projects')
     activity_logs: Mapped[list['ActivityLog']] = relationship(
         'ActivityLog',
         back_populates='project',

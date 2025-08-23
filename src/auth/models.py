@@ -10,7 +10,10 @@ from src.common.database import Base
 if TYPE_CHECKING:
     # These are still needed because they're used in relationship annotations
     from src.activity_log.models import ActivityLog
-    from src.teams.models import Invitation, TeamMember
+    from src.organizations.models import (
+        OrganizationInvitation,
+        OrganizationMember,
+    )
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
@@ -37,21 +40,21 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         back_populates='user',
         cascade='all, delete-orphan',
     )
-    team_memberships: Mapped[list['TeamMember']] = relationship(
-        'TeamMember',
+    organization_memberships: Mapped[list['OrganizationMember']] = relationship(
+        'OrganizationMember',
         back_populates='user',
         cascade='all, delete-orphan',
     )
-    sent_invitations: Mapped[list['Invitation']] = relationship(
-        'Invitation',
+    sent_org_invitations: Mapped[list['OrganizationInvitation']] = relationship(
+        'OrganizationInvitation',
         back_populates='invited_by',
-        foreign_keys='[Invitation.invited_by_id]',
+        foreign_keys='[OrganizationInvitation.invited_by_id]',
         cascade='all, delete-orphan',
     )
-    received_invitations: Mapped[list['Invitation']] = relationship(
-        'Invitation',
+    received_org_invitations: Mapped[list['OrganizationInvitation']] = relationship(
+        'OrganizationInvitation',
         back_populates='invitee',
-        foreign_keys='[Invitation.invitee_id]',
+        foreign_keys='[OrganizationInvitation.invitee_id]',
         cascade='all, delete-orphan',
     )
 

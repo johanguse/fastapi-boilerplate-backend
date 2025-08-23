@@ -9,8 +9,8 @@ from src.common.database import Base
 
 if TYPE_CHECKING:
     from src.auth.models import User
+    from src.organizations.models import Organization
     from src.projects.models import Project
-    from src.teams.models import Team
 
 
 class ActivityLog(Base):
@@ -37,9 +37,9 @@ class ActivityLog(Base):
         ForeignKey('users.id', ondelete='SET NULL'),
         nullable=True,
     )
-    team_id: Mapped[Optional[int]] = mapped_column(
+    organization_id: Mapped[Optional[int]] = mapped_column(
         Integer,
-        ForeignKey('teams.id', ondelete='CASCADE'),
+        ForeignKey('organizations.id', ondelete='CASCADE'),
         nullable=True,
     )
     project_id: Mapped[Optional[int]] = mapped_column(
@@ -53,10 +53,12 @@ class ActivityLog(Base):
         'User',
         back_populates='activities',
     )
-    team: Mapped['Team'] = relationship(
-        'Team',
+    organization: Mapped['Organization'] = relationship(
+        'Organization',
         back_populates='activity_logs',
     )
+    # Back-populated on Organization
+    # organization relationship defined above
     project: Mapped['Project'] = relationship(
         'Project',
         back_populates='activity_logs',
@@ -66,7 +68,7 @@ class ActivityLog(Base):
     __table_args__ = (
         Index('ix_activity_logs_created_at', 'created_at'),
         Index('ix_activity_logs_action_type', 'action_type'),
-        Index('ix_activity_logs_team_user', 'team_id', 'user_id'),
+    Index('ix_activity_logs_org_user', 'organization_id', 'user_id'),
     )
 
     def __repr__(self) -> str:

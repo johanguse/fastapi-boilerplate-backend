@@ -13,7 +13,7 @@ from src.auth.models import User
 from src.common.config import settings
 from src.common.database import Base
 from src.projects.models import Project
-from src.teams.models import Team, TeamMember, Invitation
+from src.organizations.models import Organization, OrganizationMember, OrganizationInvitation
 
 config = context.config
 

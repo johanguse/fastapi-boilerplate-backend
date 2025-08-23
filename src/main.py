@@ -13,8 +13,11 @@ from src.common.health import router as health_router
 from src.common.middleware import add_logging_middleware
 from src.common.openapi import custom_openapi
 from src.common.session import engine
+from src.organizations.routes import router as org_router
+from src.payments.routes import router as payments_router
+from src.payments.webhooks import router as payments_webhook_router
 from src.projects.routes import router as project_router
-from src.teams.routes import router as team_router
+from src.uploads.routes import router as uploads_router
 
 # Configure logging
 logging.basicConfig(
@@ -78,11 +81,25 @@ app.include_router(
     user_router,
     prefix=settings.API_V1_STR,
 )
+# Legacy Teams router removed from public API (replaced by Organizations)
 app.include_router(
-    team_router, prefix=f'{settings.API_V1_STR}/teams', tags=['teams']
+    org_router,
+    prefix=f'{settings.API_V1_STR}/organizations',
+    tags=['organizations'],
 )
 app.include_router(
     project_router, prefix=f'{settings.API_V1_STR}/projects', tags=['projects']
+)
+app.include_router(
+    payments_router, prefix=f'{settings.API_V1_STR}/payments', tags=['payments']
+)
+app.include_router(
+    payments_webhook_router,
+    prefix=f'{settings.API_V1_STR}/payments',
+    tags=['payments']
+)
+app.include_router(
+    uploads_router, prefix=f'{settings.API_V1_STR}/uploads', tags=['uploads']
 )
 
 # Custom OpenAPI schema

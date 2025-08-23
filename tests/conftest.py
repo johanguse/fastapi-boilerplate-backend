@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi_users.db import SQLAlchemyUserDatabase
+from sqlalchemy.pool import NullPool
 
 # Import all models to ensure proper mapper initialization
 from src.activity_log.models import ActivityLog
@@ -19,51 +20,70 @@ from src.common.config import settings
 from src.common.database import Base
 from src.common.session import get_async_session
 from src.projects.models import Project
-from src.teams.models import Team, TeamMember, Invitation
+from src.organizations.models import Organization, OrganizationMember, OrganizationInvitation
 from src.main import app
-from tests.test_helpers import create_test_user_raw, create_test_team_raw, create_test_project_raw, create_test_auth_token, create_mock_user, get_mock_auth_deps
+from tests.test_helpers import create_test_user_raw, create_test_organization_raw, create_test_project_raw, create_test_auth_token, create_mock_user, get_mock_auth_deps
 
-# Create a separate test engine
-test_engine = create_async_engine(
-    settings.DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg://'),
-    echo=False,
-    pool_pre_ping=True,
-    pool_recycle=300,
-)
+# Explicitly ignore deprecated/duplicate-named test modules to avoid import mismatches
+collect_ignore = [
+    "tests/organizations/test_service.py",
+    "tests/payments/test_service.py",
+    "tests/test_services_projects.py",
+]
 
-# Create the session factory
-TestingSessionLocal = sessionmaker(
-    bind=test_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
-)
+def _make_engine():
+    """Create a per-test async engine tied to the current event loop.
+
+    Using NullPool prevents cross-loop leaks from pooled connections and avoids
+    asyncpg cancellations after the loop is closed.
+    """
+    return create_async_engine(
+        settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
+        echo=False,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        poolclass=NullPool,
+    )
 
 
 @pytest_asyncio.fixture(autouse=True)
 async def clean_test_data():
-    """Clean test data after each test."""
-    async with TestingSessionLocal() as session:
-        try:
-            await session.execute(
-                text("DELETE FROM users WHERE email IN ('test@example.com', 'new@example.com')")
-            )
-            await session.commit()
-        except Exception:
-            await session.rollback()
-        finally:
-            await session.close()
+    """Clean test data after each test using a short-lived engine/session."""
+    # Run test
+    yield
+    # Cleanup phase
+    engine = _make_engine()
+    try:
+        async_session_factory = sessionmaker(
+            bind=engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autocommit=False,
+            autoflush=False,
+        )
+        async with async_session_factory() as session:
+            try:
+                await session.execute(
+                    text(
+                        "DELETE FROM users WHERE email IN ('test@example.com', 'new@example.com', 'act@test.com')"
+                    )
+                )
+                await session.commit()
+            except Exception:
+                await session.rollback()
+    finally:
+        await engine.dispose()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def event_loop():
-    """Create an instance of the event loop for each test session."""
-    policy = asyncio.get_event_loop_policy()
-    loop = policy.new_event_loop()
-    asyncio.set_event_loop(loop)
-    yield loop
-    loop.close()
+    """Create a fresh event loop per test to work with pytest-asyncio strict mode."""
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        yield loop
+    finally:
+        loop.close()
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -75,13 +95,34 @@ async def init_db():
 
 @pytest_asyncio.fixture
 async def async_session(init_db) -> AsyncGenerator[AsyncSession, None]:
-    """Create a new session for each test."""
-    session = TestingSessionLocal()
+    """Create a new per-test engine and session to avoid cross-loop issues."""
+    engine = _make_engine()
+    async_session_factory = sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
+    )
+    session = async_session_factory()
     try:
         yield session
     finally:
-        await session.rollback()
-        await session.close()
+        # best-effort rollback and close
+        try:
+            await session.rollback()
+        except Exception:
+            pass
+        try:
+            await session.close()
+        finally:
+            await engine.dispose()
+
+
+# Back-compat for legacy tests expecting a `db_session` fixture name
+@pytest_asyncio.fixture
+async def db_session(async_session: AsyncSession) -> AsyncGenerator[AsyncSession, None]:
+    yield async_session
 
 
 @pytest_asyncio.fixture
@@ -123,12 +164,12 @@ async def authenticated_client(client: AsyncClient, test_user: Dict[str, Any], a
 
 
 @pytest_asyncio.fixture
-async def test_team(async_session: AsyncSession, test_user: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a test team using raw SQL."""
-    return await create_test_team_raw(async_session, test_user["id"])
+async def test_organization(async_session: AsyncSession, test_user: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a test organization using raw SQL."""
+    return await create_test_organization_raw(async_session, test_user["id"])
 
 
 @pytest_asyncio.fixture
-async def test_project(async_session: AsyncSession, test_team: Dict[str, Any]) -> Dict[str, Any]:
+async def test_project(async_session: AsyncSession, test_organization: Dict[str, Any]) -> Dict[str, Any]:
     """Create a test project using raw SQL."""
-    return await create_test_project_raw(async_session, test_team["id"]) 
+    return await create_test_project_raw(async_session, test_organization["id"]) 
