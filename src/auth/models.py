@@ -40,22 +40,28 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         back_populates='user',
         cascade='all, delete-orphan',
     )
-    organization_memberships: Mapped[list['OrganizationMember']] = relationship(
-        'OrganizationMember',
-        back_populates='user',
-        cascade='all, delete-orphan',
+    organization_memberships: Mapped[list['OrganizationMember']] = (
+        relationship(
+            'OrganizationMember',
+            back_populates='user',
+            cascade='all, delete-orphan',
+        )
     )
-    sent_org_invitations: Mapped[list['OrganizationInvitation']] = relationship(
-        'OrganizationInvitation',
-        back_populates='invited_by',
-        foreign_keys='[OrganizationInvitation.invited_by_id]',
-        cascade='all, delete-orphan',
+    sent_org_invitations: Mapped[list['OrganizationInvitation']] = (
+        relationship(
+            'OrganizationInvitation',
+            back_populates='invited_by',
+            foreign_keys='[OrganizationInvitation.invited_by_id]',
+            cascade='all, delete-orphan',
+        )
     )
-    received_org_invitations: Mapped[list['OrganizationInvitation']] = relationship(
-        'OrganizationInvitation',
-        back_populates='invitee',
-        foreign_keys='[OrganizationInvitation.invitee_id]',
-        cascade='all, delete-orphan',
+    received_org_invitations: Mapped[list['OrganizationInvitation']] = (
+        relationship(
+            'OrganizationInvitation',
+            back_populates='invitee',
+            foreign_keys='[OrganizationInvitation.invitee_id]',
+            cascade='all, delete-orphan',
+        )
     )
 
     def __repr__(self) -> str:

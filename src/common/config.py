@@ -49,11 +49,17 @@ class Settings(BaseSettings):
     BETTER_AUTH_ENABLED: bool = bool(os.getenv('BETTER_AUTH_ENABLED', ''))
     BETTER_AUTH_ALGORITHM: str = os.getenv('BETTER_AUTH_ALGORITHM', 'RS256')
     BETTER_AUTH_JWKS_URL: str | None = os.getenv('BETTER_AUTH_JWKS_URL')
-    BETTER_AUTH_SHARED_SECRET: str | None = os.getenv('BETTER_AUTH_SHARED_SECRET')
+    BETTER_AUTH_SHARED_SECRET: str | None = os.getenv(
+        'BETTER_AUTH_SHARED_SECRET'
+    )
     BETTER_AUTH_ISSUER: str | None = os.getenv('BETTER_AUTH_ISSUER')
     BETTER_AUTH_AUDIENCE: str | None = os.getenv('BETTER_AUTH_AUDIENCE')
-    BETTER_AUTH_EMAIL_CLAIM: str = os.getenv('BETTER_AUTH_EMAIL_CLAIM', 'email')
-    BETTER_AUTH_SUB_IS_EMAIL: bool = os.getenv('BETTER_AUTH_SUB_IS_EMAIL', 'false').lower() == 'true'
+    BETTER_AUTH_EMAIL_CLAIM: str = os.getenv(
+        'BETTER_AUTH_EMAIL_CLAIM', 'email'
+    )
+    BETTER_AUTH_SUB_IS_EMAIL: bool = (
+        os.getenv('BETTER_AUTH_SUB_IS_EMAIL', 'false').lower() == 'true'
+    )
 
     RESEND_API_KEY: str = os.getenv('RESEND_API_KEY')
     RESEND_FROM_EMAIL: str = os.getenv('RESEND_FROM_EMAIL')

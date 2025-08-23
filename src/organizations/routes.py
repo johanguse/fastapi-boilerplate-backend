@@ -40,11 +40,15 @@ async def get_organizations(
     return paginate(orgs, params)
 
 
-@router.post('/{organization_id}/invite', response_model=OrganizationMemberResponse)
+@router.post(
+    '/{organization_id}/invite', response_model=OrganizationMemberResponse
+)
 async def invite_member(
     organization_id: int,
     invite: OrganizationInvite,
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
-    return await invite_to_organization(db, organization_id, invite, current_user)
+    return await invite_to_organization(
+        db, organization_id, invite, current_user
+    )

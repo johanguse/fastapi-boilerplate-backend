@@ -62,7 +62,9 @@ async def create_organization(
     return db_org
 
 
-async def get_organization(db: AsyncSession, organization_id: int) -> Organization:
+async def get_organization(
+    db: AsyncSession, organization_id: int
+) -> Organization:
     result = await db.execute(
         select(Organization).filter(Organization.id == organization_id)
     )
@@ -80,7 +82,9 @@ async def get_user_organizations(
     return result.scalars().all()
 
 
-async def is_org_admin(db: AsyncSession, org: Organization, user: User) -> bool:
+async def is_org_admin(
+    db: AsyncSession, org: Organization, user: User
+) -> bool:
     result = await db.execute(
         select(OrganizationMember).filter(
             OrganizationMember.organization_id == org.id,

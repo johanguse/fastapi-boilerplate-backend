@@ -49,9 +49,12 @@ async def handle_subscription_update(db: AsyncSession, event: dict):
         if isinstance(obj, dict):
             return obj.get(key, default)
         return getattr(obj, key, default)
+
     # Lookup organization by stripe_customer_id
     result = await db.execute(
-        __import__('sqlalchemy').sql.select(Organization).where(
+        __import__('sqlalchemy')
+        .sql.select(Organization)
+        .where(
             Organization.stripe_customer_id == _get(subscription, 'customer')
         )
     )

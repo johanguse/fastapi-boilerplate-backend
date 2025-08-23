@@ -68,7 +68,7 @@ class ActivityLog(Base):
     __table_args__ = (
         Index('ix_activity_logs_created_at', 'created_at'),
         Index('ix_activity_logs_action_type', 'action_type'),
-    Index('ix_activity_logs_org_user', 'organization_id', 'user_id'),
+        Index('ix_activity_logs_org_user', 'organization_id', 'user_id'),
     )
 
     def __repr__(self) -> str:

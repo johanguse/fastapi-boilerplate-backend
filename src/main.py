@@ -91,12 +91,14 @@ app.include_router(
     project_router, prefix=f'{settings.API_V1_STR}/projects', tags=['projects']
 )
 app.include_router(
-    payments_router, prefix=f'{settings.API_V1_STR}/payments', tags=['payments']
+    payments_router,
+    prefix=f'{settings.API_V1_STR}/payments',
+    tags=['payments'],
 )
 app.include_router(
     payments_webhook_router,
     prefix=f'{settings.API_V1_STR}/payments',
-    tags=['payments']
+    tags=['payments'],
 )
 app.include_router(
     uploads_router, prefix=f'{settings.API_V1_STR}/uploads', tags=['uploads']

@@ -39,7 +39,9 @@ class Project(Base):
     )
 
     # Relationships
-    organization: Mapped['Organization'] = relationship('Organization', back_populates='projects')
+    organization: Mapped['Organization'] = relationship(
+        'Organization', back_populates='projects'
+    )
     activity_logs: Mapped[list['ActivityLog']] = relationship(
         'ActivityLog',
         back_populates='project',

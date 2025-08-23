@@ -37,25 +37,25 @@ async def log_activity(
     # Build values using DB column names, omitting None values so nullable
     # fields are left to defaults and to keep INSERT column list minimal.
     values: dict = {
-        "action": data.action,
-        "action_type": "OTHER",
-        "description": data.description,
-        "user_id": user.id,
+        'action': data.action,
+        'action_type': 'OTHER',
+        'description': data.description,
+        'user_id': user.id,
     }
     if data.ip_address is not None:
-        values["ip_address"] = data.ip_address
+        values['ip_address'] = data.ip_address
     if data.metadata is not None:
-        values["metadata"] = data.metadata
+        values['metadata'] = data.metadata
     if data.project_id is not None:
-        values["project_id"] = data.project_id
+        values['project_id'] = data.project_id
     if data.organization_id is not None:
-        values["organization_id"] = data.organization_id
+        values['organization_id'] = data.organization_id
 
     # Dynamically construct a minimal INSERT with only provided columns.
-    cols = ", ".join(values.keys())
-    params = ", ".join(f":{k}" for k in values.keys())
+    cols = ', '.join(values.keys())
+    params = ', '.join(f':{k}' for k in values.keys())
     stmt = text(
-        f"INSERT INTO {ActivityLog.__tablename__} ({cols}) VALUES ({params}) RETURNING id"
+        f'INSERT INTO {ActivityLog.__tablename__} ({cols}) VALUES ({params}) RETURNING id'
     )
     result = await db.execute(stmt, values)
     new_id = result.scalar_one()
@@ -66,7 +66,7 @@ async def log_activity(
     # columns not present in legacy schemas (e.g., organization_id).
     return SimpleNamespace(
         id=new_id,
-        user_id=values.get("user_id"),
-        action=values.get("action"),
-        description=values.get("description"),
+        user_id=values.get('user_id'),
+        action=values.get('action'),
+        description=values.get('description'),
     )
