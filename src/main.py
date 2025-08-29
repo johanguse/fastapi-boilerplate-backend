@@ -10,7 +10,7 @@ from src.auth.user_routes import router as user_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
-from src.common.middleware import add_logging_middleware
+from src.common.middleware import add_logging_middleware, add_i18n_middleware
 from src.common.openapi import custom_openapi
 from src.common.session import engine
 from src.organizations.routes import router as org_router
@@ -57,6 +57,7 @@ app = FastAPI(
 )
 
 # Add middleware
+add_i18n_middleware(app)
 add_logging_middleware(app)
 app.add_middleware(
     CORSMiddleware,

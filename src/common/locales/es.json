@@ -1,0 +1,64 @@
+{
+  "auth": {
+    "invalid_credentials": "Email o contraseña inválidos",
+    "user_not_found": "Usuario no encontrado",
+    "email_already_exists": "El email ya existe",
+    "account_disabled": "La cuenta está deshabilitada",
+    "token_expired": "El token ha expirado",
+    "invalid_token": "Token inválido",
+    "insufficient_permissions": "Permisos insuficientes",
+    "password_too_weak": "La contraseña es muy débil",
+    "email_not_verified": "La dirección de email no está verificada"
+  },
+  "validation": {
+    "required_field": "Este campo es obligatorio",
+    "invalid_email": "Formato de email inválido",
+    "min_length": "Debe tener al menos {min_length} caracteres",
+    "max_length": "No debe tener más de {max_length} caracteres",
+    "invalid_format": "Formato inválido"
+  },
+  "organization": {
+    "not_found": "Organización no encontrada",
+    "access_denied": "Acceso denegado a la organización",
+    "name_exists": "El nombre de la organización ya existe",
+    "member_not_found": "Miembro no encontrado",
+    "cannot_remove_owner": "No se puede eliminar al propietario de la organización"
+  },
+  "project": {
+    "not_found": "Proyecto no encontrado",
+    "access_denied": "Acceso denegado al proyecto",
+    "name_exists": "El nombre del proyecto ya existe"
+  },
+  "payment": {
+    "card_declined": "Su tarjeta fue rechazada",
+    "insufficient_funds": "Fondos insuficientes",
+    "invalid_payment_method": "Método de pago inválido",
+    "subscription_not_found": "Suscripción no encontrada",
+    "plan_not_found": "Plan no encontrado"
+  },
+  "error": {
+    "internal_server": "Error interno del servidor",
+    "not_found": "Recurso no encontrado",
+    "bad_request": "Solicitud incorrecta",
+    "forbidden": "Prohibido",
+    "rate_limit": "Límite de velocidad excedido"
+  },
+  "success": {
+    "created": "Creado exitosamente",
+    "updated": "Actualizado exitosamente",
+    "deleted": "Eliminado exitosamente",
+    "email_sent": "Email enviado exitosamente"
+  },
+  "messages": {
+    "one": "Tienes {count} mensaje nuevo",
+    "other": "Tienes {count} mensajes nuevos"
+  },
+  "notifications": {
+    "one": "{count} notificación",
+    "other": "{count} notificaciones"
+  },
+  "users": {
+    "one": "{count} usuario",
+    "other": "{count} usuarios"
+  }
+}

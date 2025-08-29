@@ -77,6 +77,13 @@ jobs:
       env:
         DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
         ENV_STATE: test
+        SECRET_KEY: dummy
+        RESEND_API_KEY: dummy
+        RESEND_FROM_EMAIL: dummy@example.com
+        R2_ENDPOINT_URL: http://example.com
+        R2_ACCESS_KEY_ID: dummy
+        R2_SECRET_ACCESS_KEY: dummy
+        R2_BUCKET_NAME: dummy
       run: poetry run task migrate
 
     - name: Run tests with coverage
