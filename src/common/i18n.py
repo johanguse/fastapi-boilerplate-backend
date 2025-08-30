@@ -14,8 +14,14 @@ from babel.core import UnknownLocaleError
 class I18nManager:
     """Manages internationalization for the backend API."""
     
-    SUPPORTED_LANGUAGES = ['en', 'es', 'fr', 'de', 'pt']
-    DEFAULT_LANGUAGE = 'en'
+    SUPPORTED_LANGUAGES = [
+        'en-US', 'en-GB', 
+        'es-ES', 'es-MX', 
+        'fr-FR', 'fr-CA', 
+        'de-DE', 
+        'pt-BR', 'pt-PT'
+    ]
+    DEFAULT_LANGUAGE = 'en-US'
     
     def __init__(self):
         """Initialize the I18n manager and load translation files."""
@@ -53,6 +59,36 @@ class I18nManager:
         return lang_code in cls.SUPPORTED_LANGUAGES
     
     @classmethod
+    def get_fallback_language(cls, lang_code: str) -> str:
+        """
+        Get fallback language for regional variants.
+        
+        Args:
+            lang_code: Language code (e.g., 'en-US', 'pt-BR')
+            
+        Returns:
+            Fallback language code
+        """
+        # If exact match exists, return it
+        if lang_code in cls.SUPPORTED_LANGUAGES:
+            return lang_code
+        
+        # Try to find regional variant or base language
+        if '-' in lang_code:
+            base_lang = lang_code.split('-')[0]
+            # Look for any supported regional variant of the base language
+            for supported in cls.SUPPORTED_LANGUAGES:
+                if supported.startswith(base_lang + '-'):
+                    return supported
+        else:
+            # If given base language, try to find a regional variant
+            for supported in cls.SUPPORTED_LANGUAGES:
+                if supported.startswith(lang_code + '-'):
+                    return supported
+        
+        return cls.DEFAULT_LANGUAGE
+    
+    @classmethod
     def get_language_from_accept_header(cls, accept_language: Optional[str]) -> str:
         """
         Extract the preferred language from Accept-Language header.
@@ -70,10 +106,12 @@ class I18nManager:
         # Format: "en-US,en;q=0.9,es;q=0.8,fr;q=0.7"
         languages = []
         for lang_entry in accept_language.split(','):
-            # Extract language code (before any '-' or ';')
-            lang_code = lang_entry.strip().split(';')[0].split('-')[0].lower()
-            if cls.is_supported_language(lang_code):
-                languages.append(lang_code)
+            # Extract language code (before any ';' for q-value)
+            lang_code = lang_entry.strip().split(';')[0].strip()
+            # Try exact match first, then fallback
+            fallback_lang = cls.get_fallback_language(lang_code)
+            if fallback_lang != cls.DEFAULT_LANGUAGE or lang_code == cls.DEFAULT_LANGUAGE:
+                languages.append(fallback_lang)
         
         return languages[0] if languages else cls.DEFAULT_LANGUAGE
     
@@ -97,8 +135,8 @@ class I18nManager:
         if language is None:
             language = self.DEFAULT_LANGUAGE
         
-        if not self.is_supported_language(language):
-            language = self.DEFAULT_LANGUAGE
+        # Use fallback language logic for regional variants
+        language = self.get_fallback_language(language)
         
         # Get translation from the specified language dictionary
         translations = self._translations.get(language, self._translations.get(self.DEFAULT_LANGUAGE, {}))

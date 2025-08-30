@@ -117,6 +117,22 @@ class Settings(BaseSettings):
     PAYMENT_SUCCESS_URL: str = 'https://yourapp.com/success'
     PAYMENT_CANCEL_URL: str = 'https://yourapp.com/cancel'
 
+    # OAuth Providers
+    GOOGLE_CLIENT_ID: str = os.getenv('GOOGLE_CLIENT_ID', '')
+    GOOGLE_CLIENT_SECRET: str = os.getenv('GOOGLE_CLIENT_SECRET', '')
+    
+    GITHUB_CLIENT_ID: str = os.getenv('GITHUB_CLIENT_ID', '')
+    GITHUB_CLIENT_SECRET: str = os.getenv('GITHUB_CLIENT_SECRET', '')
+    
+    MICROSOFT_CLIENT_ID: str = os.getenv('MICROSOFT_CLIENT_ID', '')
+    MICROSOFT_CLIENT_SECRET: str = os.getenv('MICROSOFT_CLIENT_SECRET', '')
+    
+    APPLE_CLIENT_ID: str = os.getenv('APPLE_CLIENT_ID', '')
+    APPLE_CLIENT_SECRET: str = os.getenv('APPLE_CLIENT_SECRET', '')
+    APPLE_TEAM_ID: str = os.getenv('APPLE_TEAM_ID', '')
+    APPLE_KEY_ID: str = os.getenv('APPLE_KEY_ID', '')
+    APPLE_PRIVATE_KEY: str = os.getenv('APPLE_PRIVATE_KEY', '')
+
     # Uploads
     ALLOWED_FILE_TYPES: list = [
         'text/plain',
