@@ -53,7 +53,7 @@ class PermissionError(APIError):
     def __init__(
         self,
         detail: str = 'Permission denied',
-        translation_key: Optional[str] = 'error.forbidden',
+        translation_key: Optional[str] = None,
         language: Optional[str] = None,
         **translation_params,
     ):
@@ -72,7 +72,7 @@ class ValidationError(APIError):
     def __init__(
         self,
         detail: str = 'Validation error',
-        translation_key: Optional[str] = 'error.bad_request',
+        translation_key: Optional[str] = None,
         language: Optional[str] = None,
         **translation_params,
     ):

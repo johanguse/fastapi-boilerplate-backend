@@ -138,3 +138,96 @@ async def test_get_project_and_update_and_delete(monkeypatch):
     db3 = FakeSession(results=[FakeResult(scalar_value=proj)])
     await proj_service.delete_project(db3, 9, user)
     assert db3.commits >= 1
+
+
+@pytest.mark.asyncio
+async def test_create_project_success(monkeypatch):
+    """Test successful project creation"""
+    class OrgObj:
+        def __init__(self, plan, active):
+            self.plan_name = plan
+            self.active_projects = active
+
+    db = FakeSession()
+    user = make_user()
+    
+    # Mock successful org membership and limits check
+    monkeypatch.setattr(proj_service, 'is_org_member', AsyncMock(return_value=True))
+    org = OrgObj('pro', 2)  # Under limit
+    monkeypatch.setattr(proj_service, 'get_organization', AsyncMock(return_value=org))
+
+    project_data = SimpleNamespace(name='Test Project', description='Test description', organization_id=1)
+    result = await proj_service.create_project(db, project_data, user)
+    
+    assert result.name == 'Test Project'
+    assert result.description == 'Test description'
+    assert result.organization_id == 1
+    assert db.commits >= 2  # One for project creation, one for updating org active_projects
+    assert org.active_projects == 3  # Should be incremented
+
+
+@pytest.mark.asyncio
+async def test_get_project_not_found(monkeypatch):
+    """Test getting a project that doesn't exist"""
+    db = FakeSession(results=[FakeResult(scalar_value=None)])
+    user = make_user()
+    
+    with pytest.raises(Exception) as e:
+        await proj_service.get_project(db, 999, user)
+    assert 'not found' in str(e.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_get_project_permission_denied(monkeypatch):
+    """Test getting a project when user is not org member"""
+    proj = Project()
+    proj.id = 9
+    proj.name = 'X'
+    proj.description = None
+    proj.organization_id = 5
+    
+    db = FakeSession(results=[FakeResult(scalar_value=proj)])
+    user = make_user()
+    monkeypatch.setattr(proj_service, 'is_org_member', AsyncMock(return_value=False))
+    
+    with pytest.raises(Exception) as e:
+        await proj_service.get_project(db, 9, user)
+    assert 'member' in str(e.value).lower()
+
+
+@pytest.mark.asyncio 
+async def test_get_projects_success(monkeypatch):
+    """Test getting all projects for a user"""
+    projects = [
+        Project(id=1, name='Project 1', organization_id=1),
+        Project(id=2, name='Project 2', organization_id=1),
+    ]
+    
+    db = FakeSession(results=[FakeResult(scalars_list=projects)])
+    user = make_user()
+    
+    result = await proj_service.get_projects(db, user)
+    assert len(result) == 2
+    assert result[0].name == 'Project 1'
+    assert result[1].name == 'Project 2'
+
+
+@pytest.mark.asyncio
+async def test_update_project_success(monkeypatch):
+    """Test successful project update"""
+    proj = Project()
+    proj.id = 9
+    proj.name = 'Old Name'
+    proj.description = 'Old Description'
+    proj.organization_id = 5
+    
+    db = FakeSession(results=[FakeResult(scalar_value=proj)])
+    user = make_user()
+    monkeypatch.setattr(proj_service, 'is_org_member', AsyncMock(return_value=True))
+    
+    update_data = SimpleNamespace(model_dump=lambda **_: {'name': 'New Name', 'description': 'New Description'})
+    result = await proj_service.update_project(db, 9, update_data, user)
+    
+    assert result.name == 'New Name'
+    assert result.description == 'New Description'
+    assert db.commits >= 1
