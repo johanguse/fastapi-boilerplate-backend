@@ -1,6 +1,5 @@
 import logging
 import time
-from typing import Optional
 
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import (
@@ -22,7 +21,7 @@ async def i18n_middleware(
     2. Stored cookie (preferred_locale)
     3. Accept-Language header
     4. Default language (fallback)
-    
+
     Args:
         request: The incoming request
         call_next: The next middleware or endpoint
@@ -41,26 +40,28 @@ async def i18n_middleware(
         else:
             # 3. Check Accept-Language header
             accept_language = request.headers.get('accept-language')
-            preferred_language = i18n.get_language_from_accept_header(accept_language)
-    
+            preferred_language = i18n.get_language_from_accept_header(
+                accept_language
+            )
+
     # Store the language in request state for use in route handlers
     request.state.language = preferred_language
-    
+
     response = await call_next(request)
-    
+
     # Add Content-Language header to response
     response.headers['Content-Language'] = preferred_language
-    
+
     # Set cookie if language was explicitly chosen via query param
     if lang_param and i18n.is_supported_language(lang_param):
         response.set_cookie(
-            key='preferred_locale', 
-            value=lang_param, 
+            key='preferred_locale',
+            value=lang_param,
             max_age=60 * 60 * 24 * 30,  # 30 days
             httponly=True,
-            samesite='lax'
+            samesite='lax',
         )
-    
+
     return response
 
 

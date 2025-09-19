@@ -15,7 +15,7 @@ from src.organizations.schemas import OrganizationCreate, OrganizationInvite
 from src.utils.email import send_invitation_email
 
 
-@time_operation("create_organization")
+@time_operation('create_organization')
 async def create_organization(
     db: AsyncSession, org: OrganizationCreate, current_user: User
 ) -> Organization:
@@ -73,7 +73,7 @@ async def get_organization(
     return result.scalar_one_or_none()
 
 
-@time_operation("get_user_organizations")
+@time_operation('get_user_organizations')
 async def get_user_organizations(
     db: AsyncSession, user: User
 ) -> list[Organization]:
@@ -110,7 +110,7 @@ async def is_org_member(
     return result.scalar_one_or_none() is not None
 
 
-@time_operation("invite_to_organization")
+@time_operation('invite_to_organization')
 async def invite_to_organization(
     db: AsyncSession,
     organization_id: int,

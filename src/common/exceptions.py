@@ -15,12 +15,14 @@ class APIError(HTTPException):
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
         headers: dict | None = None,
-        **translation_params
+        **translation_params,
     ):
         # Use translated message if translation_key is provided
         if translation_key:
-            detail = i18n.translate(translation_key, language, **translation_params)
-        
+            detail = i18n.translate(
+                translation_key, language, **translation_params
+            )
+
         super().__init__(
             status_code=status_code, detail=detail, headers=headers
         )
@@ -34,14 +36,14 @@ class NotFoundError(APIError):
         detail: str = 'Resource not found',
         translation_key: Optional[str] = 'error.not_found',
         language: Optional[str] = None,
-        **translation_params
+        **translation_params,
     ):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=detail,
             translation_key=translation_key,
             language=language,
-            **translation_params
+            **translation_params,
         )
 
 
@@ -53,14 +55,14 @@ class PermissionError(APIError):
         detail: str = 'Permission denied',
         translation_key: Optional[str] = 'error.forbidden',
         language: Optional[str] = None,
-        **translation_params
+        **translation_params,
     ):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=detail,
             translation_key=translation_key,
             language=language,
-            **translation_params
+            **translation_params,
         )
 
 
@@ -72,14 +74,14 @@ class ValidationError(APIError):
         detail: str = 'Validation error',
         translation_key: Optional[str] = 'error.bad_request',
         language: Optional[str] = None,
-        **translation_params
+        **translation_params,
     ):
         super().__init__(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=detail,
             translation_key=translation_key,
             language=language,
-            **translation_params
+            **translation_params,
         )
 
 
@@ -91,14 +93,14 @@ class AuthenticationError(APIError):
         detail: str = 'Authentication failed',
         translation_key: Optional[str] = 'auth.invalid_credentials',
         language: Optional[str] = None,
-        **translation_params
+        **translation_params,
     ):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=detail,
             translation_key=translation_key,
             language=language,
-            **translation_params
+            **translation_params,
         )
 
 
@@ -110,14 +112,14 @@ class OrganizationError(APIError):
         detail: str = 'Organization error',
         translation_key: Optional[str] = 'organization.not_found',
         language: Optional[str] = None,
-        **translation_params
+        **translation_params,
     ):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=detail,
             translation_key=translation_key,
             language=language,
-            **translation_params
+            **translation_params,
         )
 
 
@@ -129,14 +131,14 @@ class ProjectError(APIError):
         detail: str = 'Project error',
         translation_key: Optional[str] = 'project.not_found',
         language: Optional[str] = None,
-        **translation_params
+        **translation_params,
     ):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=detail,
             translation_key=translation_key,
             language=language,
-            **translation_params
+            **translation_params,
         )
 
 
@@ -148,12 +150,12 @@ class PaymentError(APIError):
         detail: str = 'Payment error',
         translation_key: Optional[str] = 'payment.card_declined',
         language: Optional[str] = None,
-        **translation_params
+        **translation_params,
     ):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=detail,
             translation_key=translation_key,
             language=language,
-            **translation_params
+            **translation_params,
         )

@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.models import User
 from src.auth.schemas import UserRead, UserUpdate
 from src.auth.service import get_user_by_email, get_users, update_user
 from src.auth.users import current_active_user
+from src.common.exceptions import NotFoundError
+from src.common.i18n import i18n
 from src.common.pagination import CustomParams, Paginated
 from src.common.session import get_async_session
 from src.common.utils import get_request_language, translate_message
-from src.common.exceptions import NotFoundError
-from src.common.i18n import i18n
 
 router = APIRouter(tags=['users'])
 
@@ -65,8 +65,7 @@ async def get_user_profile(
         language = get_request_language(request)
         # Raise exception with translated message
         raise NotFoundError(
-            translation_key='auth.user_not_found',
-            language=language
+            translation_key='auth.user_not_found', language=language
         )
     return user
 
@@ -80,29 +79,31 @@ async def get_available_languages():
     for lang_code in i18n.get_supported_languages():
         locale_info = i18n.get_locale_info(lang_code)
         languages.append(locale_info)
-    
+
     return {
         'supported_languages': languages,
-        'default_language': i18n.DEFAULT_LANGUAGE
+        'default_language': i18n.DEFAULT_LANGUAGE,
     }
 
 
 @router.get('/i18n/test')
 async def test_translation(
     request: Request,
-    key: str = Query('auth.user_not_found', description='Translation key to test')
+    key: str = Query(
+        'auth.user_not_found', description='Translation key to test'
+    ),
 ):
     """
     Test translation endpoint - returns translated message based on Accept-Language header
     """
     language = get_request_language(request)
     translated_message = translate_message(key, request)
-    
+
     return {
         'language': language,
         'key': key,
         'message': translated_message,
-        'available_languages': i18n.get_supported_languages()
+        'available_languages': i18n.get_supported_languages(),
     }
 
 
@@ -110,7 +111,7 @@ async def test_translation(
 async def test_pluralization(
     request: Request,
     key: str = Query('messages', description='Base plural key to test'),
-    count: int = Query(1, description='Count for pluralization')
+    count: int = Query(1, description='Count for pluralization'),
 ):
     """
     Test pluralization endpoint - demonstrates plural forms in different languages
@@ -118,7 +119,7 @@ async def test_pluralization(
     language = get_request_language(request)
     plural_form = i18n.get_plural_form(language, count)
     translated_message = i18n.translate_plural(key, count, language)
-    
+
     return {
         'language': language,
         'count': count,
@@ -126,9 +127,9 @@ async def test_pluralization(
         'base_key': key,
         'message': translated_message,
         'examples': {
-            lang: i18n.translate_plural(key, count, lang) 
+            lang: i18n.translate_plural(key, count, lang)
             for lang in i18n.get_supported_languages()
-        }
+        },
     }
 
 
@@ -137,21 +138,23 @@ async def get_localized_datetime(request: Request):
     """
     Returns current datetime formatted according to the user's locale
     """
-    from babel.dates import format_datetime
     from datetime import datetime
-    
+
+    from babel.dates import format_datetime
+
     language = get_request_language(request)
-    
+
     try:
         from babel import Locale
+
         locale = Locale.parse(language)
         now = datetime.now()
         localized_time = format_datetime(now, locale=locale)
     except Exception:
         localized_time = str(datetime.now())
-    
+
     return {
         'language': language,
         'datetime': localized_time,
-        'iso_datetime': datetime.now().isoformat()
+        'iso_datetime': datetime.now().isoformat(),
     }

@@ -3,18 +3,18 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
-from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
 
+from src.auth.email_routes import router as auth_email_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
-from src.auth.email_routes import router as auth_email_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
-from src.common.middleware import add_logging_middleware, add_i18n_middleware
+from src.common.middleware import add_i18n_middleware, add_logging_middleware
 from src.common.monitoring import add_performance_monitoring
 from src.common.openapi import custom_openapi
 from src.common.session import engine
@@ -34,7 +34,7 @@ if IS_PRODUCTION:
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(),
-        ]
+        ],
     )
 else:
     logging.basicConfig(

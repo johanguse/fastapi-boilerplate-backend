@@ -9,11 +9,11 @@ from src.common.pagination import CustomParams, Paginated
 from src.common.security import get_current_active_user
 from src.common.session import get_async_session
 from src.common.streaming import (
-    JSONStreamer,
     CSVStreamer,
     DatabaseStreamer,
+    JSONStreamer,
+    create_csv_streaming_response,
     create_json_streaming_response,
-    create_csv_streaming_response
 )
 from src.projects.schemas import Project, ProjectCreate, ProjectUpdate
 from src.projects.service import (
@@ -98,9 +98,10 @@ async def export_projects_json(
     Export all user projects as streaming JSON.
     Memory-efficient export for large project datasets.
     """
+
     async def stream_projects():
         query = """
-            SELECT p.id, p.name, p.description, p.organization_id, 
+            SELECT p.id, p.name, p.description, p.organization_id,
                    p.created_at, p.updated_at, o.name as organization_name
             FROM projects p
             JOIN organizations o ON p.organization_id = o.id
@@ -108,14 +109,14 @@ async def export_projects_json(
             WHERE om.user_id = :user_id
             ORDER BY p.created_at DESC
         """
-        
+
         async for row in DatabaseStreamer.stream_query_results(
-            db, query, {"user_id": current_user.id}, batch_size=500
+            db, query, {'user_id': current_user.id}, batch_size=500
         ):
             yield row
-    
+
     generator = JSONStreamer.stream_json_array(stream_projects())
-    return create_json_streaming_response(generator, "projects.json")
+    return create_json_streaming_response(generator, 'projects.json')
 
 
 @router.get('/export/csv')
@@ -127,11 +128,18 @@ async def export_projects_csv(
     Export all user projects as streaming CSV.
     Efficient export for spreadsheet analysis.
     """
-    headers = ["ID", "Name", "Description", "Organization", "Created At", "Updated At"]
-    
+    headers = [
+        'ID',
+        'Name',
+        'Description',
+        'Organization',
+        'Created At',
+        'Updated At',
+    ]
+
     async def stream_project_rows():
         query = """
-            SELECT p.id, p.name, p.description, p.organization_id, 
+            SELECT p.id, p.name, p.description, p.organization_id,
                    p.created_at, p.updated_at, o.name as organization_name
             FROM projects p
             JOIN organizations o ON p.organization_id = o.id
@@ -139,18 +147,18 @@ async def export_projects_csv(
             WHERE om.user_id = :user_id
             ORDER BY p.created_at DESC
         """
-        
+
         async for row in DatabaseStreamer.stream_query_results(
-            db, query, {"user_id": current_user.id}, batch_size=500
+            db, query, {'user_id': current_user.id}, batch_size=500
         ):
             yield [
-                str(row["id"]),
-                row["name"] or "",
-                row["description"] or "",
-                row["organization_name"] or "",
-                str(row["created_at"]) if row["created_at"] else "",
-                str(row["updated_at"]) if row["updated_at"] else ""
+                str(row['id']),
+                row['name'] or '',
+                row['description'] or '',
+                row['organization_name'] or '',
+                str(row['created_at']) if row['created_at'] else '',
+                str(row['updated_at']) if row['updated_at'] else '',
             ]
-    
+
     generator = CSVStreamer.stream_csv(headers, stream_project_rows())
-    return create_csv_streaming_response(generator, "projects.csv")
+    return create_csv_streaming_response(generator, 'projects.csv')
