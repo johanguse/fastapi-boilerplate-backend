@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 from typing import Union
 
 from dotenv import load_dotenv
@@ -145,3 +146,12 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    """
+    Cached settings instance to avoid re-creating the settings object.
+    This provides significant performance improvement for dependency injection.
+    """
+    return Settings()

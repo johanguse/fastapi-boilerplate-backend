@@ -3,10 +3,11 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.common.config import settings
+from src.common.config import get_settings
 
 logger = logging.getLogger(__name__)
 
+settings = get_settings()
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL.replace(
     'postgresql://', 'postgresql+asyncpg://'
 )

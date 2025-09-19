@@ -4,6 +4,7 @@ Provides translation support for error messages and API responses.
 """
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional, Dict, Any
 
@@ -59,6 +60,7 @@ class I18nManager:
         return lang_code in cls.SUPPORTED_LANGUAGES
     
     @classmethod
+    @lru_cache(maxsize=None)
     def get_fallback_language(cls, lang_code: str) -> str:
         """
         Get fallback language for regional variants.
@@ -89,6 +91,7 @@ class I18nManager:
         return cls.DEFAULT_LANGUAGE
     
     @classmethod
+    @lru_cache(maxsize=128)
     def get_language_from_accept_header(cls, accept_language: Optional[str]) -> str:
         """
         Extract the preferred language from Accept-Language header.
@@ -225,6 +228,7 @@ class I18nManager:
         return message
     
     @classmethod
+    @lru_cache(maxsize=64)
     def get_locale_info(cls, language: str) -> dict:
         """
         Get locale information for a language.
@@ -254,6 +258,15 @@ class I18nManager:
 
 # Global instance
 i18n = I18nManager()
+
+
+@lru_cache()
+def get_i18n_manager() -> I18nManager:
+    """
+    Cached I18n manager instance to avoid reloading translations.
+    This provides performance improvement for dependency injection.
+    """
+    return I18nManager()
 
 
 def t(key: str, language: Optional[str] = None, **kwargs) -> str:

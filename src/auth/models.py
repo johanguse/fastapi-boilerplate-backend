@@ -71,3 +71,22 @@ class User(SQLAlchemyBaseUserTable[int], Base):
 
     def __repr__(self) -> str:
         return f'<User {self.email}>'
+
+
+class EmailToken(Base):
+    """Model for storing email verification and password reset tokens."""
+    __tablename__ = "email_tokens"
+    
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    user_email: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    token_type: Mapped[str] = mapped_column(String, nullable=False)  # 'verification' or 'password_reset'
+    token_hash: Mapped[str] = mapped_column(String, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+    
+    def __repr__(self) -> str:
+        return f'<EmailToken {self.token_type} for {self.user_email}>'

@@ -41,6 +41,9 @@ stripe = "^11.4.1"
 cryptography = "^44.0.0"
 python-magic = "^0.4.27"
 babel = "^2.17.0"
+uvloop = "^0.21.0"
+httptools = "^0.6.4"
+orjson = "^3.11.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
@@ -89,6 +92,9 @@ test-auth = 'pytest tests/test_auth.py -v'
 test-watch = 'pytest -xvs --watch'
 migrations = 'alembic revision --autogenerate -m'
 migrate = 'alembic upgrade head'
+seed = 'python scripts/seed.py'
+reset-db = 'python scripts/reset_db.py'
+reset-and-seed = 'python scripts/reset_db.py && python scripts/seed.py'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
