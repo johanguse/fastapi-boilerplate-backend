@@ -34,7 +34,7 @@ class NotFoundError(APIError):
     def __init__(
         self,
         detail: str = 'Resource not found',
-        translation_key: Optional[str] = 'error.not_found',
+        translation_key: Optional[str] = None,
         language: Optional[str] = None,
         **translation_params,
     ):
@@ -91,7 +91,7 @@ class AuthenticationError(APIError):
     def __init__(
         self,
         detail: str = 'Authentication failed',
-        translation_key: Optional[str] = 'auth.invalid_credentials',
+        translation_key: Optional[str] = None,
         language: Optional[str] = None,
         **translation_params,
     ):
@@ -110,7 +110,7 @@ class OrganizationError(APIError):
     def __init__(
         self,
         detail: str = 'Organization error',
-        translation_key: Optional[str] = 'organization.not_found',
+        translation_key: Optional[str] = None,
         language: Optional[str] = None,
         **translation_params,
     ):
@@ -129,7 +129,7 @@ class ProjectError(APIError):
     def __init__(
         self,
         detail: str = 'Project error',
-        translation_key: Optional[str] = 'project.not_found',
+        translation_key: Optional[str] = None,
         language: Optional[str] = None,
         **translation_params,
     ):
@@ -148,7 +148,7 @@ class PaymentError(APIError):
     def __init__(
         self,
         detail: str = 'Payment error',
-        translation_key: Optional[str] = 'payment.card_declined',
+        translation_key: Optional[str] = None,
         language: Optional[str] = None,
         **translation_params,
     ):

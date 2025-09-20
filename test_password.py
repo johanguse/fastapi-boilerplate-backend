@@ -21,11 +21,14 @@ async def test_password():
     )
     
     async with async_session() as session:
-        # Get user manager
+        # Get user manager properly
         from src.auth.users import UserManager
         from src.auth.models import User
+        from fastapi_users.db import SQLAlchemyUserDatabase
         
-        user_manager = UserManager(User, session)
+        # Create user database instance
+        user_db = SQLAlchemyUserDatabase(session, User)
+        user_manager = UserManager(user_db)
         
         # Test password hashing
         password = "admin123"

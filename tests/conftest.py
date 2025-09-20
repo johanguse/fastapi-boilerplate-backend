@@ -75,17 +75,6 @@ async def clean_test_data():
         await engine.dispose()
 
 
-@pytest.fixture()
-def event_loop():
-    """Create a fresh event loop per test to work with pytest-asyncio strict mode."""
-    loop = asyncio.new_event_loop()
-    try:
-        asyncio.set_event_loop(loop)
-        yield loop
-    finally:
-        loop.close()
-
-
 @pytest_asyncio.fixture(scope="session")
 async def init_db():
     # No need to create/drop tables in PostgreSQL - they should already exist
