@@ -70,11 +70,14 @@ async def get_project(
 async def get_projects(db: AsyncSession, current_user: User) -> list[Project]:
     """Get all projects for teams the user is a member of"""
     from src.organizations.models import OrganizationMember
-    
+
     result = await db.execute(
         select(Project)
         .join(Project.organization)
-        .join(OrganizationMember, OrganizationMember.organization_id == Project.organization_id)
+        .join(
+            OrganizationMember,
+            OrganizationMember.organization_id == Project.organization_id,
+        )
         .filter(OrganizationMember.user_id == current_user.id)
     )
     return result.scalars().all()
