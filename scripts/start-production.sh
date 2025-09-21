@@ -1,8 +1,8 @@
 #!/bin/bash
-"""
-Production startup script for FastAPI boilerplate.
-Handles different deployment scenarios and optimizations.
-"""
+#
+# Production startup script for FastAPI boilerplate.
+# Handles different deployment scenarios and optimizations.
+#
 
 set -e
 

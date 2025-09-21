@@ -1,0 +1,10 @@
+[build]
+cmd = 'poetry install --only=main --no-root'
+
+[start]
+cmd = 'chmod +x scripts/start-production.sh && ./scripts/start-production.sh'
+
+[variables]
+PYTHONPATH = '/app/src'
+SERVER = 'uvicorn'
+WORKERS = '1'
