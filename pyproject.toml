@@ -17,6 +17,7 @@ sqlalchemy = "^2.0.36"
 psycopg2-binary = "^2.9.9"
 pydantic = {extras = ["email"], version = "^2.8.2"}
 alembic = "^1.14.1"
+mako = "1.3.6"  # Pin to non-yanked version
 uvicorn = "^0.34.0"
 pyjwt = {extras = ["crypto"], version = "^2.9.0"}
 passlib = {extras = ["argon2"], version = "^1.7.4"}
@@ -101,6 +102,10 @@ reset-and-seed = 'python scripts/reset_db.py && python scripts/seed.py'
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# Railway deployment optimizations
+[tool.poetry.build]
+generate-setup-file = false
 
 [tool.coverage.run]
 omit = [
