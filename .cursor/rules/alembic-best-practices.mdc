@@ -1,0 +1,86 @@
+---
+description: Best practices for database migrations with Alembic
+globs: **/*.{py}
+alwaysApply: false
+---
+# Alembic Database Migration Best Practices
+
+## Migration Development
+
+- Create one migration per logical change
+- Use meaningful migration names that describe the change
+- Include detailed docstrings in migration scripts
+- Use `op.create_table()` instead of Base.metadata.create_all()
+- Test migrations both forward and backward
+
+## Version Control
+
+- Never edit or delete existing migrations
+- Create new migrations to fix issues in previous ones
+- Include migrations in version control
+- Review migration scripts carefully before committing
+- Consider using branches for experimental schema changes
+
+## Migration Organization
+
+- Organize migrations by module or feature when appropriate
+- Use multiple migration branches for modular applications
+- Consider using labels for categorizing migrations
+- Document complex migrations with comments
+- Keep migration files small and focused
+
+## SQL Operations
+
+- Use explicit SQL types instead of SQLAlchemy types in migrations
+- Prefer batch operations for large tables
+- Handle large data migrations in batches
+- Implement proper error handling in data migrations
+- Consider performance implications of migrations
+
+## Database Safety
+
+- Use transactions for atomic migration operations
+- Test migrations on a copy of production data
+- Implement proper downgrade paths for all migrations
+- Consider implementing backups before migrations
+- Use database locks carefully
+
+## Multi-database Support
+
+- Design migrations with multiple database engines in mind
+- Test migrations on all supported database engines
+- Use database-specific implementations when necessary
+- Document database-specific considerations
+- Handle dialect differences properly
+
+## Deployment Strategy
+
+- Implement automated migration in CI/CD pipelines
+- Consider using Alembic's offline mode for deployment
+- Have a rollback strategy for failed migrations
+- Implement proper logging for migration operations
+- Consider zero-downtime migration strategies
+
+## Performance Considerations
+
+- Be careful with migrations that lock tables
+- Consider using deferred constraints for large tables
+- Implement index creation with minimal locking
+- Use temporary tables for complex transformations
+- Monitor database performance during migrations
+
+## Error Handling
+
+- Implement proper error logging during migrations
+- Create a strategy for handling failed migrations
+- Consider implementing migration circuit breakers
+- Test edge cases and failure scenarios
+- Document recovery procedures
+
+## Maintenance
+
+- Periodically clean up and consolidate migrations
+- Monitor migration history in production
+- Document database schema versions
+- Implement schema validation checks
+- Consider using schema dumps for verification

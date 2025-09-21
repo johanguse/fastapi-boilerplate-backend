@@ -104,6 +104,9 @@ celerybeat.pid
 
 # Environments
 .env
+.env.docker.dev
+.env.docker.prod
+!.env.example
 .venv
 env/
 venv/
@@ -135,4 +138,7 @@ secret.py
 # Custom
 .env.*
 !.env.sample
+!.env.docker.dev
+!.env.docker.prod
+!docker/.env.example
 .db.env

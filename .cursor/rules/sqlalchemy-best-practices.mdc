@@ -1,0 +1,86 @@
+---
+description: Best practices for using SQLAlchemy ORM
+globs: **/*.{py}
+alwaysApply: false
+---
+# SQLAlchemy Best Practices
+
+## SQLAlchemy 2.0 Migration
+
+- Use the SQLAlchemy 2.0 style with type annotations
+- Prefer `select()` over legacy Query style
+- Use `AsyncSession` for asynchronous database operations
+- Implement proper relationship loading strategies (selectinload, joinedload)
+- Follow the new transaction patterns with explicit commit/rollback
+
+## Model Design
+
+- Use mapped_column with type annotations instead of Column
+- Define explicit primary and foreign keys with proper ondelete behavior
+- Implement proper cascades for relationship management
+- Add meaningful __repr__ methods to models for debugging
+- Use SQLAlchemy events for model hooks instead of ORM methods
+
+## Query Optimization
+
+- Use indexing for frequently queried columns
+- Prefer eager loading with joinedload/selectinload over lazy loading
+- Use pagination for large result sets
+- Implement optimistic concurrency control for concurrent updates
+- Profile and monitor slow queries
+
+## Session Management
+
+- Use session as a context manager or dependency
+- Implement proper error handling with try/except/finally blocks
+- Don't keep sessions open longer than necessary
+- Use explicit transaction boundaries
+- Be aware of session expiration and object detachment
+
+## Asynchronous Operations
+
+- Use AsyncSession with async/await syntax
+- Avoid synchronous operations in async context
+- Properly handle connection pooling with async drivers
+- Be careful with async relationship loading patterns
+- Implement proper retry mechanisms for transient failures
+
+## Migrations
+
+- Use Alembic for database migrations
+- Implement proper version control for migrations
+- Create meaningful migration scripts with clear docstrings
+- Test migrations in a staging environment before production
+- Use Alembic's offline mode for CI/CD pipelines
+
+## Database Relationships
+
+- Design relationships based on domain model, not technical convenience
+- Use proper cascade delete behavior (SET NULL, CASCADE, etc.)
+- Be careful with circular dependencies
+- Consider using association objects for complex many-to-many relationships
+- Use backref/back_populates consistently for bidirectional relationships
+
+## Performance Tuning
+
+- Use SQLAlchemy's execution options for fine-grained control
+- Implement proper connection pooling
+- Use compiled query caching for frequently executed queries
+- Consider using Core for bulk operations instead of ORM
+- Monitor connection usage and database load
+
+## Error Handling
+
+- Use appropriate exception handling for database errors
+- Implement retry logic for transient failures
+- Log database errors with appropriate context
+- Use custom exceptions for domain-specific errors
+- Consider using SQLAlchemy's event system for error tracking
+
+## Testing
+
+- Use SQLAlchemy's test fixtures
+- Implement transaction-based test isolation
+- Use in-memory SQLite for fast unit tests
+- Create proper test factories for model instances
+- Test database migrations as part of CI/CD

@@ -1,0 +1,86 @@
+---
+description: Best practices for FastAPI applications and routing
+globs: **/*.{py}
+alwaysApply: false
+---
+# FastAPI Best Practices
+
+## Architectural Patterns
+
+- Use a service layer pattern to separate business logic from API endpoints
+- Implement dependency injection for database sessions, auth, and other services
+- Use router tags for logical API grouping in documentation
+- Structure routes by domain or feature, not by HTTP method
+- Implement proper error handling with custom exception handlers
+
+## Asynchronous Programming
+
+- Use `async def` for I/O-bound operations (DB, external APIs, file operations)
+- Use `def` for CPU-bound operations that don't benefit from async
+- Avoid mixing sync and async code within the same execution path
+- Use proper async libraries for database, HTTP requests, etc.
+- Be aware of Python's async limitations (GIL) for CPU-bound tasks
+
+## Route Definitions
+
+- Use typed path, query, and body parameters
+- Include proper response_model definitions for all endpoints
+- Use status codes consistently (201 for creation, 204 for deletion, etc.)
+- Implement pagination for list endpoints
+- Add comprehensive docstrings for OpenAPI documentation
+
+## Security
+
+- Use FastAPI's security dependencies (OAuth2, API key, etc.)
+- Implement proper JWT validation with expiration
+- Use HTTPS in all environments
+- Implement rate limiting for public endpoints
+- Validate all input data with Pydantic models
+
+## Validation and Schemas
+
+- Use Pydantic models for request validation and response serialization
+- Implement custom validators for complex business rules
+- Use Field(...) for required fields with descriptions
+- Separate database models from API schemas
+- Use inheritance for schema reuse and versioning
+
+## Performance
+
+- Implement caching for expensive operations
+- Use connection pooling for database connections
+- Consider background tasks for long-running operations
+- Optimize database queries with proper indexes and joins
+- Use streaming responses for large datasets
+
+## Testing
+
+- Write tests for all API endpoints
+- Use pytest with async fixtures
+- Implement integration tests with test database
+- Use factory patterns for test data generation
+- Test error cases and edge conditions
+
+## API Documentation
+
+- Add descriptive summaries and descriptions to endpoints
+- Group endpoints with tags
+- Include examples in schema definitions
+- Use response descriptions for different status codes
+- Customize OpenAPI with additional info
+
+## Middleware and Hooks
+
+- Use middleware for cross-cutting concerns (logging, timing, etc.)
+- Prefer lifespan context managers over @app.on_event
+- Implement proper exception handling middleware
+- Use dependencies for request validation
+- Consider middleware for tracing and monitoring
+
+## Dependency Injection
+
+- Use FastAPI's dependency injection system
+- Create reusable dependencies for common operations
+- Implement hierarchical dependencies
+- Use Depends() with proper type annotations
+- Cache expensive dependencies when appropriate

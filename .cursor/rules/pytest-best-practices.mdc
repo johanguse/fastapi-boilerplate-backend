@@ -1,0 +1,86 @@
+---
+description: Best practices for testing with Pytest
+globs: **/*.{py}
+alwaysApply: false
+---
+# Pytest Best Practices
+
+## Test Organization
+
+- Structure tests to mirror the application structure
+- Use descriptive test names with clear intention
+- Group related tests into classes when appropriate
+- Use pytest markers to categorize tests
+- Separate unit, integration, and end-to-end tests
+
+## Fixtures
+
+- Create modular, reusable fixtures
+- Use fixture scope appropriately (function, class, module, session)
+- Implement factory fixtures for flexible test data
+- Document fixtures with clear docstrings
+- Use fixture parametrization for testing variations
+
+## Asynchronous Testing
+
+- Use pytest-asyncio for testing async code
+- Implement proper async fixtures
+- Test both success and error paths
+- Handle timeouts properly
+- Use proper cleanup for async resources
+
+## Database Testing
+
+- Use test-specific database instances
+- Implement transaction-based test isolation
+- Use factory patterns for test data generation
+- Reset database state between tests
+- Consider using in-memory databases for speed
+
+## Mocking and Patching
+
+- Use pytest-mock for clean mocking
+- Mock external dependencies, not internal code
+- Create reusable mock fixtures
+- Verify mock expectations explicitly
+- Be careful with patching, especially in async code
+
+## Testing FastAPI Applications
+
+- Use TestClient for API testing
+- Test all response status codes and error cases
+- Implement dependency overrides for testing
+- Test authentication and authorization
+- Use proper cleanup for application resources
+
+## Test Coverage
+
+- Aim for high test coverage, but focus on quality
+- Use pytest-cov to measure coverage
+- Prioritize testing core business logic
+- Test edge cases and error conditions
+- Don't chase 100% coverage at the expense of test quality
+
+## Test Performance
+
+- Keep unit tests fast (milliseconds, not seconds)
+- Use session-scoped fixtures for expensive setup
+- Consider selective testing for CI/CD pipelines
+- Implement parallel test execution when appropriate
+- Profile slow tests and optimize
+
+## Parameterized Testing
+
+- Use pytest.mark.parametrize for testing variations
+- Implement data-driven testing for complex logic
+- Use clear parameter names
+- Consider external data sources for large test cases
+- Document parameter meanings
+
+## Assertion Best Practices
+
+- Use pytest's built-in assertions
+- Implement custom assertion helpers for complex checks
+- Include meaningful error messages
+- Test one concept per assertion
+- Consider using third-party assertion libraries for complex data

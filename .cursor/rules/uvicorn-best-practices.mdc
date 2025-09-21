@@ -1,0 +1,86 @@
+---
+description: Best practices for running FastAPI with Uvicorn
+globs: **/*.{py}
+alwaysApply: false
+---
+# Uvicorn Best Practices
+
+## Configuration
+
+- Use environment-specific configuration files
+- Set appropriate log levels for different environments
+- Configure appropriate number of workers (2 * cores + 1)
+- Implement proper timeouts for production
+- Use HTTPS in production environments
+
+## Performance Tuning
+
+- Enable HTTP/2 support in production
+- Implement proper connection keep-alive settings
+- Use uvloop for better async performance
+- Configure appropriate buffer sizes
+- Implement proper backlog settings for high-traffic servers
+
+## Deployment
+
+- Use Gunicorn as a process manager in production
+- Implement proper process monitoring
+- Use systemd or supervisor for service management
+- Configure proper graceful shutdown behavior
+- Implement health checks for container environments
+
+## Logging
+
+- Configure structured JSON logging in production
+- Implement appropriate log rotation
+- Set reasonable log levels to avoid excessive output
+- Log to stdout/stderr for container compatibility
+- Consider integrating with logging services
+
+## Security
+
+- Implement proper CORS configuration
+- Use HTTPS with proper certificates
+- Configure appropriate security headers
+- Limit access to admin endpoints
+- Consider implementing rate limiting
+
+## Resource Management
+
+- Configure appropriate worker count for the environment
+- Implement proper memory limits
+- Monitor CPU usage and scale accordingly
+- Use connection pooling for database connections
+- Implement proper timeout handling
+
+## Monitoring
+
+- Implement health check endpoints
+- Set up application metrics (Prometheus, StatsD)
+- Monitor server resource usage
+- Set up alerts for abnormal conditions
+- Implement proper error tracking
+
+## Development Environment
+
+- Use --reload flag for development
+- Configure appropriate log levels for debugging
+- Use --debug for detailed error information
+- Consider using --reload-dir for selective reloading
+- Implement proper development vs. production settings
+
+## Container Deployment
+
+- Design for proper signal handling in containers
+- Configure appropriate port bindings
+- Use proper process ID handling
+- Implement graceful shutdown
+- Design for horizontal scaling
+
+## Error Handling
+
+- Implement global exception handlers
+- Configure proper error logging
+- Implement custom error responses
+- Handle startup errors gracefully
+- Consider implementing circuit breakers for dependencies

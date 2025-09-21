@@ -1,0 +1,86 @@
+---
+description: Best practices for file storage with R2
+globs: **/*.{py}
+alwaysApply: false
+---
+# Cloudflare R2 Storage Best Practices
+
+## Bucket Organization
+
+- Create separate buckets for different data categories
+- Use logical bucket naming conventions
+- Implement proper bucket-level access policies
+- Consider region selection for latency optimization
+- Document bucket organization for team reference
+
+## File Structure
+
+- Implement logical path hierarchies for objects
+- Use content-based and/or date-based partitioning
+- Avoid deeply nested structures (aim for 3-4 levels max)
+- Use consistent naming conventions for files
+- Consider using UUIDs for unique file names
+
+## Security
+
+- Implement least-privilege access controls
+- Use pre-signed URLs for temporary access
+- Implement proper CORS policies for web access
+- Enable encryption for sensitive data
+- Regularly audit bucket permissions
+
+## Performance Optimization
+
+- Use Cloudflare's CDN for public assets
+- Implement appropriate cache-control headers
+- Use multipart uploads for large files
+- Consider compression for text-based files
+- Use appropriate content-type headers
+
+## Cost Management
+
+- Implement lifecycle policies for infrequently accessed data
+- Monitor storage usage and implement alerts
+- Use batch operations for cost-effective management
+- Consider intelligent tiering for cost optimization
+- Implement proper cleanup for temporary files
+
+## API Usage
+
+- Use the S3-compatible API with boto3
+- Implement proper error handling and retries
+- Use async operations for bulk uploads/downloads
+- Implement batching for multiple operations
+- Consider using Worker integration for direct uploads
+
+## Integration with FastAPI
+
+- Implement streaming responses for large file downloads
+- Use background tasks for upload processing
+- Implement proper mime-type validation
+- Use content-disposition headers for downloads
+- Consider direct-to-R2 uploads for large files
+
+## Monitoring and Maintenance
+
+- Implement logging for all storage operations
+- Set up alerts for unexpected usage patterns
+- Regularly audit stored data for compliance
+- Implement proper backup strategies
+- Monitor API usage and rate limits
+
+## Error Handling
+
+- Implement proper retry logic for transient errors
+- Handle API rate limiting gracefully
+- Log storage errors with appropriate context
+- Implement fallback mechanisms
+- Consider circuit breakers for dependency isolation
+
+## Development and Testing
+
+- Use environment-specific buckets (dev, staging, prod)
+- Implement mocking for local development
+- Use fixtures for testing storage operations
+- Automate cleanup of test data
+- Document storage patterns for team members

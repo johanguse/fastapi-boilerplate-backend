@@ -1,0 +1,64 @@
+{
+  "auth": {
+    "invalid_credentials": "Ungültige E-Mail oder Passwort",
+    "user_not_found": "Benutzer nicht gefunden",
+    "email_already_exists": "E-Mail existiert bereits",
+    "account_disabled": "Konto ist deaktiviert",
+    "token_expired": "Token ist abgelaufen",
+    "invalid_token": "Ungültiger Token",
+    "insufficient_permissions": "Unzureichende Berechtigungen",
+    "password_too_weak": "Passwort ist zu schwach",
+    "email_not_verified": "E-Mail-Adresse ist nicht verifiziert"
+  },
+  "validation": {
+    "required_field": "Dieses Feld ist erforderlich",
+    "invalid_email": "Ungültiges E-Mail-Format",
+    "min_length": "Muss mindestens {min_length} Zeichen haben",
+    "max_length": "Darf höchstens {max_length} Zeichen haben",
+    "invalid_format": "Ungültiges Format"
+  },
+  "organization": {
+    "not_found": "Organisation nicht gefunden",
+    "access_denied": "Zugriff auf Organisation verweigert",
+    "name_exists": "Organisationsname existiert bereits",
+    "member_not_found": "Mitglied nicht gefunden",
+    "cannot_remove_owner": "Kann Organisationsbesitzer nicht entfernen"
+  },
+  "project": {
+    "not_found": "Projekt nicht gefunden",
+    "access_denied": "Zugriff auf Projekt verweigert",
+    "name_exists": "Projektname existiert bereits"
+  },
+  "payment": {
+    "card_declined": "Ihre Karte wurde abgelehnt",
+    "insufficient_funds": "Unzureichende Mittel",
+    "invalid_payment_method": "Ungültige Zahlungsmethode",
+    "subscription_not_found": "Abonnement nicht gefunden",
+    "plan_not_found": "Plan nicht gefunden"
+  },
+  "error": {
+    "internal_server": "Interner Serverfehler",
+    "not_found": "Ressource nicht gefunden",
+    "bad_request": "Fehlerhafte Anfrage",
+    "forbidden": "Verboten",
+    "rate_limit": "Rate-Limit überschritten"
+  },
+  "success": {
+    "created": "Erfolgreich erstellt",
+    "updated": "Erfolgreich aktualisiert",
+    "deleted": "Erfolgreich gelöscht",
+    "email_sent": "E-Mail erfolgreich gesendet"
+  },
+  "messages": {
+    "one": "Sie haben {count} neue Nachricht",
+    "other": "Sie haben {count} neue Nachrichten"
+  },
+  "notifications": {
+    "one": "{count} Benachrichtigung",
+    "other": "{count} Benachrichtigungen"
+  },
+  "users": {
+    "one": "{count} Benutzer",
+    "other": "{count} Benutzer"
+  }
+}

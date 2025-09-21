@@ -1,0 +1,100 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "tests-all",
+			"type": "shell",
+			"command": "poetry",
+			"args": [
+				"run",
+				"task",
+				"test"
+			],
+			"problemMatcher": [
+				"$pytest"
+			],
+			"group": "build"
+		},
+		{
+			"label": "tests-all",
+			"type": "shell",
+			"command": "poetry",
+			"args": [
+				"run",
+				"task",
+				"test"
+			],
+			"problemMatcher": [
+				"$pytest"
+			],
+			"group": "build"
+		},
+		{
+			"label": "tests-all",
+			"type": "shell",
+			"command": "poetry",
+			"args": [
+				"run",
+				"task",
+				"test"
+			],
+			"problemMatcher": [
+				"$pytest"
+			],
+			"group": "build"
+		},
+		{
+			"label": "tests-all",
+			"type": "shell",
+			"command": "poetry",
+			"args": [
+				"run",
+				"task",
+				"test"
+			],
+			"problemMatcher": [
+				"$pytest"
+			],
+			"group": "build"
+		},
+		{
+			"label": "tests-all",
+			"type": "shell",
+			"command": "poetry",
+			"args": [
+				"run",
+				"task",
+				"test"
+			],
+			"problemMatcher": [
+				"$pytest"
+			],
+			"group": "build"
+		},
+		{
+			"label": "tests-all",
+			"type": "shell",
+			"command": "poetry",
+			"args": [
+				"run",
+				"task",
+				"test"
+			],
+			"problemMatcher": [
+				"$pytest"
+			],
+			"group": "build"
+		},
+		{
+			"label": "tests-all",
+			"type": "shell",
+			"command": "poetry",
+			"args": [
+				"run",
+				"task",
+				"migrate"
+			],
+			"group": "build"
+		}
+	]
+}

@@ -1,0 +1,64 @@
+{
+  "auth": {
+    "invalid_credentials": "Invalid email or password",
+    "user_not_found": "User not found",
+    "email_already_exists": "Email already exists",
+    "account_disabled": "Account is disabled",
+    "token_expired": "Token has expired",
+    "invalid_token": "Invalid token",
+    "insufficient_permissions": "Insufficient permissions",
+    "password_too_weak": "Password is too weak",
+    "email_not_verified": "Email address is not verified"
+  },
+  "validation": {
+    "required_field": "This field is required",
+    "invalid_email": "Invalid email format",
+    "min_length": "Must be at least {min_length} characters",
+    "max_length": "Must be no more than {max_length} characters",
+    "invalid_format": "Invalid format"
+  },
+  "organization": {
+    "not_found": "Organization not found",
+    "access_denied": "Access denied to organization",
+    "name_exists": "Organization name already exists",
+    "member_not_found": "Member not found",
+    "cannot_remove_owner": "Cannot remove organization owner"
+  },
+  "project": {
+    "not_found": "Project not found",
+    "access_denied": "Access denied to project",
+    "name_exists": "Project name already exists"
+  },
+  "payment": {
+    "card_declined": "Your card was declined",
+    "insufficient_funds": "Insufficient funds",
+    "invalid_payment_method": "Invalid payment method",
+    "subscription_not_found": "Subscription not found",
+    "plan_not_found": "Plan not found"
+  },
+  "error": {
+    "internal_server": "Internal server error",
+    "not_found": "Resource not found",
+    "bad_request": "Bad request",
+    "forbidden": "Forbidden",
+    "rate_limit": "Rate limit exceeded"
+  },
+  "success": {
+    "created": "Successfully created",
+    "updated": "Successfully updated",
+    "deleted": "Successfully deleted",
+    "email_sent": "Email sent successfully"
+  },
+  "messages": {
+    "one": "You have {count} new message",
+    "other": "You have {count} new messages"
+  },
+  "notifications": {
+    "one": "{count} notification",
+    "other": "{count} notifications"
+  },
+  "users": {
+    "one": "{count} user",
+    "other": "{count} users"
+  }
+}

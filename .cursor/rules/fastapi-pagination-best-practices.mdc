@@ -1,0 +1,9 @@
+---
+description: Best practices for pagination with FastAPI Pagination
+globs: **/*.{py}
+---
+- Use FastAPI Pagination's built-in pagination parameters for consistency.
+- Implement proper error handling for invalid pagination requests.
+- Use pagination to limit the amount of data returned in API responses.
+- Optimize database queries to work efficiently with pagination.
+- Use pagination metadata to provide useful information to clients.

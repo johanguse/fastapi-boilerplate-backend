@@ -9,6 +9,19 @@ Key Principles
 - Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
 - Favor named exports for routes and utility functions.
 - Use the Receive an Object, Return an Object (RORO) pattern.
+- Use the "Domain-Driven Design (DDD)" or more specifically, a "Feature-First" or "Domain-First" folder structure.
+- Use Poetry for dependency management and DO not touch on pyproject file.... just send me the commands to add the dependencies.
+- Use Alembic for database migrations.
+- Use Resend for email.
+- Use SQLAlchemy for database ORM.
+- Use Uvicorn for running the server.
+- Use Pytest for testing.
+- Use Ruff for linting.
+- Use FastAPI for the API.
+- Use FastAPI Users for authentication.
+- Use FastAPI Security for security.
+- Use FastAPI Pagination for pagination.
+- Use datetime import UTC, datetime for datetime.
 
 Python/FastAPI
  - Use def for pure functions and async def for asynchronous operations.
@@ -17,6 +30,9 @@ Python/FastAPI
  - Avoid unnecessary curly braces in conditional statements.
  - For single-line statements in conditionals, omit curly braces.
  - Use concise, one-line syntax for simple conditional statements (e.g., if condition: do_something()).
+
+Architecture
+Use "Domain-Driven Design (DDD)" or more specifically, a "Feature-First" or "Domain-First" folder structure.
 
 Error Handling and Validation
  - Prioritize error handling and edge cases:
@@ -61,13 +77,11 @@ from pydantic import BaseModel, Field
 
 app = FastAPI()
 
-
 class FilterParams(BaseModel):
     limit: int = Field(100, gt=0, le=100)
     offset: int = Field(0, ge=0)
     order_by: Literal["created_at", "updated_at"] = "created_at"
     tags: list[str] = []
-
 
 @app.get("/items/")
 async def read_items(filter_query: Annotated[FilterParams, Query()]):
@@ -84,14 +98,12 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-
 class CommonHeaders(BaseModel):
     host: str
     save_data: bool
     if_modified_since: str | None = None
     traceparent: str | None = None
     x_tag: list[str] = []
-
 
 @app.get("/items/")
 async def read_items(headers: Annotated[CommonHeaders, Header()]):
@@ -108,12 +120,10 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-
 class Cookies(BaseModel):
     session_id: str
     fatebook_tracker: str | None = None
     googall_tracker: str | None = None
-
 
 @app.get("/items/")
 async def read_items(cookies: Annotated[Cookies, Cookie()]):
@@ -132,7 +142,6 @@ from pydantic import BaseModel, Field
 
 app = FastAPI()
 
-
 class FilterParams(BaseModel):
     model_config = {"extra": "forbid"}
 
@@ -140,7 +149,6 @@ class FilterParams(BaseModel):
     offset: int = Field(0, ge=0)
     order_by: Literal["created_at", "updated_at"] = "created_at"
     tags: list[str] = []
-
 
 @app.get("/items/")
 async def read_items(filter_query: Annotated[FilterParams, Query()]):
@@ -153,7 +161,7 @@ Performance Optimization
  - Use lazy loading techniques for large datasets and substantial API responses.
 
 Key Conventions
- 1. Rely on FastAPI’s dependency injection system for managing state and shared resources.
+ 1. Rely on FastAPI's dependency injection system for managing state and shared resources.
  2. Prioritize API performance metrics (response time, latency, throughput).
  3. Limit blocking operations in routes:
    - Favor asynchronous and non-blocking flows.
@@ -161,3 +169,36 @@ Key Conventions
    - Structure routes and dependencies clearly to optimize readability and maintainability.
 
 Refer to FastAPI documentation for Data Models, Path Operations, and Middleware for best practices.
+
+# Route Pattern
+
+@router.post('/', response_model=Project)
+async def create_new_project(
+    project: ProjectCreate,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    return await create_project(db, project, current_user)
+
+# Service Pattern
+
+async def create_project(
+    db: AsyncSession,
+    project: ProjectCreate,
+    current_user: User
+) -> Project:
+    if not current_user.is_active:
+        raise HTTPException(403, "Inactive users can't create projects")
+
+    # ... rest of implementation
+
+# Error Handling Pattern
+
+async def handle_errors(func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
+    try:
+        return await func(*args,**kwargs)
+    except APIError:
+        raise
+    except Exception as e:
+        logger.exception(f'Unexpected error in {func.__name__}: {str(e)}')
+        raise APIError(status_code=500, detail='An unexpected error occurred')

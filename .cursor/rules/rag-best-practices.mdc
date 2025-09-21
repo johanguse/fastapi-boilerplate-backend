@@ -1,0 +1,8 @@
+---
+description: Deprecated RAG doc (not used in this project)
+globs: []
+alwaysApply: false
+---
+# Deprecated
+
+This repository does not use RAG. This rule file is intentionally left blank.
