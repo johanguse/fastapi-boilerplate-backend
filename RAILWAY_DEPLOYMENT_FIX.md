@@ -1,22 +1,44 @@
 # Railway Deployment Fix - Implementation Summary
 
+## 🚨 LATEST FIX: Taskipy Command Issue
+
+**Issue**: Railway build failing with "Command not found: task" error during healthcheck.
+
+**Root Cause**: 
+- `taskipy` was in dev dependencies but being called during production build
+- Circular dependency in `pre_test = 'task lint'` configuration
+
+**Solution Applied**:
+1. **Moved taskipy to main dependencies**: Now available during Railway build
+2. **Removed circular dependency**: Eliminated `pre_test = 'task lint'` line
+3. **Added explicit startup command**: Clear command definition in `railway.toml`
+4. **Created nixpacks.toml**: Explicit build instructions for Railway
+
 ## Changes Made
 
 ### 1. Updated `pyproject.toml`
 - **Fixed Mako version**: Pinned `mako = "1.3.6"` to avoid the yanked 1.3.7 version
+- **Moved taskipy**: From dev dependencies to main dependencies
+- **Fixed circular dependency**: Removed `pre_test = 'task lint'` line
 - **Added build optimizations**: Added `[tool.poetry.build]` section for better Railway compatibility
 - **Kept asyncpg**: Your asyncpg version (0.30.0) is newer and should work better than the problematic 0.29.0
 
-### 2. Created `railway.toml`
+### 2. Updated `railway.toml`
 - **Configured Nixpacks builder**: Uses Railway's default Python builder
+- **Uses production script**: Leverages your existing `scripts/start-production.sh`
 - **Added health check**: Points to your existing `/health` endpoint
 - **Set restart policy**: Configured for production resilience
 
-### 3. Created `Dockerfile.railway`
+### 3. Created `nixpacks.toml`
+- **Explicit build command**: `poetry install --only=main --no-root`
+- **Uses production script**: Calls your `scripts/start-production.sh` for startup
+- **Environment variables**: PYTHONPATH, SERVER=uvicorn, WORKERS=1
+
+### 4. Created `Dockerfile.railway`
 - **Multi-stage build**: Separates build dependencies from runtime
+- **Uses production script**: Leverages your existing startup script
 - **Optimized for Railway**: Handles compilation issues with asyncpg
 - **Security improvements**: Non-root user, minimal runtime dependencies
-- **Production ready**: Proper health checks and environment variables
 
 ## Deployment Options
 
