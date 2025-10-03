@@ -53,5 +53,9 @@ if __name__ == "__main__":
     import os
     # Import and run the regular seed script
     sys.path.insert(0, os.path.dirname(__file__))
-    from seed import create_seed_data
-    asyncio.run(create_seed_data())
+    # Import from the seed.py file, not the seed/ directory
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("seed_module", os.path.join(os.path.dirname(__file__), "seed.py"))
+    seed_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(seed_module)
+    asyncio.run(seed_module.create_seed_data())

@@ -92,20 +92,20 @@ async def create_seed_data():
                     sort_order=1,
                 ),
                 SubscriptionPlan(
-                    name='starter',
-                    display_name='Starter',
-                    description='Perfect for getting started',
-                    stripe_price_id_monthly='price_starter_monthly',
-                    stripe_price_id_yearly='price_starter_yearly',
-                    stripe_product_id='prod_starter',
-                    price_monthly_usd=990,
-                    price_yearly_usd=9900,
-                    price_monthly_eur=890,
-                    price_yearly_eur=8900,
-                    price_monthly_gbp=790,
-                    price_yearly_gbp=7900,
-                    price_monthly_brl=4990,
-                    price_yearly_brl=49900,
+                    name='basic',
+                    display_name='Basic Plan',
+                    description='Entry-level plan for small businesses',
+                    stripe_price_id_monthly='price_1Rsk6eD9jtDTgtt7wOVii0Uv',
+                    stripe_price_id_yearly='price_1Rsk6fD9jtDTgtt7atHuhVi0',
+                    stripe_product_id='prod_SmwOSjZOdHh8R2',
+                    price_monthly_usd=2800,
+                    price_yearly_usd=19900,
+                    price_monthly_eur=2520,
+                    price_yearly_eur=17910,
+                    price_monthly_gbp=2240,
+                    price_yearly_gbp=15920,
+                    price_monthly_brl=14000,
+                    price_yearly_brl=99500,
                     max_projects=3,
                     max_users=5,
                     max_storage_gb=5,
@@ -114,20 +114,20 @@ async def create_seed_data():
                     sort_order=2,
                 ),
                 SubscriptionPlan(
-                    name='pro',
-                    display_name='Professional',
-                    description='For growing teams',
-                    stripe_price_id_monthly='price_pro_monthly',
-                    stripe_price_id_yearly='price_pro_yearly',
-                    stripe_product_id='prod_pro',
-                    price_monthly_usd=2990,
-                    price_yearly_usd=29900,
-                    price_monthly_eur=2690,
-                    price_yearly_eur=26900,
-                    price_monthly_gbp=2390,
-                    price_yearly_gbp=23900,
-                    price_monthly_brl=14990,
-                    price_yearly_brl=149900,
+                    name='premium',
+                    display_name='Premium Subscription',
+                    description='Monthly premium subscription with advanced features',
+                    stripe_price_id_monthly='price_1Rsk6gD9jtDTgtt7D6J4QE4k',
+                    stripe_price_id_yearly='price_1Rsk6gD9jtDTgtt7KbZqwLhV',
+                    stripe_product_id='prod_SmwOCZUzUTQ5Zi',
+                    price_monthly_usd=6800,
+                    price_yearly_usd=45000,
+                    price_monthly_eur=6120,
+                    price_yearly_eur=40500,
+                    price_monthly_gbp=5440,
+                    price_yearly_gbp=36000,
+                    price_monthly_brl=34000,
+                    price_yearly_brl=225000,
                     max_projects=10,
                     max_users=20,
                     max_storage_gb=50,
@@ -136,20 +136,20 @@ async def create_seed_data():
                     sort_order=3,
                 ),
                 SubscriptionPlan(
-                    name='business',
-                    display_name='Business',
-                    description='For large organizations',
-                    stripe_price_id_monthly='price_business_monthly',
-                    stripe_price_id_yearly='price_business_yearly',
-                    stripe_product_id='prod_business',
-                    price_monthly_usd=9990,
-                    price_yearly_usd=99900,
-                    price_monthly_eur=8990,
-                    price_yearly_eur=89900,
-                    price_monthly_gbp=7990,
-                    price_yearly_gbp=79900,
-                    price_monthly_brl=49990,
-                    price_yearly_brl=499900,
+                    name='enterprise',
+                    display_name='Enterprise Solution',
+                    description='Full-featured enterprise package with custom support',
+                    stripe_price_id_monthly='price_1Rsk6bD9jtDTgtt7YVFraetI',
+                    stripe_price_id_yearly='price_1Rsk6dD9jtDTgtt7qEkMYgBF',
+                    stripe_product_id='prod_SmwOdGQRNlyp3D',
+                    price_monthly_usd=25500,
+                    price_yearly_usd=199900,
+                    price_monthly_eur=22950,
+                    price_yearly_eur=179910,
+                    price_monthly_gbp=20400,
+                    price_yearly_gbp=159920,
+                    price_monthly_brl=127500,
+                    price_yearly_brl=999500,
                     max_projects=50,
                     max_users=100,
                     max_storage_gb=500,
@@ -598,10 +598,10 @@ async def create_seed_data():
         subscriptions = []
         billing_records = []
         
-        # Development Team - Business plan (active subscription)
+        # Development Team - Enterprise plan (active subscription)
         sub1 = CustomerSubscription(
             organization_id=organizations[0].id,
-            plan_id=all_plans['business'].id,
+            plan_id=all_plans['enterprise'].id,
             stripe_customer_id='cus_dev_team_001',
             stripe_subscription_id='sub_dev_team_001',
             status='active',
@@ -623,18 +623,18 @@ async def create_seed_data():
                 subscription_id=sub1.id,
                 stripe_invoice_id=f'inv_dev_{months_ago}_001',
                 stripe_payment_intent_id=f'pi_dev_{months_ago}_001',
-                amount=all_plans['business'].price_monthly_usd,
+                amount=all_plans['enterprise'].price_monthly_usd,
                 currency='usd',
                 status='paid',
                 invoice_date=datetime.now(UTC) - timedelta(days=30 * months_ago),
                 paid_at=datetime.now(UTC) - timedelta(days=30 * months_ago, hours=1),
-                description=f"Business Plan - Monthly subscription (Month {3-months_ago})"
+                description=f"Enterprise Solution - Monthly subscription (Month {3-months_ago})"
             ))
         
-        # Marketing Team - Pro plan (active)
+        # Marketing Team - Premium plan (active)
         sub2 = CustomerSubscription(
             organization_id=organizations[1].id,
-            plan_id=all_plans['pro'].id,
+            plan_id=all_plans['premium'].id,
             stripe_customer_id='cus_marketing_001',
             stripe_subscription_id='sub_marketing_001',
             status='active',
@@ -656,18 +656,18 @@ async def create_seed_data():
                 subscription_id=sub2.id,
                 stripe_invoice_id=f'inv_marketing_{months_ago}_001',
                 stripe_payment_intent_id=f'pi_marketing_{months_ago}_001',
-                amount=all_plans['pro'].price_monthly_usd,
+                amount=all_plans['premium'].price_monthly_usd,
                 currency='usd',
                 status='paid',
                 invoice_date=datetime.now(UTC) - timedelta(days=30 * months_ago),
                 paid_at=datetime.now(UTC) - timedelta(days=30 * months_ago, hours=2),
-                description=f"Pro Plan - Monthly subscription (Month {2-months_ago})"
+                description=f"Premium Subscription - Monthly subscription (Month {2-months_ago})"
             ))
         
-        # Research Team - Starter plan (active)
+        # Research Team - Basic plan (active)
         sub3 = CustomerSubscription(
             organization_id=organizations[2].id,
-            plan_id=all_plans['starter'].id,
+            plan_id=all_plans['basic'].id,
             stripe_customer_id='cus_research_001',
             stripe_subscription_id='sub_research_001',
             status='active',
@@ -688,18 +688,18 @@ async def create_seed_data():
             subscription_id=sub3.id,
             stripe_invoice_id='inv_research_0_001',
             stripe_payment_intent_id='pi_research_0_001',
-            amount=all_plans['starter'].price_monthly_usd,
+            amount=all_plans['basic'].price_monthly_usd,
             currency='usd',
             status='paid',
             invoice_date=datetime.now(UTC) - timedelta(days=30),
             paid_at=datetime.now(UTC) - timedelta(days=30, hours=1),
-            description="Starter Plan - Monthly subscription"
+            description="Basic Plan - Monthly subscription"
         ))
         
-        # Sales Department - Pro plan (trialing)
+        # Sales Department - Premium plan (trialing)
         sub4 = CustomerSubscription(
             organization_id=organizations[3].id,
-            plan_id=all_plans['pro'].id,
+            plan_id=all_plans['premium'].id,
             stripe_customer_id='cus_sales_001',
             stripe_subscription_id='sub_sales_001',
             status='trialing',
@@ -796,10 +796,10 @@ async def create_seed_data():
         print(f"   • mike@example.com (member, active)")
         print(f"   • emma@example.com (admin, active)")
         print(f"\n💳 Active Subscriptions:")
-        print(f"   • Development Team: Business Plan (${all_plans['business'].price_monthly_usd / 100}/mo)")
-        print(f"   • Marketing Team: Pro Plan (${all_plans['pro'].price_monthly_usd / 100}/mo)")
-        print(f"   • Research Team: Starter Plan (${all_plans['starter'].price_monthly_usd / 100}/mo)")
-        print(f"   • Sales Department: Pro Plan (trialing)")
+        print(f"   • Development Team: Enterprise Solution (${all_plans['enterprise'].price_monthly_usd / 100}/mo)")
+        print(f"   • Marketing Team: Premium Subscription (${all_plans['premium'].price_monthly_usd / 100}/mo)")
+        print(f"   • Research Team: Basic Plan (${all_plans['basic'].price_monthly_usd / 100}/mo)")
+        print(f"   • Sales Department: Premium Subscription (trialing)")
         print(f"   • Customer Success: Free Plan")
         
     await engine.dispose()

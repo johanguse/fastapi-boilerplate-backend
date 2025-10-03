@@ -9,10 +9,10 @@ def create_subscriptions_and_billing(organizations, plans):
     billing_records = []
     payment_activities = []
     
-    # Development Team - Business plan (active subscription)
+    # Development Team - Enterprise plan (active subscription)
     sub1 = CustomerSubscription(
         organization_id=organizations[0].id,
-        plan_id=plans['business'].id,
+        plan_id=plans['enterprise'].id,
         stripe_customer_id='cus_dev_team_001',
         stripe_subscription_id='sub_dev_team_001',
         status='active',
@@ -32,18 +32,18 @@ def create_subscriptions_and_billing(organizations, plans):
             subscription_id=sub1.id,
             stripe_invoice_id=f'inv_dev_{months_ago}_001',
             stripe_payment_intent_id=f'pi_dev_{months_ago}_001',
-            amount=plans['business'].price_monthly_usd,
+            amount=plans['enterprise'].price_monthly_usd,
             currency='usd',
             status='paid',
             invoice_date=datetime.now(UTC) - timedelta(days=30 * months_ago),
             paid_at=datetime.now(UTC) - timedelta(days=30 * months_ago, hours=1),
-            description=f"Business Plan - Monthly subscription (Month {3-months_ago})"
+            description=f"Enterprise Solution - Monthly subscription (Month {3-months_ago})"
         ))
     
-    # Marketing Team - Pro plan (active)
+    # Marketing Team - Premium plan (active)
     sub2 = CustomerSubscription(
         organization_id=organizations[1].id,
-        plan_id=plans['pro'].id,
+        plan_id=plans['premium'].id,
         stripe_customer_id='cus_marketing_001',
         stripe_subscription_id='sub_marketing_001',
         status='active',
@@ -63,18 +63,18 @@ def create_subscriptions_and_billing(organizations, plans):
             subscription_id=sub2.id,
             stripe_invoice_id=f'inv_marketing_{months_ago}_001',
             stripe_payment_intent_id=f'pi_marketing_{months_ago}_001',
-            amount=plans['pro'].price_monthly_usd,
+            amount=plans['premium'].price_monthly_usd,
             currency='usd',
             status='paid',
             invoice_date=datetime.now(UTC) - timedelta(days=30 * months_ago),
             paid_at=datetime.now(UTC) - timedelta(days=30 * months_ago, hours=2),
-            description=f"Pro Plan - Monthly subscription (Month {2-months_ago})"
+            description=f"Premium Subscription - Monthly subscription (Month {2-months_ago})"
         ))
     
-    # Research Team - Starter plan (active)
+    # Research Team - Basic plan (active)
     sub3 = CustomerSubscription(
         organization_id=organizations[2].id,
-        plan_id=plans['starter'].id,
+        plan_id=plans['basic'].id,
         stripe_customer_id='cus_research_001',
         stripe_subscription_id='sub_research_001',
         status='active',
@@ -93,18 +93,18 @@ def create_subscriptions_and_billing(organizations, plans):
         subscription_id=sub3.id,
         stripe_invoice_id='inv_research_0_001',
         stripe_payment_intent_id='pi_research_0_001',
-        amount=plans['starter'].price_monthly_usd,
+        amount=plans['basic'].price_monthly_usd,
         currency='usd',
         status='paid',
         invoice_date=datetime.now(UTC) - timedelta(days=30),
         paid_at=datetime.now(UTC) - timedelta(days=30, hours=1),
-        description="Starter Plan - Monthly subscription"
+        description="Basic Plan - Monthly subscription"
     ))
     
-    # Sales Department - Pro plan (trialing)
+    # Sales Department - Premium plan (trialing)
     sub4 = CustomerSubscription(
         organization_id=organizations[3].id,
-        plan_id=plans['pro'].id,
+        plan_id=plans['premium'].id,
         stripe_customer_id='cus_sales_001',
         stripe_subscription_id='sub_sales_001',
         status='trialing',

@@ -143,9 +143,12 @@ async def get_admin_stats(
     )
     verified_users = len(verified_users_result.scalars().all())
 
-    # Active users
+    # Active users (is_active=True AND status is not suspended)
     active_users_result = await db.execute(
-        select(User).where(User.is_active == True)
+        select(User).where(
+            User.is_active == True,
+            User.status != 'suspended'
+        )
     )
     active_users = len(active_users_result.scalars().all())
 
