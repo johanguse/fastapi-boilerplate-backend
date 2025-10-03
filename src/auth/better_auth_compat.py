@@ -243,6 +243,9 @@ async def sign_in_email(
                 'email': user.email,
                 'name': getattr(user, 'name', user.email.split('@')[0]),
                 'emailVerified': user.is_verified,
+                'role': getattr(user, 'role', 'member'),
+                'is_verified': user.is_verified,
+                'is_superuser': user.is_superuser,
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -327,6 +330,9 @@ async def sign_up_email(
                     user, 'name', request.name or user.email.split('@')[0]
                 ),
                 'emailVerified': user.is_verified,
+                'role': getattr(user, 'role', 'member'),
+                'is_verified': user.is_verified,
+                'is_superuser': user.is_superuser,
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -398,6 +404,9 @@ async def get_session(
             'email': user.email,
             'name': getattr(user, 'name', user.email.split('@')[0]),
             'emailVerified': user.is_verified,
+            'role': getattr(user, 'role', 'member'),
+            'is_verified': user.is_verified,
+            'is_superuser': user.is_superuser,
             'createdAt': user.created_at.isoformat()
             if hasattr(user, 'created_at') and user.created_at
             else None,

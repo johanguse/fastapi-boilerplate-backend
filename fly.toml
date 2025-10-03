@@ -1,4 +1,4 @@
-app = "user-center-api"
+app = "boilerplate-api"
 primary_region = "gru"
 
 [build]

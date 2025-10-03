@@ -64,6 +64,7 @@ class Settings(BaseSettings):
 
     RESEND_API_KEY: str = os.getenv('RESEND_API_KEY')
     RESEND_FROM_EMAIL: str = os.getenv('RESEND_FROM_EMAIL')
+    FROM_EMAIL: str = os.getenv('FROM_EMAIL', os.getenv('RESEND_FROM_EMAIL', 'noreply@example.com'))
 
     R2_ENDPOINT_URL: str = os.getenv('R2_ENDPOINT_URL')
     R2_ACCESS_KEY_ID: str = os.getenv('R2_ACCESS_KEY_ID')
