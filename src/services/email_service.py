@@ -48,7 +48,7 @@ class EmailService:
             return False
 
         verification_link = f'{self.frontend_url}/verify-email?token={token}'
-        display_name = name if name else email.split('@')[0]
+        display_name = name if name else email.split('@', maxsplit=1)[0]
 
         try:
             params = {
@@ -86,7 +86,7 @@ class EmailService:
 
             response = resend.emails.send(params)
             logger.info(
-                f"Verification email sent to {email}, ID: {response.get('id')}"
+                f'Verification email sent to {email}, ID: {response.get("id")}'
             )
             return True
 
@@ -115,7 +115,7 @@ class EmailService:
             return False
 
         reset_link = f'{self.frontend_url}/reset-password?token={token}'
-        display_name = name if name else email.split('@')[0]
+        display_name = name if name else email.split('@', maxsplit=1)[0]
 
         try:
             params = {
@@ -154,7 +154,7 @@ class EmailService:
 
             response = resend.emails.send(params)
             logger.info(
-                f"Password reset email sent to {email}, ID: {response.get('id')}"
+                f'Password reset email sent to {email}, ID: {response.get("id")}'
             )
             return True
 
@@ -181,7 +181,7 @@ class EmailService:
             logger.error('Resend API key not found - check RESEND_API_KEY')
             return False
 
-        display_name = name if name else email.split('@')[0]
+        display_name = name if name else email.split('@', maxsplit=1)[0]
         dashboard_link = f'{self.frontend_url}/dashboard'
 
         try:
@@ -221,7 +221,7 @@ class EmailService:
 
             response = resend.emails.send(params)
             logger.info(
-                f"Welcome email sent to {email}, ID: {response.get('id')}"
+                f'Welcome email sent to {email}, ID: {response.get("id")}'
             )
             return True
 

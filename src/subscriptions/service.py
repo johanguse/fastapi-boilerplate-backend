@@ -30,10 +30,10 @@ async def get_subscription_plans(
 ) -> list[SubscriptionPlan]:
     """Get all subscription plans."""
     query = select(SubscriptionPlan).order_by(SubscriptionPlan.sort_order)
-    
+
     if active_only:
         query = query.where(SubscriptionPlan.is_active == True)  # noqa: E712
-    
+
     result = await db.execute(query)
     return list(result.scalars().all())
 
@@ -80,10 +80,10 @@ async def create_checkout_session(
     """Create a Stripe checkout session for subscription."""
     if not settings.STRIPE_SECRET_KEY:
         raise HTTPException(500, 'Stripe not configured')
-    
+
     # Get or create subscription record
     subscription = await get_organization_subscription(db, organization.id)
-    
+
     if not subscription:
         subscription = CustomerSubscription(
             organization_id=organization.id,
@@ -91,14 +91,14 @@ async def create_checkout_session(
         )
         db.add(subscription)
         await db.flush()
-    
+
     # Get plan details from price_id
     plan_name = 'starter'
     for pid, plan_config in settings.STRIPE_PLANS.items():
         if pid == price_id:
             plan_name = plan_config.get('name', 'starter')
             break
-    
+
     try:
         # Create Stripe checkout session
         session = stripe.checkout.Session.create(
@@ -125,16 +125,16 @@ async def create_checkout_session(
                 'subscription_id': str(subscription.id),
             },
         )
-        
+
         # Update subscription with customer ID
         if session.customer:
             subscription.stripe_customer_id = session.customer
             await db.commit()
-        
+
         return CheckoutSessionResponse(
             session_id=session.id, checkout_url=session.url
         )
-    
+
     except stripe.error.StripeError as e:
         raise HTTPException(400, f'Stripe error: {str(e)}')
 
@@ -145,19 +145,19 @@ async def create_customer_portal_session(
     """Create a Stripe customer portal session."""
     if not settings.STRIPE_SECRET_KEY:
         raise HTTPException(500, 'Stripe not configured')
-    
+
     subscription = await get_organization_subscription(db, organization.id)
-    
+
     if not subscription or not subscription.stripe_customer_id:
         raise HTTPException(404, 'No active subscription found')
-    
+
     try:
         session = stripe.billing_portal.Session.create(
             customer=subscription.stripe_customer_id, return_url=return_url
         )
-        
+
         return CustomerPortalResponse(portal_url=session.url)
-    
+
     except stripe.error.StripeError as e:
         raise HTTPException(400, f'Stripe error: {str(e)}')
 
@@ -167,23 +167,23 @@ async def cancel_subscription(
 ) -> CustomerSubscription:
     """Cancel an organization's subscription."""
     subscription = await get_organization_subscription(db, organization_id)
-    
+
     if not subscription or not subscription.stripe_subscription_id:
         raise HTTPException(404, 'No active subscription found')
-    
+
     try:
         # Cancel in Stripe
         stripe.Subscription.modify(
             subscription.stripe_subscription_id, cancel_at_period_end=True
         )
-        
+
         # Update local record
         subscription.cancel_at_period_end = True
         subscription.canceled_at = datetime.now(UTC)
         await db.commit()
-        
+
         return subscription
-    
+
     except stripe.error.StripeError as e:
         raise HTTPException(400, f'Stripe error: {str(e)}')
 
@@ -193,12 +193,12 @@ async def get_subscription_usage(
 ) -> SubscriptionUsageResponse:
     """Get organization's subscription usage metrics."""
     subscription = await get_organization_subscription(db, organization_id)
-    
+
     if not subscription or not subscription.plan:
         raise HTTPException(404, 'No active subscription found')
-    
+
     plan = subscription.plan
-    
+
     # Calculate usage percentages
     projects_usage = (
         (subscription.current_projects_count / plan.max_projects * 100)
@@ -215,7 +215,7 @@ async def get_subscription_usage(
         if plan.max_storage_gb > 0
         else 0
     )
-    
+
     return SubscriptionUsageResponse(
         organization_id=organization_id,
         plan_name=plan.name,
@@ -234,20 +234,22 @@ async def get_subscription_usage(
 async def handle_subscription_created(db: AsyncSession, event: dict):
     """Handle subscription.created webhook event."""
     subscription_data = event['data']['object']
-    
+
     # Get metadata
     metadata = subscription_data.get('metadata', {})
     subscription_id = metadata.get('subscription_id')
-    
+
     if not subscription_id:
         return
-    
+
     # Update subscription record
     result = await db.execute(
-        select(CustomerSubscription).where(CustomerSubscription.id == int(subscription_id))
+        select(CustomerSubscription).where(
+            CustomerSubscription.id == int(subscription_id)
+        )
     )
     subscription = result.scalar_one_or_none()
-    
+
     if subscription:
         subscription.stripe_subscription_id = subscription_data['id']
         subscription.stripe_customer_id = subscription_data['customer']
@@ -265,18 +267,19 @@ async def handle_subscription_updated(db: AsyncSession, event: dict):
     """Handle subscription.updated webhook event."""
     subscription_data = event['data']['object']
     stripe_subscription_id = subscription_data['id']
-    
+
     # Find subscription by Stripe ID
     result = await db.execute(
         select(CustomerSubscription).where(
-            CustomerSubscription.stripe_subscription_id == stripe_subscription_id
+            CustomerSubscription.stripe_subscription_id
+            == stripe_subscription_id
         )
     )
     subscription = result.scalar_one_or_none()
-    
+
     if not subscription:
         return
-    
+
     # Update subscription details
     subscription.status = subscription_data['status']
     subscription.current_period_start = datetime.fromtimestamp(
@@ -288,7 +291,7 @@ async def handle_subscription_updated(db: AsyncSession, event: dict):
     subscription.cancel_at_period_end = subscription_data.get(
         'cancel_at_period_end', False
     )
-    
+
     # Update trial info if present
     if subscription_data.get('trial_start'):
         subscription.trial_start = datetime.fromtimestamp(
@@ -298,7 +301,7 @@ async def handle_subscription_updated(db: AsyncSession, event: dict):
         subscription.trial_end = datetime.fromtimestamp(
             subscription_data['trial_end'], UTC
         )
-    
+
     await db.commit()
 
 
@@ -306,15 +309,16 @@ async def handle_subscription_deleted(db: AsyncSession, event: dict):
     """Handle subscription.deleted webhook event."""
     subscription_data = event['data']['object']
     stripe_subscription_id = subscription_data['id']
-    
+
     # Find and update subscription
     result = await db.execute(
         select(CustomerSubscription).where(
-            CustomerSubscription.stripe_subscription_id == stripe_subscription_id
+            CustomerSubscription.stripe_subscription_id
+            == stripe_subscription_id
         )
     )
     subscription = result.scalar_one_or_none()
-    
+
     if subscription:
         subscription.status = 'canceled'
         subscription.canceled_at = datetime.now(UTC)
@@ -325,21 +329,22 @@ async def handle_invoice_paid(db: AsyncSession, event: dict):
     """Handle invoice.payment_succeeded webhook event."""
     invoice_data = event['data']['object']
     stripe_subscription_id = invoice_data.get('subscription')
-    
+
     if not stripe_subscription_id:
         return
-    
+
     # Find subscription
     result = await db.execute(
         select(CustomerSubscription).where(
-            CustomerSubscription.stripe_subscription_id == stripe_subscription_id
+            CustomerSubscription.stripe_subscription_id
+            == stripe_subscription_id
         )
     )
     subscription = result.scalar_one_or_none()
-    
+
     if not subscription:
         return
-    
+
     # Create billing history record
     billing_record = BillingHistory(
         subscription_id=subscription.id,
@@ -354,13 +359,13 @@ async def handle_invoice_paid(db: AsyncSession, event: dict):
         invoice_pdf=invoice_data.get('invoice_pdf'),
         description=invoice_data.get('description'),
     )
-    
+
     db.add(billing_record)
-    
+
     # Update subscription status
     if subscription.status != 'active':
         subscription.status = 'active'
-    
+
     await db.commit()
 
 
@@ -368,21 +373,22 @@ async def handle_invoice_payment_failed(db: AsyncSession, event: dict):
     """Handle invoice.payment_failed webhook event."""
     invoice_data = event['data']['object']
     stripe_subscription_id = invoice_data.get('subscription')
-    
+
     if not stripe_subscription_id:
         return
-    
+
     # Find subscription
     result = await db.execute(
         select(CustomerSubscription).where(
-            CustomerSubscription.stripe_subscription_id == stripe_subscription_id
+            CustomerSubscription.stripe_subscription_id
+            == stripe_subscription_id
         )
     )
     subscription = result.scalar_one_or_none()
-    
+
     if not subscription:
         return
-    
+
     # Create billing history record
     billing_record = BillingHistory(
         subscription_id=subscription.id,
@@ -395,12 +401,12 @@ async def handle_invoice_payment_failed(db: AsyncSession, event: dict):
         invoice_url=invoice_data.get('hosted_invoice_url'),
         description=invoice_data.get('description'),
     )
-    
+
     db.add(billing_record)
-    
+
     # Update subscription status
     subscription.status = 'past_due'
-    
+
     await db.commit()
 
 

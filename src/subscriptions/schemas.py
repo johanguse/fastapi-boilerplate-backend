@@ -38,7 +38,7 @@ class SubscriptionPlanResponse(SubscriptionPlanBase):
     is_active: bool
     sort_order: int
     created_at: datetime
-    
+
     # Multi-currency pricing
     price_monthly_eur: Optional[int] = None
     price_yearly_eur: Optional[int] = None
@@ -84,7 +84,7 @@ class CustomerSubscriptionResponse(CustomerSubscriptionBase):
     current_storage_gb: int
     created_at: datetime
     updated_at: datetime
-    
+
     # Include plan details
     plan: Optional[SubscriptionPlanResponse] = None
 

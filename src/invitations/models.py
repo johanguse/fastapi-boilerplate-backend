@@ -36,6 +36,7 @@ class EmailVerificationToken(Base):
 
     # Relationships
     from src.auth.models import User
+
     user: Mapped['User'] = relationship('User', foreign_keys=[user_id])
 
     def is_expired(self) -> bool:
@@ -75,6 +76,7 @@ class PasswordResetToken(Base):
 
     # Relationships
     from src.auth.models import User
+
     user: Mapped['User'] = relationship('User', foreign_keys=[user_id])
 
     def is_expired(self) -> bool:
@@ -107,12 +109,12 @@ class TeamInvitation(Base):
         String(255), unique=True, index=True, default=generate_token
     )
     message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Status tracking
     status: Mapped[str] = mapped_column(
         String(20), default='pending', index=True
     )  # pending, accepted, declined, expired
-    
+
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC) + timedelta(days=7),
@@ -123,7 +125,7 @@ class TeamInvitation(Base):
     accepted_by_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True
     )
-    
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
@@ -155,4 +157,3 @@ class TeamInvitation(Base):
 
     def __repr__(self) -> str:
         return f'<TeamInvitation {self.email} to org {self.organization_id}>'
-

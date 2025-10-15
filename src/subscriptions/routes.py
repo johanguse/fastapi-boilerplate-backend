@@ -10,7 +10,7 @@ from src.auth.models import User
 from src.common.security import get_current_active_user
 from src.common.session import get_async_session
 from src.organizations.service import get_organization, is_org_admin
-from src.subscriptions.models import BillingHistory, SubscriptionPlan
+from src.subscriptions.models import BillingHistory
 from src.subscriptions.schemas import (
     BillingHistoryResponse,
     CheckoutSessionCreate,
@@ -24,7 +24,6 @@ from src.subscriptions.service import (
     cancel_subscription,
     create_checkout_session,
     create_customer_portal_session,
-    get_billing_history,
     get_organization_subscription,
     get_subscription_plans,
     get_subscription_usage,
@@ -58,10 +57,12 @@ async def create_subscription_checkout(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     if not await is_org_admin(db, organization, current_user):
-        raise HTTPException(403, 'Only organization admins can manage subscriptions')
-    
+        raise HTTPException(
+            403, 'Only organization admins can manage subscriptions'
+        )
+
     # Create checkout session
     return await create_checkout_session(
         db,
@@ -86,16 +87,17 @@ async def get_organization_subscription_details(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     subscription = await get_organization_subscription(db, organization_id)
     if not subscription:
         raise HTTPException(404, 'No subscription found')
-    
+
     return subscription
 
 
 @router.post(
-    '/organizations/{organization_id}/portal', response_model=CustomerPortalResponse
+    '/organizations/{organization_id}/portal',
+    response_model=CustomerPortalResponse,
 )
 async def get_customer_portal(
     organization_id: int,
@@ -108,10 +110,12 @@ async def get_customer_portal(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     if not await is_org_admin(db, organization, current_user):
-        raise HTTPException(403, 'Only organization admins can access billing portal')
-    
+        raise HTTPException(
+            403, 'Only organization admins can access billing portal'
+        )
+
     return await create_customer_portal_session(db, organization, return_url)
 
 
@@ -129,10 +133,12 @@ async def cancel_organization_subscription(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     if not await is_org_admin(db, organization, current_user):
-        raise HTTPException(403, 'Only organization admins can cancel subscriptions')
-    
+        raise HTTPException(
+            403, 'Only organization admins can cancel subscriptions'
+        )
+
     return await cancel_subscription(db, organization_id)
 
 
@@ -150,7 +156,7 @@ async def get_organization_usage(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     return await get_subscription_usage(db, organization_id)
 
 
@@ -168,15 +174,17 @@ async def get_organization_billing_history(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     if not await is_org_admin(db, organization, current_user):
-        raise HTTPException(403, 'Only organization admins can view billing history')
-    
+        raise HTTPException(
+            403, 'Only organization admins can view billing history'
+        )
+
     # Get subscription
     subscription = await get_organization_subscription(db, organization_id)
     if not subscription:
         raise HTTPException(404, 'No subscription found')
-    
+
     # Return paginated billing history
     return await paginate(
         db,

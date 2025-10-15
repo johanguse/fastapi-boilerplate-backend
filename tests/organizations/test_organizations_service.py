@@ -1,12 +1,12 @@
-import pytest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import pytest
 from fastapi import HTTPException
 
 from src.auth.models import User
-from src.organizations.models import Organization, OrganizationInvitation
 from src.organizations import service as org_service
+from src.organizations.models import Organization, OrganizationInvitation
 
 
 class FakeResult:
@@ -47,7 +47,7 @@ class FakeSession:
 
     async def refresh(self, obj):
         # simulate DB generated id
-        if getattr(obj, 'id', None) in (None, 0):
+        if getattr(obj, 'id', None) in {None, 0}:
             obj.id = 123
 
     def add(self, obj):
@@ -96,7 +96,9 @@ async def test_create_organization_limit_reached():
     db = FakeSession(
         results=[
             FakeResult(scalar_value=None),
-            FakeResult(scalars_list=[Organization(), Organization(), Organization()]),
+            FakeResult(
+                scalars_list=[Organization(), Organization(), Organization()]
+            ),
         ]
     )
     user = make_user(max_teams=2)
@@ -134,11 +136,17 @@ async def test_invite_to_organization_success(monkeypatch):
     org.name = 'Acme'
 
     # Patch helpers used by invite flow
-    monkeypatch.setattr(org_service, 'get_organization', AsyncMock(return_value=org))
-    monkeypatch.setattr(org_service, 'is_org_admin', AsyncMock(return_value=True))
+    monkeypatch.setattr(
+        org_service, 'get_organization', AsyncMock(return_value=org)
+    )
+    monkeypatch.setattr(
+        org_service, 'is_org_admin', AsyncMock(return_value=True)
+    )
 
     send_inv = AsyncMock()
-    monkeypatch.setattr('src.organizations.service.send_invitation_email', send_inv)
+    monkeypatch.setattr(
+        'src.organizations.service.send_invitation_email', send_inv
+    )
 
     log_activity = AsyncMock()
     monkeypatch.setattr('src.activity_log.service.log_activity', log_activity)

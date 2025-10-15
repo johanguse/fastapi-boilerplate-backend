@@ -1,7 +1,7 @@
-from fastapi_pagination.bases import AbstractPage
+from unittest.mock import patch
 
 import pytest
-from unittest.mock import patch
+from fastapi_pagination.bases import AbstractPage
 
 from src.payments import service as pay_service
 
@@ -34,7 +34,10 @@ async def test_create_checkout_session_updates_customer_id():
             self.customer = 'cus_123'
             self.url = 'https://checkout.stripe.com/test'
 
-    with patch('src.payments.service.stripe.checkout.Session.create', return_value=FakeStripeSession()):
+    with patch(
+        'src.payments.service.stripe.checkout.Session.create',
+        return_value=FakeStripeSession(),
+    ):
         url = await pay_service.create_checkout_session(db, org, 'price_1M')
 
     assert url.startswith('https://')
@@ -68,14 +71,12 @@ async def test_handle_subscription_update_happy_path(monkeypatch):
 
     event = {
         'data': {
-            'object': StripeLike(
-                {
-                    'customer': 'cus_999',
-                    'id': 'sub_001',
-                    'status': 'active',
-                    'items': {'data': [{'price': {'id': 'price_1M'}}]},
-                }
-            )
+            'object': StripeLike({
+                'customer': 'cus_999',
+                'id': 'sub_001',
+                'status': 'active',
+                'items': {'data': [{'price': {'id': 'price_1M'}}]},
+            })
         }
     }
 
@@ -84,7 +85,10 @@ async def test_handle_subscription_update_happy_path(monkeypatch):
     assert org.stripe_subscription_id == 'sub_001'
     assert org.plan_name == 'starter'
     assert org.subscription_status == 'active'
-    assert org.max_projects == pay_service.settings.STRIPE_PLANS['price_1M']['max_projects']
+    assert (
+        org.max_projects
+        == pay_service.settings.STRIPE_PLANS['price_1M']['max_projects']
+    )
 
 
 @pytest.mark.asyncio

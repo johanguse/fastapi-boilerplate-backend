@@ -314,6 +314,7 @@ class AuditLogger:
 
 # Convenience functions for common audit events
 
+
 def log_login_success(user_id: int, email: str, request: Request):
     """Log successful login."""
     AuditLogger.log_auth_event(
@@ -325,7 +326,9 @@ def log_login_success(user_id: int, email: str, request: Request):
     )
 
 
-def log_login_failure(email: str, request: Request, reason: str = 'invalid_credentials'):
+def log_login_failure(
+    email: str, request: Request, reason: str = 'invalid_credentials'
+):
     """Log failed login attempt."""
     AuditLogger.log_auth_event(
         action='login',
@@ -453,5 +456,3 @@ def log_organization_member_removed(
         resource_id=str(removed_member_id),
         request=request,
     )
-
-

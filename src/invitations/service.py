@@ -32,7 +32,7 @@ async def create_email_verification_token(
     db.add(token)
     await db.commit()
     await db.refresh(token)
-    
+
     # Send email
     verification_link = f'{base_url}/verify-email?token={token.token}'
     await send_email_verification(
@@ -41,13 +41,11 @@ async def create_email_verification_token(
         verification_link=verification_link,
         background_tasks=background_tasks,
     )
-    
+
     return token
 
 
-async def verify_email_token(
-    db: AsyncSession, token_str: str
-) -> User:
+async def verify_email_token(db: AsyncSession, token_str: str) -> User:
     """Verify email token and mark user as verified."""
     result = await db.execute(
         select(EmailVerificationToken).where(
@@ -55,23 +53,23 @@ async def verify_email_token(
         )
     )
     token = result.scalar_one_or_none()
-    
+
     if not token:
         raise HTTPException(404, 'Invalid verification token')
-    
+
     if not token.is_valid():
         raise HTTPException(400, 'Token has expired or been used')
-    
+
     # Mark token as used
     token.used_at = datetime.now(UTC)
-    
+
     # Mark user as verified
     user_result = await db.execute(
         select(User).where(User.id == token.user_id)
     )
     user = user_result.scalar_one()
     user.is_verified = True
-    
+
     await db.commit()
     return user
 
@@ -88,11 +86,9 @@ async def create_team_invitation(
 ) -> TeamInvitation:
     """Create and send team invitation."""
     # Check if user already member
-    existing_user = await db.execute(
-        select(User).where(User.email == email)
-    )
+    existing_user = await db.execute(select(User).where(User.email == email))
     user = existing_user.scalar_one_or_none()
-    
+
     if user:
         existing_member = await db.execute(
             select(OrganizationMember).where(
@@ -102,7 +98,7 @@ async def create_team_invitation(
         )
         if existing_member.scalar_one_or_none():
             raise HTTPException(400, 'User is already a member')
-    
+
     # Check for existing pending invitation
     existing_invite = await db.execute(
         select(TeamInvitation).where(
@@ -113,13 +109,13 @@ async def create_team_invitation(
     )
     if existing_invite.scalar_one_or_none():
         raise HTTPException(400, 'Invitation already sent')
-    
+
     # Get organization
     org_result = await db.execute(
         select(Organization).where(Organization.id == organization_id)
     )
     organization = org_result.scalar_one()
-    
+
     # Create invitation
     invitation = TeamInvitation(
         organization_id=organization_id,
@@ -131,7 +127,7 @@ async def create_team_invitation(
     db.add(invitation)
     await db.commit()
     await db.refresh(invitation)
-    
+
     # Send email
     invitation_link = f'{base_url}/accept-invitation?token={invitation.token}'
     await send_team_invitation(
@@ -143,7 +139,7 @@ async def create_team_invitation(
         message=message,
         background_tasks=background_tasks,
     )
-    
+
     return invitation
 
 
@@ -155,16 +151,16 @@ async def accept_team_invitation(
         select(TeamInvitation).where(TeamInvitation.token == token)
     )
     invitation = result.scalar_one_or_none()
-    
+
     if not invitation:
         raise HTTPException(404, 'Invalid invitation')
-    
+
     if not invitation.is_pending():
         raise HTTPException(400, 'Invitation is no longer valid')
-    
+
     if invitation.email != user.email:
         raise HTTPException(403, 'This invitation is for a different email')
-    
+
     # Add user to organization
     member = OrganizationMember(
         organization_id=invitation.organization_id,
@@ -172,15 +168,15 @@ async def accept_team_invitation(
         role=invitation.role,
     )
     db.add(member)
-    
+
     # Update invitation
     invitation.status = 'accepted'
     invitation.accepted_at = datetime.now(UTC)
     invitation.accepted_by_id = user.id
-    
+
     await db.commit()
     await db.refresh(member)
-    
+
     return member
 
 
@@ -192,23 +188,23 @@ async def decline_team_invitation(
         select(TeamInvitation).where(TeamInvitation.token == token)
     )
     invitation = result.scalar_one_or_none()
-    
+
     if not invitation:
         raise HTTPException(404, 'Invalid invitation')
-    
+
     if not invitation.is_pending():
         raise HTTPException(400, 'Invitation is no longer valid')
-    
+
     if user and invitation.email != user.email:
         raise HTTPException(403, 'This invitation is for a different email')
-    
+
     # Update invitation
     invitation.status = 'declined'
     invitation.updated_at = datetime.now(UTC)
-    
+
     await db.commit()
     await db.refresh(invitation)
-    
+
     return invitation
 
 
@@ -223,17 +219,17 @@ async def cancel_team_invitation(
         )
     )
     invitation = result.scalar_one_or_none()
-    
+
     if not invitation:
         raise HTTPException(404, 'Invitation not found')
-    
+
     if invitation.status != 'pending':
         raise HTTPException(400, 'Only pending invitations can be cancelled')
-    
+
     invitation.status = 'expired'
     invitation.updated_at = datetime.now(UTC)
-    
+
     await db.commit()
     await db.refresh(invitation)
-    
+
     return invitation

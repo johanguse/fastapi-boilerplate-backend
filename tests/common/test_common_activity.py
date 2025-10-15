@@ -1,6 +1,6 @@
 import pytest
-from sqlalchemy import text
 from pydantic import BaseModel
+from sqlalchemy import text
 
 from src.common.activity import ActivityLogData, log_activity
 
@@ -42,14 +42,16 @@ async def test_log_activity_persists(db_session):
     )
     await db_session.commit()
 
-    res = await db_session.execute(text("SELECT id FROM users WHERE email='act@test.com'"))
+    res = await db_session.execute(
+        text("SELECT id FROM users WHERE email='act@test.com'")
+    )
     user_id = res.fetchone()[0]
 
     user = DummyUser(id=user_id)
-    data = ActivityLogData(action="test", description="did something")
+    data = ActivityLogData(action='test', description='did something')
 
     activity = await log_activity(db_session, user, data)
     assert activity.id is not None
     assert activity.user_id == user_id
-    assert activity.action == "test"
-    assert activity.description == "did something"
+    assert activity.action == 'test'
+    assert activity.description == 'did something'

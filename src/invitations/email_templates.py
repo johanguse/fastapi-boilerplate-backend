@@ -88,7 +88,7 @@ def get_email_verification_template(
             """,
         },
     }
-    
+
     return templates.get(language, templates['en-US'])
 
 
@@ -103,7 +103,7 @@ def get_team_invitation_template(
     """Get team invitation email template."""
     templates = {
         'en-US': {
-            'subject': f'You\'re invited to join {organization_name}',
+            'subject': f"You're invited to join {organization_name}",
             'html': f"""
 <!DOCTYPE html>
 <html>
@@ -185,7 +185,7 @@ def get_team_invitation_template(
             """,
         },
     }
-    
+
     return templates.get(language, templates['en-US'])
 
 
@@ -235,6 +235,5 @@ def get_password_reset_template(
             """,
         },
     }
-    
-    return templates.get(language, templates['en-US'])
 
+    return templates.get(language, templates['en-US'])

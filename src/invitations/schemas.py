@@ -10,7 +10,9 @@ class TeamInvitationCreate(BaseModel):
     """Schema for creating a team invitation."""
 
     email: EmailStr
-    role: str = Field(default='member', pattern='^(owner|admin|member|viewer)$')
+    role: str = Field(
+        default='member', pattern='^(owner|admin|member|viewer)$'
+    )
     message: Optional[str] = Field(None, max_length=500)
 
 
@@ -53,4 +55,3 @@ class InvitationListResponse(BaseModel):
     invited_by_name: str
     expires_at: datetime
     created_at: datetime
-

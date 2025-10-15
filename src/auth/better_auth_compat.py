@@ -97,7 +97,7 @@ def verify_better_auth_jwt(token: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def _get_token_from_request(request: Request) -> Optional[str]:
+def get_token_from_request(request: Request) -> Optional[str]:
     """Extract JWT from Authorization header or fallback to session cookie."""
     # Bearer token first
     auth_header = request.headers.get('Authorization')
@@ -154,7 +154,7 @@ def _delete_cookie(response: Response, key: str, path: str = '/') -> None:
 async def _get_user_from_request(
     request: Request, session: AsyncSession
 ) -> User:
-    token = _get_token_from_request(request)
+    token = get_token_from_request(request)
     if not token:
         raise HTTPException(status_code=401, detail='No valid session')
     payload = verify_better_auth_jwt(token)
@@ -379,7 +379,7 @@ async def get_session(
 ):
     """Get current session information"""
     # Get token from Authorization header or cookie
-    token = _get_token_from_request(request)
+    token = get_token_from_request(request)
     if not token:
         raise HTTPException(status_code=401, detail='No valid session')
     payload = verify_better_auth_jwt(token)

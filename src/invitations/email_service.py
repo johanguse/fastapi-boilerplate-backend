@@ -23,14 +23,17 @@ async def send_email_verification(
     background_tasks: Optional[BackgroundTasks] = None,
 ):
     """Send email verification email."""
-    template = get_email_verification_template(name, verification_link, language)
-    
+    template = get_email_verification_template(
+        name, verification_link, language
+    )
+
     def send():
         try:
             # Import here to avoid issues if resend not configured
             import resend
+
             resend.api_key = settings.RESEND_API_KEY
-            
+
             resend.Emails.send({
                 'from': settings.FROM_EMAIL,
                 'to': email,
@@ -39,8 +42,10 @@ async def send_email_verification(
             })
             logger.info(f'Email verification sent to {email}')
         except Exception as e:
-            logger.error(f'Failed to send verification email to {email}: {str(e)}')
-    
+            logger.error(
+                f'Failed to send verification email to {email}: {str(e)}'
+            )
+
     if background_tasks:
         background_tasks.add_task(send)
     else:
@@ -59,14 +64,20 @@ async def send_team_invitation(
 ):
     """Send team invitation email."""
     template = get_team_invitation_template(
-        invited_by_name, organization_name, invitation_link, role, message, language
+        invited_by_name,
+        organization_name,
+        invitation_link,
+        role,
+        message,
+        language,
     )
-    
+
     def send():
         try:
             import resend
+
             resend.api_key = settings.RESEND_API_KEY
-            
+
             resend.Emails.send({
                 'from': settings.FROM_EMAIL,
                 'to': email,
@@ -76,7 +87,7 @@ async def send_team_invitation(
             logger.info(f'Team invitation sent to {email}')
         except Exception as e:
             logger.error(f'Failed to send invitation to {email}: {str(e)}')
-    
+
     if background_tasks:
         background_tasks.add_task(send)
     else:
@@ -92,12 +103,13 @@ async def send_password_reset(
 ):
     """Send password reset email."""
     template = get_password_reset_template(name, reset_link, language)
-    
+
     def send():
         try:
             import resend
+
             resend.api_key = settings.RESEND_API_KEY
-            
+
             resend.Emails.send({
                 'from': settings.FROM_EMAIL,
                 'to': email,
@@ -107,9 +119,8 @@ async def send_password_reset(
             logger.info(f'Password reset email sent to {email}')
         except Exception as e:
             logger.error(f'Failed to send password reset to {email}: {str(e)}')
-    
+
     if background_tasks:
         background_tasks.add_task(send)
     else:
         send()
-

@@ -1,18 +1,21 @@
 import pytest
 
-pytest.skip("deprecated duplicate; moved to tests/common", allow_module_level=True)
+pytest.skip(
+    'deprecated duplicate; moved to tests/common', allow_module_level=True
+)
+
 
 def test_types_exports_exist():
     # Importing common.types should expose these names via __all__
-    import src.common.types as types
+    from src.common import types  # noqa: E402
 
     # When not TYPE_CHECKING, these are aliases to Any. Just ensure attributes exist.
     for name in [
-        "ActivityLog",
-        "User",
-        "Project",
-        "Organization",
-        "OrganizationMember",
-        "OrganizationInvitation",
+        'ActivityLog',
+        'User',
+        'Project',
+        'Organization',
+        'OrganizationMember',
+        'OrganizationInvitation',
     ]:
-        assert hasattr(types, name), f"{name} should exist on common.types"
+        assert hasattr(types, name), f'{name} should exist on common.types'

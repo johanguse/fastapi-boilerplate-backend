@@ -27,7 +27,7 @@ class SubscriptionPlan(Base):
     stripe_product_id: Mapped[Optional[str]] = mapped_column(
         String(100), nullable=True
     )
-    
+
     # Pricing (in cents)
     price_monthly_usd: Mapped[int] = mapped_column(Integer, default=0)
     price_yearly_usd: Mapped[int] = mapped_column(Integer, default=0)
@@ -49,15 +49,15 @@ class SubscriptionPlan(Base):
     price_yearly_brl: Mapped[Optional[int]] = mapped_column(
         Integer, nullable=True
     )
-    
+
     # Plan limits
     max_projects: Mapped[int] = mapped_column(Integer, default=1)
     max_users: Mapped[int] = mapped_column(Integer, default=1)
     max_storage_gb: Mapped[int] = mapped_column(Integer, default=1)
-    
+
     # Features (JSON array of feature keys)
     features: Mapped[dict] = mapped_column(JSON, default=dict)
-    
+
     # Metadata
     is_active: Mapped[bool] = mapped_column(default=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
@@ -65,9 +65,11 @@ class SubscriptionPlan(Base):
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
-    
+
     # Relationships
     subscriptions: Mapped[list['CustomerSubscription']] = relationship(
         back_populates='plan', cascade='all, delete-orphan'
@@ -87,9 +89,11 @@ class CustomerSubscription(Base):
         Integer, ForeignKey('organizations.id', ondelete='CASCADE'), index=True
     )
     plan_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey('subscription_plans.id', ondelete='SET NULL'), nullable=True
+        Integer,
+        ForeignKey('subscription_plans.id', ondelete='SET NULL'),
+        nullable=True,
     )
-    
+
     # Stripe identifiers
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(
         String(100), unique=True, nullable=True
@@ -97,12 +101,12 @@ class CustomerSubscription(Base):
     stripe_subscription_id: Mapped[Optional[str]] = mapped_column(
         String(100), unique=True, nullable=True
     )
-    
+
     # Subscription status
     status: Mapped[str] = mapped_column(
         String(20), default='inactive', index=True
     )  # active, canceled, past_due, unpaid, incomplete, trialing
-    
+
     # Billing cycle
     current_period_start: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -120,24 +124,29 @@ class CustomerSubscription(Base):
     trial_end: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    
+
     # Usage tracking
     current_users_count: Mapped[int] = mapped_column(Integer, default=0)
     current_projects_count: Mapped[int] = mapped_column(Integer, default=0)
     current_storage_gb: Mapped[int] = mapped_column(Integer, default=0)
-    
+
     # Metadata (using extra_data to avoid SQLAlchemy reserved name)
     extra_data: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
-    
+
     # Relationships
     from src.organizations.models import Organization
-    organization: Mapped['Organization'] = relationship(back_populates='subscription')
+
+    organization: Mapped['Organization'] = relationship(
+        back_populates='subscription'
+    )
     plan: Mapped[Optional['SubscriptionPlan']] = relationship(
         back_populates='subscriptions'
     )
@@ -160,7 +169,7 @@ class BillingHistory(Base):
         ForeignKey('customer_subscriptions.id', ondelete='CASCADE'),
         index=True,
     )
-    
+
     # Invoice details
     stripe_invoice_id: Mapped[Optional[str]] = mapped_column(
         String(100), unique=True, nullable=True
@@ -168,14 +177,14 @@ class BillingHistory(Base):
     stripe_payment_intent_id: Mapped[Optional[str]] = mapped_column(
         String(100), nullable=True
     )
-    
+
     # Payment information
     amount: Mapped[int] = mapped_column(Integer)  # in cents
     currency: Mapped[str] = mapped_column(String(3), default='usd')
     status: Mapped[str] = mapped_column(
         String(20), index=True
     )  # paid, failed, pending, refunded
-    
+
     # Dates
     invoice_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
@@ -183,18 +192,18 @@ class BillingHistory(Base):
     paid_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    
+
     # URLs
     invoice_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     invoice_pdf: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Metadata (using extra_data to avoid SQLAlchemy reserved name)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     extra_data: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
     )
-    
+
     # Relationships
     subscription: Mapped['CustomerSubscription'] = relationship(
         back_populates='billing_history'

@@ -7,19 +7,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
+from slowapi.errors import RateLimitExceeded
 
+from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
-from src.auth.admin_routes import router as admin_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
 from src.common.middleware import add_i18n_middleware, add_logging_middleware
 from src.common.monitoring import add_performance_monitoring
 from src.common.openapi import custom_openapi
-from src.common.session import engine
 from src.common.rate_limiter import limiter, rate_limit_exceeded_handler
+from src.common.session import engine
 from src.organizations.routes import router as org_router
 from src.payments.routes import router as payments_router
 from src.payments.webhooks import router as payments_webhook_router
@@ -27,7 +28,6 @@ from src.projects.routes import router as project_router
 from src.subscriptions.routes import router as subscriptions_router
 from src.subscriptions.webhooks import router as subscriptions_webhook_router
 from src.uploads.routes import router as uploads_router
-from slowapi.errors import RateLimitExceeded
 
 # Production optimizations
 IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development') == 'production'
@@ -67,11 +67,11 @@ SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL.replace(
 async def lifespan(app: FastAPI):
     # Startup
     from src.common.audit_logger import AuditLogger, EventStatus
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info('Database tables created')
-    
+
     # Log application startup
     AuditLogger.log_system_event(
         action='application_startup',
@@ -81,9 +81,9 @@ async def lifespan(app: FastAPI):
             'version': settings.PROJECT_VERSION,
         },
     )
-    
+
     yield
-    
+
     # Shutdown
     logger.info('Application shutting down')
     AuditLogger.log_system_event(

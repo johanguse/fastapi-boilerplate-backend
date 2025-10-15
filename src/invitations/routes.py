@@ -40,12 +40,12 @@ async def resend_verification_email(
     """Resend email verification."""
     if current_user.is_verified:
         raise HTTPException(400, 'Email already verified')
-    
+
     base_url = str(request.base_url).rstrip('/')
     await create_email_verification_token(
         db, current_user, base_url, background_tasks
     )
-    
+
     return {'message': 'Verification email sent'}
 
 
@@ -78,10 +78,10 @@ async def invite_team_member(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     if not await is_org_admin(db, organization, current_user):
         raise HTTPException(403, 'Only admins can invite team members')
-    
+
     base_url = str(request.base_url).rstrip('/')
     invitation = await create_team_invitation(
         db,
@@ -93,7 +93,7 @@ async def invite_team_member(
         base_url,
         background_tasks,
     )
-    
+
     return invitation
 
 
@@ -122,7 +122,7 @@ async def decline_invitation(
     current_user: User = Depends(get_current_active_user),
 ):
     """Decline team invitation."""
-    invitation = await decline_team_invitation(db, token, current_user)
+    await decline_team_invitation(db, token, current_user)
     return {'message': 'Invitation declined'}
 
 
@@ -139,10 +139,10 @@ async def list_invitations(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     if not await is_org_admin(db, organization, current_user):
         raise HTTPException(403, 'Only admins can view invitations')
-    
+
     result = await db.execute(
         select(TeamInvitation)
         .where(
@@ -152,7 +152,7 @@ async def list_invitations(
         .order_by(TeamInvitation.created_at.desc())
     )
     invitations = result.scalars().all()
-    
+
     # Format response
     response = []
     for inv in invitations:
@@ -168,7 +168,7 @@ async def list_invitations(
                 created_at=inv.created_at,
             )
         )
-    
+
     return response
 
 
@@ -185,9 +185,9 @@ async def cancel_invitation(
     organization = await get_organization(db, organization_id)
     if not organization:
         raise HTTPException(404, 'Organization not found')
-    
+
     if not await is_org_admin(db, organization, current_user):
         raise HTTPException(403, 'Only admins can cancel invitations')
-    
+
     await cancel_team_invitation(db, invitation_id, organization_id)
     return {'message': 'Invitation cancelled'}

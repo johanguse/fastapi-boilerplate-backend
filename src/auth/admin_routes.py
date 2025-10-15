@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import select, func, delete as sql_delete, desc
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, EmailStr
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
-from src.auth.models import User
-from src.auth.schemas import UserRead, UserCreate
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from pydantic import BaseModel, EmailStr
+from sqlalchemy import desc, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.activity_log.models import ActivityLog
+from src.auth.models import User
+from src.auth.schemas import UserCreate, UserRead
 from src.common.pagination import CustomParams, Paginated
 from src.common.session import get_async_session
 
@@ -19,11 +20,11 @@ async def get_current_user_from_cookie(
 ) -> User:
     """Get current user from Better Auth cookie"""
     from src.auth.better_auth_compat import (
-        _get_token_from_request,
+        get_token_from_request,
         verify_better_auth_jwt,
     )
 
-    token = _get_token_from_request(request)
+    token = get_token_from_request(request)
     if not token:
         raise HTTPException(status_code=401, detail='Not authenticated')
 
@@ -36,7 +37,9 @@ async def get_current_user_from_cookie(
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
-        raise HTTPException(status_code=401, detail='User not found or inactive')
+        raise HTTPException(
+            status_code=401, detail='User not found or inactive'
+        )
 
     return user
 
@@ -65,7 +68,8 @@ async def list_all_users(
     if search:
         search_filter = f'%{search}%'
         query = query.where(
-            (User.name.ilike(search_filter)) | (User.email.ilike(search_filter))
+            (User.name.ilike(search_filter))
+            | (User.email.ilike(search_filter))
         )
 
     # Apply role filter
@@ -139,16 +143,13 @@ async def get_admin_stats(
 
     # Verified users
     verified_users_result = await db.execute(
-        select(User).where(User.is_verified == True)
+        select(User).where(User.is_verified)
     )
     verified_users = len(verified_users_result.scalars().all())
 
     # Active users (is_active=True AND status is not suspended)
     active_users_result = await db.execute(
-        select(User).where(
-            User.is_active == True,
-            User.status != 'suspended'
-        )
+        select(User).where(User.is_active, User.status != 'suspended')
     )
     active_users = len(active_users_result.scalars().all())
 
@@ -175,6 +176,7 @@ async def get_admin_stats(
 # User Management Schemas
 class UserUpdateAdmin(BaseModel):
     """Schema for admin to update user"""
+
     name: Optional[str] = None
     role: Optional[str] = None
     status: Optional[str] = None  # active, invited, suspended
@@ -184,6 +186,7 @@ class UserUpdateAdmin(BaseModel):
 
 class UserInvite(BaseModel):
     """Schema for inviting a user"""
+
     email: EmailStr
     name: str
     role: str = 'member'
@@ -241,8 +244,7 @@ async def delete_user(
     # Prevent admin from deleting themselves
     if _admin.id == user_id:
         raise HTTPException(
-            status_code=400,
-            detail='Cannot delete your own account'
+            status_code=400, detail='Cannot delete your own account'
         )
 
     result = await db.execute(select(User).where(User.id == user_id))
@@ -267,8 +269,9 @@ async def invite_user(
     Invite a new user (Admin only)
     Creates user account with temporary password
     """
-    from src.auth.users import get_user_manager
     import secrets
+
+    from src.auth.users import get_user_manager
 
     # Check if user already exists
     existing_result = await db.execute(
@@ -276,14 +279,13 @@ async def invite_user(
     )
     if existing_result.scalar_one_or_none():
         raise HTTPException(
-            status_code=400,
-            detail='User with this email already exists'
+            status_code=400, detail='User with this email already exists'
         )
 
     # Create user with random password (they'll need to reset)
     temp_password = secrets.token_urlsafe(16)
     user_manager = get_user_manager()
-    
+
     user_create = UserCreate(
         email=invite.email,
         password=temp_password,
@@ -292,17 +294,17 @@ async def invite_user(
         is_active=True,
         is_verified=False,
     )
-    
+
     user = await user_manager.create(user_create, safe=False)
-    
+
     # Set status to 'invited'
     user.status = 'invited'
     await db.commit()
     await db.refresh(user)
-    
+
     # TODO: Send invitation email with password reset link
     # For now, just return the created user
-    
+
     return user
 
 
@@ -315,15 +317,16 @@ async def get_analytics_overview(
     Get analytics overview for reports dashboard (Admin only)
     """
     from datetime import datetime, timedelta
-    from src.organizations.models import Organization
-    from src.subscriptions.models import CustomerSubscription, BillingHistory
+
     from src.activity_log.models import ActivityLog
-    
+    from src.organizations.models import Organization
+    from src.subscriptions.models import BillingHistory, CustomerSubscription
+
     # Date ranges
     now = datetime.now()
     last_30_days = now - timedelta(days=30)
     last_7_days = now - timedelta(days=7)
-    
+
     # Users analytics
     total_users = await db.scalar(select(func.count(User.id)))
     new_users_30d = await db.scalar(
@@ -332,17 +335,17 @@ async def get_analytics_overview(
     new_users_7d = await db.scalar(
         select(func.count(User.id)).where(User.created_at >= last_7_days)
     )
-    
+
     # Organizations analytics
     total_orgs = await db.scalar(select(func.count(Organization.id)))
-    
+
     # Subscriptions analytics
     active_subs = await db.scalar(
         select(func.count(CustomerSubscription.id)).where(
             CustomerSubscription.status == 'active'
         )
     )
-    
+
     # Revenue analytics (from billing history)
     total_revenue_result = await db.execute(
         select(func.sum(BillingHistory.amount)).where(
@@ -350,18 +353,18 @@ async def get_analytics_overview(
         )
     )
     total_revenue = total_revenue_result.scalar() or 0
-    
+
     revenue_30d_result = await db.execute(
         select(func.sum(BillingHistory.amount)).where(
             BillingHistory.status == 'paid',
-            BillingHistory.paid_at >= last_30_days
+            BillingHistory.paid_at >= last_30_days,
         )
     )
     revenue_30d = revenue_30d_result.scalar() or 0
-    
+
     # Activity logs
     total_activities = await db.scalar(select(func.count(ActivityLog.id)))
-    
+
     return {
         'users': {
             'total': total_users or 0,
@@ -395,21 +398,21 @@ async def get_users_growth(
     Get user growth data for charts (Admin only)
     """
     from datetime import datetime, timedelta
-    
+
     now = datetime.now()
     start_date = now - timedelta(days=days)
-    
+
     # Group users by day
     result = await db.execute(
         select(
             func.date(User.created_at).label('date'),
-            func.count(User.id).label('count')
+            func.count(User.id).label('count'),
         )
         .where(User.created_at >= start_date)
         .group_by(func.date(User.created_at))
         .order_by(func.date(User.created_at))
     )
-    
+
     growth_data = [
         {
             'date': str(row.date),
@@ -417,7 +420,7 @@ async def get_users_growth(
         }
         for row in result
     ]
-    
+
     return {'data': growth_data}
 
 
@@ -431,25 +434,26 @@ async def get_revenue_chart(
     Get revenue data for charts (Admin only)
     """
     from datetime import datetime, timedelta
+
     from src.subscriptions.models import BillingHistory
-    
+
     now = datetime.now()
     start_date = now - timedelta(days=days)
-    
+
     # Group revenue by day
     result = await db.execute(
         select(
             func.date(BillingHistory.paid_at).label('date'),
-            func.sum(BillingHistory.amount).label('revenue')
+            func.sum(BillingHistory.amount).label('revenue'),
         )
         .where(
             BillingHistory.status == 'paid',
-            BillingHistory.paid_at >= start_date
+            BillingHistory.paid_at >= start_date,
         )
         .group_by(func.date(BillingHistory.paid_at))
         .order_by(func.date(BillingHistory.paid_at))
     )
-    
+
     revenue_data = [
         {
             'date': str(row.date),
@@ -457,7 +461,7 @@ async def get_revenue_chart(
         }
         for row in result
     ]
-    
+
     return {'data': revenue_data, 'currency': 'usd'}
 
 
@@ -486,7 +490,9 @@ async def list_activity_logs(
     params: CustomParams = Depends(),
     action_type: str = Query(None, description='Filter by action type'),
     user_id: int = Query(None, description='Filter by user ID'),
-    organization_id: int = Query(None, description='Filter by organization ID'),
+    organization_id: int = Query(
+        None, description='Filter by organization ID'
+    ),
     db: AsyncSession = Depends(get_async_session),
     _admin: User = Depends(require_admin),
 ):
@@ -494,7 +500,7 @@ async def list_activity_logs(
     List activity logs with pagination and filters (Admin only)
     """
     from sqlalchemy.orm import selectinload
-    
+
     # Build query with selectinload for better performance
     query = select(ActivityLog).options(selectinload(ActivityLog.user))
 
@@ -531,7 +537,9 @@ async def list_activity_logs(
             'organization_id': activity_log.organization_id,
             'project_id': activity_log.project_id,
             'user_name': activity_log.user.name if activity_log.user else None,
-            'user_email': activity_log.user.email if activity_log.user else None,
+            'user_email': activity_log.user.email
+            if activity_log.user
+            else None,
         }
         logs.append(ActivityLogRead(**log_dict))
 

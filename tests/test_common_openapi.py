@@ -1,28 +1,29 @@
 import pytest
 
-pytest.skip("deprecated duplicate; moved to tests/common", allow_module_level=True)
+pytest.skip(
+    'deprecated duplicate; moved to tests/common', allow_module_level=True
+)
 
-from types import SimpleNamespace
 
-from fastapi import FastAPI
+from fastapi import FastAPI  # noqa: E402
 
-from src.common.openapi import custom_openapi
+from src.common.openapi import custom_openapi  # noqa: E402
 
 
 def test_custom_openapi_builds_and_caches():
     app = FastAPI()
 
-    @app.get("/ping")
+    @app.get('/ping')
     def ping():
-        return {"ok": True}
+        return {'ok': True}
 
     # First call builds and caches
     schema1 = custom_openapi(app)
-    assert "components" in schema1
-    assert "security" in schema1
-    assert "paths" in schema1
+    assert 'components' in schema1
+    assert 'security' in schema1
+    assert 'paths' in schema1
     # Paths should be prefixed by API_V1_STR
-    assert any(path.startswith("/api/v1/") for path in schema1["paths"].keys())
+    assert any(path.startswith('/api/v1/') for path in schema1['paths'].keys())
 
     # Second call returns cached object
     schema2 = custom_openapi(app)

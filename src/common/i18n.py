@@ -83,7 +83,7 @@ class I18nManager:
 
         # Try to find regional variant or base language
         if '-' in lang_code:
-            base_lang = lang_code.split('-')[0]
+            base_lang = lang_code.split('-', maxsplit=1)[0]
             # Look for any supported regional variant of the base language
             for supported in cls.SUPPORTED_LANGUAGES:
                 if supported.startswith(base_lang + '-'):

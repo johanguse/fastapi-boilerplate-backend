@@ -1,5 +1,7 @@
 """Drop alembic_version table to reset migration history."""
+
 from sqlalchemy import create_engine, text
+
 from src.common.config import settings
 
 engine = create_engine(str(settings.DATABASE_URL))
