@@ -53,6 +53,7 @@ async def create_test_user_raw(
                         is_active,
                         is_verified,
                         role,
+                        status,
                         is_superuser,
                         max_teams,
                         created_at,
@@ -65,6 +66,7 @@ async def create_test_user_raw(
                         :is_active,
                         :is_verified,
                         :role,
+                        :status,
                         :is_superuser,
                         :max_teams,
                         NOW(),
@@ -80,6 +82,7 @@ async def create_test_user_raw(
                     'is_active': True,
                     'is_verified': True,
                     'role': 'member',
+                    'status': 'active',
                     'is_superuser': False,
                     'max_teams': 5,
                 },
@@ -95,6 +98,7 @@ async def create_test_user_raw(
                         is_active,
                         is_verified,
                         role,
+                        status,
                         is_superuser,
                         created_at,
                         updated_at
@@ -106,6 +110,7 @@ async def create_test_user_raw(
                         :is_active,
                         :is_verified,
                         :role,
+                        :status,
                         :is_superuser,
                         NOW(),
                         NOW()
@@ -120,6 +125,7 @@ async def create_test_user_raw(
                     'is_active': True,
                     'is_verified': True,
                     'role': 'member',
+                    'status': 'active',
                     'is_superuser': False,
                 },
             )
@@ -135,6 +141,7 @@ async def create_test_user_raw(
         'is_superuser': False,
         'max_teams': 5,
         'role': 'member',
+        'status': 'active',
     }
 
 
@@ -276,6 +283,7 @@ def create_mock_user(
         'is_verified': True,
         'is_superuser': False,
         'role': 'member',
+        'status': 'active',
         'max_teams': max_teams,
     }
 
@@ -302,6 +310,7 @@ def get_mock_auth_deps(app, mock_user: Dict[str, Any] = None):
         is_verified=mock_user.get('is_verified', True),
         is_superuser=mock_user.get('is_superuser', False),
         role=mock_user.get('role', 'member'),
+        status=mock_user.get('status', 'active'),
         max_teams=mock_user.get('max_teams', 5),
     )
 
