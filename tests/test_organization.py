@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from httpx import AsyncClient, Response
+from httpx import ASGITransport, AsyncClient, Response
 
 from tests.test_helpers import create_mock_user, get_mock_auth_deps
 
@@ -25,7 +25,9 @@ async def test_create_organization():
     get_mock_auth_deps(app, mock_user)
 
     try:
-        async with AsyncClient(app=app, base_url='http://test') as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as client:
             original_post = client.post
 
             async def mock_post(url, **kwargs):
@@ -83,7 +85,9 @@ async def test_get_user_organizations():
     get_mock_auth_deps(app, mock_user)
 
     try:
-        async with AsyncClient(app=app, base_url='http://test') as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as client:
             original_get = client.get
 
             async def mock_get(url, **kwargs):
@@ -128,7 +132,9 @@ async def test_invite_org_member():
     get_mock_auth_deps(app, mock_user)
 
     try:
-        async with AsyncClient(app=app, base_url='http://test') as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as client:
             original_post = client.post
 
             async def mock_post(url, **kwargs):
@@ -176,7 +182,9 @@ async def test_create_org_limit_reached():
     get_mock_auth_deps(app, mock_user)
 
     try:
-        async with AsyncClient(app=app, base_url='http://test') as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as client:
             original_post = client.post
 
             async def mock_post(url, **kwargs):
@@ -217,7 +225,9 @@ async def test_duplicate_org_name():
     get_mock_auth_deps(app, mock_user)
 
     try:
-        async with AsyncClient(app=app, base_url='http://test') as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as client:
             original_post = client.post
 
             async def mock_post(url, **kwargs):

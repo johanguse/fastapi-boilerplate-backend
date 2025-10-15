@@ -1,7 +1,7 @@
 from typing import Any, AsyncGenerator, Dict
 
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -72,7 +72,7 @@ async def clean_test_data():
         await engine.dispose()
 
 
-@pytest_asyncio.fixture(scope='session')
+@pytest_asyncio.fixture(scope='function')
 async def init_db():
     # No need to create/drop tables in PostgreSQL - they should already exist
     # We'll just clean up test data after tests
@@ -126,7 +126,9 @@ async def client(async_session) -> AsyncGenerator[AsyncClient, None]:
 
     # Create and yield the client
     try:
-        async with AsyncClient(app=app, base_url='http://test') as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as ac:
             yield ac
     finally:
         # Always clear overrides, even if there's an exception

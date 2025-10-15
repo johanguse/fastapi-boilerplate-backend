@@ -5,7 +5,7 @@ Run this directly with: python -m tests.manual_test
 
 import asyncio
 
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 from src.auth.users import current_active_user
 from src.main import app
@@ -43,7 +43,9 @@ async def test_me_endpoint():
 
     try:
         # Create a test client
-        async with AsyncClient(app=app, base_url='http://test') as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as client:
             # Make the request
             response = await client.get('/api/v1/me')
 
