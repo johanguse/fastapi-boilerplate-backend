@@ -2,12 +2,16 @@
 
 import secrets
 from datetime import UTC, datetime, timedelta
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
+
+if TYPE_CHECKING:
+    from src.auth.models import User
+    from src.organizations.models import Organization
 
 
 def generate_token():
@@ -35,8 +39,6 @@ class EmailVerificationToken(Base):
     )
 
     # Relationships
-    from src.auth.models import User
-
     user: Mapped['User'] = relationship('User', foreign_keys=[user_id])
 
     def is_expired(self) -> bool:
@@ -75,8 +77,6 @@ class PasswordResetToken(Base):
     )
 
     # Relationships
-    from src.auth.models import User
-
     user: Mapped['User'] = relationship('User', foreign_keys=[user_id])
 
     def is_expired(self) -> bool:
@@ -136,9 +136,6 @@ class TeamInvitation(Base):
     )
 
     # Relationships
-    from src.auth.models import User
-    from src.organizations.models import Organization
-
     organization: Mapped['Organization'] = relationship('Organization')
     invited_by: Mapped['User'] = relationship(
         'User', foreign_keys=[invited_by_id]
