@@ -87,7 +87,7 @@ async def get_available_languages():
 
 
 @router.get('/i18n/test')
-async def test_translation(
+async def test_translation(  # noqa: PT028
     request: Request,
     key: str = Query(
         'auth.user_not_found', description='Translation key to test'
@@ -108,7 +108,7 @@ async def test_translation(
 
 
 @router.get('/i18n/pluralization')
-async def test_pluralization(
+async def test_pluralization(  # noqa: PT028
     request: Request,
     key: str = Query('messages', description='Base plural key to test'),
     count: int = Query(1, description='Count for pluralization'),

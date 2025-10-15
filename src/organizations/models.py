@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.activity_log.models import ActivityLog
     from src.auth.models import User
     from src.projects.models import Project
+    from src.subscriptions.models import CustomerSubscription
 
 
 class OrganizationMemberRole(str, enum.Enum):
@@ -64,6 +65,9 @@ class Organization(Base):
     )
     projects: Mapped[list['Project']] = relationship(
         'Project', back_populates='organization'
+    )
+    subscription: Mapped[Optional['CustomerSubscription']] = relationship(
+        'CustomerSubscription', back_populates='organization', uselist=False
     )
 
     def __repr__(self) -> str:

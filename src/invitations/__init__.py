@@ -1,0 +1,1 @@
+"""Team invitation management module."""

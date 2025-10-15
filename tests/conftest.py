@@ -1,35 +1,30 @@
-import asyncio
-from typing import AsyncGenerator, Dict, Any
+from typing import Any, AsyncGenerator, Dict
 
-import pytest
 import pytest_asyncio
-from fastapi import Depends
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.pool import NullPool
 
 # Import all models to ensure proper mapper initialization
-from src.activity_log.models import ActivityLog
-from src.auth.models import User
-from src.auth.users import get_user_manager, UserManager
-from src.auth.schemas import UserCreate
 from src.common.config import settings
-from src.common.database import Base
 from src.common.session import get_async_session
-from src.projects.models import Project
-from src.organizations.models import Organization, OrganizationMember, OrganizationInvitation
 from src.main import app
-from tests.test_helpers import create_test_user_raw, create_test_organization_raw, create_test_project_raw, create_test_auth_token, create_mock_user, get_mock_auth_deps
+from tests.test_helpers import (
+    create_test_auth_token,
+    create_test_organization_raw,
+    create_test_project_raw,
+    create_test_user_raw,
+)
 
 # Explicitly ignore deprecated/duplicate-named test modules to avoid import mismatches
 collect_ignore = [
-    "tests/organizations/test_service.py",
-    "tests/payments/test_service.py",
-    "tests/test_services_projects.py",
+    'tests/organizations/test_service.py',
+    'tests/payments/test_service.py',
+    'tests/test_services_projects.py',
 ]
+
 
 def _make_engine():
     """Create a per-test async engine tied to the current event loop.
@@ -38,7 +33,9 @@ def _make_engine():
     asyncpg cancellations after the loop is closed.
     """
     return create_async_engine(
-        settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
+        settings.DATABASE_URL.replace(
+            'postgresql://', 'postgresql+asyncpg://'
+        ),
         echo=False,
         pool_pre_ping=True,
         pool_recycle=300,
@@ -75,7 +72,7 @@ async def clean_test_data():
         await engine.dispose()
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope='function')
 async def init_db():
     # No need to create/drop tables in PostgreSQL - they should already exist
     # We'll just clean up test data after tests
@@ -110,23 +107,28 @@ async def async_session(init_db) -> AsyncGenerator[AsyncSession, None]:
 
 # Back-compat for legacy tests expecting a `db_session` fixture name
 @pytest_asyncio.fixture
-async def db_session(async_session: AsyncSession) -> AsyncGenerator[AsyncSession, None]:
+async def db_session(
+    async_session: AsyncSession,
+) -> AsyncGenerator[AsyncSession, None]:
     yield async_session
 
 
 @pytest_asyncio.fixture
 async def client(async_session) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client with dependency overrides."""
+
     # Override the database session
     async def override_get_db():
         yield async_session
 
     # Apply the override
     app.dependency_overrides[get_async_session] = override_get_db
-    
+
     # Create and yield the client
     try:
-        async with AsyncClient(app=app, base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url='http://test'
+        ) as ac:
             yield ac
     finally:
         # Always clear overrides, even if there's an exception
@@ -140,25 +142,33 @@ async def test_user(async_session: AsyncSession) -> Dict[str, Any]:
 
 
 @pytest_asyncio.fixture
-async def authenticated_client(client: AsyncClient, test_user: Dict[str, Any], async_session: AsyncSession) -> AsyncClient:
+async def authenticated_client(
+    client: AsyncClient, test_user: Dict[str, Any], async_session: AsyncSession
+) -> AsyncClient:
     """Return a client with an authentication token in headers."""
     # Ensure the test_user fixture has run and the user exists for token creation
     # The test_user fixture already returns a dict with id and email
-    user_id = test_user["id"]
-    email = test_user["email"]
+    user_id = test_user['id']
+    email = test_user['email']
 
     token = await create_test_auth_token(user_id=user_id, email=email)
-    client.headers["Authorization"] = f"Bearer {token}"
+    client.headers['Authorization'] = f'Bearer {token}'
     return client
 
 
 @pytest_asyncio.fixture
-async def test_organization(async_session: AsyncSession, test_user: Dict[str, Any]) -> Dict[str, Any]:
+async def test_organization(
+    async_session: AsyncSession, test_user: Dict[str, Any]
+) -> Dict[str, Any]:
     """Create a test organization using raw SQL."""
-    return await create_test_organization_raw(async_session, test_user["id"])
+    return await create_test_organization_raw(async_session, test_user['id'])
 
 
 @pytest_asyncio.fixture
-async def test_project(async_session: AsyncSession, test_organization: Dict[str, Any]) -> Dict[str, Any]:
+async def test_project(
+    async_session: AsyncSession, test_organization: Dict[str, Any]
+) -> Dict[str, Any]:
     """Create a test project using raw SQL."""
-    return await create_test_project_raw(async_session, test_organization["id"]) 
+    return await create_test_project_raw(
+        async_session, test_organization['id']
+    )

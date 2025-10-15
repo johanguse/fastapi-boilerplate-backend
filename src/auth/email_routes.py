@@ -2,13 +2,19 @@
 Email-related routes for verification and password reset.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.models import User
+from ..common.rate_limiter import (
+    EMAIL_LIMIT,
+    PASSWORD_RESET_DAILY,
+    PASSWORD_RESET_LIMIT,
+    limiter,
+)
 from ..common.session import get_async_session
 from ..services.email_service import email_service
 from ..services.token_service import token_service
@@ -39,7 +45,10 @@ class VerifyEmailRequest(BaseModel):
 
 
 @router.post('/forgot-password')
+@limiter.limit(PASSWORD_RESET_LIMIT)  # 3 requests per hour
+@limiter.limit(PASSWORD_RESET_DAILY)  # 10 requests per day
 async def forgot_password(
+    http_request: Request,  # Required for rate limiter
     request: ForgotPasswordRequest,
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -81,7 +90,9 @@ async def forgot_password(
 
 
 @router.post('/reset-password')
+@limiter.limit(PASSWORD_RESET_LIMIT)  # 3 requests per hour
 async def reset_password(
+    http_request: Request,  # Required for rate limiter
     request: ResetPasswordRequest,
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -118,7 +129,9 @@ async def reset_password(
 
 
 @router.post('/verify-email')
+@limiter.limit(EMAIL_LIMIT)  # 10 requests per hour
 async def verify_email(
+    http_request: Request,  # Required for rate limiter
     request: VerifyEmailRequest,
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -160,7 +173,9 @@ async def verify_email(
 
 
 @router.post('/resend-verification')
+@limiter.limit(EMAIL_LIMIT)  # 10 requests per hour
 async def resend_verification(
+    http_request: Request,  # Required for rate limiter
     request: ForgotPasswordRequest,  # Reuse same model (just email)
     session: AsyncSession = Depends(get_async_session),
 ):

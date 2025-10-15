@@ -22,6 +22,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=True)
     role: Mapped[str] = mapped_column(String(50), default='member')
+    status: Mapped[str] = mapped_column(
+        String(20), default='active', nullable=False
+    )  # active, invited, suspended
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

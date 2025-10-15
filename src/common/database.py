@@ -8,5 +8,7 @@ Base = declarative_base()
 # as their primary purpose here is to ensure the model classes are registered.
 from src.activity_log import models as activity_log_models  # noqa
 from src.auth import models as auth_models  # noqa
-from src.projects import models as project_models  # noqa
+from src.invitations import models as invitation_models  # noqa
 from src.organizations import models as organization_models  # noqa
+from src.projects import models as project_models  # noqa
+from src.subscriptions import models as subscription_models  # noqa

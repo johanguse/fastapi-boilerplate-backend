@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
+from slowapi.errors import RateLimitExceeded
 
+from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
@@ -17,11 +19,14 @@ from src.common.health import router as health_router
 from src.common.middleware import add_i18n_middleware, add_logging_middleware
 from src.common.monitoring import add_performance_monitoring
 from src.common.openapi import custom_openapi
+from src.common.rate_limiter import limiter, rate_limit_exceeded_handler
 from src.common.session import engine
 from src.organizations.routes import router as org_router
 from src.payments.routes import router as payments_router
 from src.payments.webhooks import router as payments_webhook_router
 from src.projects.routes import router as project_router
+from src.subscriptions.routes import router as subscriptions_router
+from src.subscriptions.webhooks import router as subscriptions_webhook_router
 from src.uploads.routes import router as uploads_router
 
 # Production optimizations
@@ -29,19 +34,25 @@ IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development') == 'production'
 
 # Configure logging for production
 if IS_PRODUCTION:
+    # Structured JSON logging for production
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format='{"timestamp":"%(asctime)s","name":"%(name)s","level":"%(levelname)s","message":"%(message)s"}',
         handlers=[
             logging.StreamHandler(),
+            logging.FileHandler('logs/app.log'),
         ],
     )
 else:
+    # Human-readable logging for development
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     )
 logger = logging.getLogger(__name__)
+
+# Create logs directory if it doesn't exist
+os.makedirs('logs', exist_ok=True)
 
 # Update the database URL to use the correct format
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL.replace(
@@ -55,12 +66,30 @@ SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL.replace(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    from src.common.audit_logger import AuditLogger, EventStatus
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info('Database tables created')
+
+    # Log application startup
+    AuditLogger.log_system_event(
+        action='application_startup',
+        status=EventStatus.SUCCESS,
+        metadata={
+            'environment': 'production' if IS_PRODUCTION else 'development',
+            'version': settings.PROJECT_VERSION,
+        },
+    )
+
     yield
+
     # Shutdown
     logger.info('Application shutting down')
+    AuditLogger.log_system_event(
+        action='application_shutdown',
+        status=EventStatus.SUCCESS,
+    )
 
 
 app = FastAPI(
@@ -68,11 +97,18 @@ app = FastAPI(
     description=settings.PROJECT_DESCRIPTION,
     version=settings.PROJECT_VERSION,
     lifespan=lifespan,
-    docs_url='/docs',
-    redoc_url='/redoc',
-    openapi_url='/openapi.json',
+    # Hide API docs in production for security
+    docs_url='/docs' if not IS_PRODUCTION else None,
+    redoc_url='/redoc' if not IS_PRODUCTION else None,
+    openapi_url='/openapi.json' if not IS_PRODUCTION else None,
     default_response_class=ORJSONResponse,
 )
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+
+# Add rate limit exception handler
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Add middleware
 add_performance_monitoring(app)  # Add first for accurate timing
@@ -106,6 +142,10 @@ app.include_router(
     user_router,
     prefix=settings.API_V1_STR,
 )
+app.include_router(
+    admin_router,
+    prefix=settings.API_V1_STR,
+)
 # Legacy Teams router removed from public API (replaced by Organizations)
 app.include_router(
     org_router,
@@ -124,6 +164,16 @@ app.include_router(
     payments_webhook_router,
     prefix=f'{settings.API_V1_STR}/payments',
     tags=['payments'],
+)
+app.include_router(
+    subscriptions_router,
+    prefix=f'{settings.API_V1_STR}/subscriptions',
+    tags=['subscriptions'],
+)
+app.include_router(
+    subscriptions_webhook_router,
+    prefix=f'{settings.API_V1_STR}/webhooks',
+    tags=['webhooks'],
 )
 app.include_router(
     uploads_router, prefix=f'{settings.API_V1_STR}/uploads', tags=['uploads']

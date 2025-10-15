@@ -97,7 +97,7 @@ def verify_better_auth_jwt(token: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def _get_token_from_request(request: Request) -> Optional[str]:
+def get_token_from_request(request: Request) -> Optional[str]:
     """Extract JWT from Authorization header or fallback to session cookie."""
     # Bearer token first
     auth_header = request.headers.get('Authorization')
@@ -154,7 +154,7 @@ def _delete_cookie(response: Response, key: str, path: str = '/') -> None:
 async def _get_user_from_request(
     request: Request, session: AsyncSession
 ) -> User:
-    token = _get_token_from_request(request)
+    token = get_token_from_request(request)
     if not token:
         raise HTTPException(status_code=401, detail='No valid session')
     payload = verify_better_auth_jwt(token)
@@ -243,6 +243,9 @@ async def sign_in_email(
                 'email': user.email,
                 'name': getattr(user, 'name', user.email.split('@')[0]),
                 'emailVerified': user.is_verified,
+                'role': getattr(user, 'role', 'member'),
+                'is_verified': user.is_verified,
+                'is_superuser': user.is_superuser,
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -327,6 +330,9 @@ async def sign_up_email(
                     user, 'name', request.name or user.email.split('@')[0]
                 ),
                 'emailVerified': user.is_verified,
+                'role': getattr(user, 'role', 'member'),
+                'is_verified': user.is_verified,
+                'is_superuser': user.is_superuser,
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -373,7 +379,7 @@ async def get_session(
 ):
     """Get current session information"""
     # Get token from Authorization header or cookie
-    token = _get_token_from_request(request)
+    token = get_token_from_request(request)
     if not token:
         raise HTTPException(status_code=401, detail='No valid session')
     payload = verify_better_auth_jwt(token)
@@ -398,6 +404,9 @@ async def get_session(
             'email': user.email,
             'name': getattr(user, 'name', user.email.split('@')[0]),
             'emailVerified': user.is_verified,
+            'role': getattr(user, 'role', 'member'),
+            'is_verified': user.is_verified,
+            'is_superuser': user.is_superuser,
             'createdAt': user.created_at.isoformat()
             if hasattr(user, 'created_at') and user.created_at
             else None,

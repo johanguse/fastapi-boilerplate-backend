@@ -8,12 +8,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 # Import all models to ensure they're known to SQLAlchemy
-from src.activity_log.models import ActivityLog
-from src.auth.models import User
 from src.common.config import settings
 from src.common.database import Base
-from src.projects.models import Project
-from src.organizations.models import Organization, OrganizationMember, OrganizationInvitation
 
 config = context.config
 
@@ -24,21 +20,23 @@ target_metadata = Base.metadata
 
 # Update the SQLAlchemy URL with the one from settings
 config.set_main_option(
-    "sqlalchemy.url", 
-    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+    'sqlalchemy.url',
+    settings.DATABASE_URL.replace('postgresql://', 'postgresql+asyncpg://'),
 )
 
+
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option('sqlalchemy.url')
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+        dialect_opts={'paramstyle': 'named'},
     )
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 def do_run_migrations(connection: Connection) -> None:
     context.configure(connection=connection, target_metadata=target_metadata)
@@ -46,10 +44,11 @@ def do_run_migrations(connection: Connection) -> None:
     with context.begin_transaction():
         context.run_migrations()
 
+
 async def run_async_migrations() -> None:
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+        prefix='sqlalchemy.',
         poolclass=pool.NullPool,
     )
 
@@ -58,8 +57,10 @@ async def run_async_migrations() -> None:
 
     await connectable.dispose()
 
+
 def run_migrations_online() -> None:
     asyncio.run(run_async_migrations())
+
 
 if context.is_offline_mode():
     run_migrations_offline()

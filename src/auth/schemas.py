@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class UserRead(schemas.BaseUser[int]):
     name: Optional[str] = None
     role: str
+    status: str = 'active'  # active, invited, suspended
 
 
 class UserCreate(schemas.BaseUserCreate):

@@ -176,6 +176,56 @@ docker compose -f docker/docker-compose.prod.yml logs -f
 - Database data is persisted in Docker volumes, so it survives container restarts
 - Always use secure passwords in production environment
 
+## Database Seeding
+
+Seed the database with sample data for development:
+
+```bash
+# Using Poetry
+poetry run python scripts/seed.py
+
+# Using Docker
+docker-compose -f docker/docker-compose.yml exec web poetry run python scripts/seed.py
+```
+
+### Seed Data Includes
+
+The seed script creates comprehensive test data:
+
+- **9 Users** with different roles and statuses
+- **5 Organizations** with various team structures
+- **7 Projects** across different organizations
+- **50+ Activity Logs** with diverse actions and timestamps
+- **4 Subscription Plans** (Free, Basic, Premium, Enterprise)
+- **5 Active Subscriptions** with billing history
+- **Multiple Billing Records** spanning several months
+
+### Default User Accounts
+
+All seed users share the same password: **`admin123`**
+
+| Email | Role | Status | Verified | Description |
+|-------|------|--------|----------|-------------|
+| `admin@example.com` | admin | active | ✓ | Admin with superuser privileges |
+| `john@example.com` | member | active | ✓ | Regular active member |
+| `jane@example.com` | member | active | ✓ | Regular active member |
+| `sarah@example.com` | member | active | ✓ | Regular active member |
+| `bob@example.com` | member | invited | ✗ | Recently invited user |
+| `alice@example.com` | member | invited | ✗ | Recently invited user |
+| `suspended@example.com` | member | suspended | ✓ | Suspended account |
+| `mike@example.com` | member | active | ✓ | Recently joined member |
+| `emma@example.com` | admin | active | ✓ | Admin without superuser |
+
+### Sample Organizations with Subscriptions
+
+| Organization | Plan | Status | Monthly Cost |
+|--------------|------|--------|--------------|
+| Development Team | Enterprise | Active | $255.00 |
+| Marketing Team | Premium | Active | $68.00 |
+| Research Team | Basic | Active | $28.00 |
+| Sales Department | Premium | Trialing | $68.00 |
+| Customer Success | Free | Active | $0.00 |
+
 ## Testing
 
 Run `task test`
