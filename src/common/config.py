@@ -78,18 +78,37 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str = ''
     STRIPE_PUBLIC_KEY: str = ''
     STRIPE_PLANS: dict = {
+        # Free
+        'price_free': {
+            'name': 'free',
+            'price': 0,
+            'interval': 'month',
+            'max_projects': 1,
+            'max_users': 1,
+            'max_storage_gb': 1,
+            'max_ai_credits_monthly': 10,
+            'ai_features_enabled': ['documents'],
+        },
         # Starter
         'price_1M': {
             'name': 'starter',
             'price': 990,
             'interval': 'month',
             'max_projects': 1,
+            'max_users': 3,
+            'max_storage_gb': 5,
+            'max_ai_credits_monthly': 1000,
+            'ai_features_enabled': ['documents', 'content'],
         },
         'price_1Y': {
             'name': 'starter',
             'price': 9900,
             'interval': 'year',
             'max_projects': 1,
+            'max_users': 3,
+            'max_storage_gb': 5,
+            'max_ai_credits_monthly': 1000,
+            'ai_features_enabled': ['documents', 'content'],
         },
         # Pro
         'price_2M': {
@@ -97,12 +116,20 @@ class Settings(BaseSettings):
             'price': 2990,
             'interval': 'month',
             'max_projects': 5,
+            'max_users': 10,
+            'max_storage_gb': 20,
+            'max_ai_credits_monthly': 5000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
         'price_2Y': {
             'name': 'pro',
             'price': 29900,
             'interval': 'year',
             'max_projects': 5,
+            'max_users': 10,
+            'max_storage_gb': 20,
+            'max_ai_credits_monthly': 5000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
         # Business
         'price_3M': {
@@ -110,12 +137,20 @@ class Settings(BaseSettings):
             'price': 9990,
             'interval': 'month',
             'max_projects': 20,
+            'max_users': 50,
+            'max_storage_gb': 100,
+            'max_ai_credits_monthly': 25000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
         'price_3Y': {
             'name': 'business',
             'price': 99900,
             'interval': 'year',
             'max_projects': 20,
+            'max_users': 50,
+            'max_storage_gb': 100,
+            'max_ai_credits_monthly': 25000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
     }
     PAYMENT_SUCCESS_URL: str = 'https://yourapp.com/success'
@@ -146,6 +181,15 @@ class Settings(BaseSettings):
         'image/png',
         'image/jpeg',
     ]
+
+    # AI Configuration
+    OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY', '')
+    ANTHROPIC_API_KEY: str = os.getenv('ANTHROPIC_API_KEY', '')
+    OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
+    AI_PROVIDER: str = os.getenv('AI_PROVIDER', 'openai')  # openai, anthropic, or openrouter
+    AI_MODEL_TEXT: str = os.getenv('AI_MODEL_TEXT', 'gpt-4-turbo')
+    AI_MODEL_EMBEDDINGS: str = os.getenv('AI_MODEL_EMBEDDINGS', 'text-embedding-3-small')
+    AI_MAX_TOKENS: int = int(os.getenv('AI_MAX_TOKENS', '4096'))
 
 
 settings = Settings()

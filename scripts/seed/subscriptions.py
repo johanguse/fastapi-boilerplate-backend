@@ -7,16 +7,14 @@ from src.subscriptions.models import BillingHistory, CustomerSubscription
 from .constants import random_ip, random_user_agent
 
 
-def create_subscriptions_and_billing(organizations, plans):
-    """Create subscription and billing history seed data."""
+def create_subscriptions(organizations, plans):
+    """Create subscription seed data."""
     subscriptions = []
-    billing_records = []
-    payment_activities = []
 
-    # Development Team - Enterprise plan (active subscription)
+    # Development Team - Business plan (active subscription)
     sub1 = CustomerSubscription(
         organization_id=organizations[0].id,
-        plan_id=plans['enterprise'].id,
+        plan_id=plans['business'].id,
         stripe_customer_id='cus_dev_team_001',
         stripe_subscription_id='sub_dev_team_001',
         status='active',
@@ -30,28 +28,10 @@ def create_subscriptions_and_billing(organizations, plans):
     )
     subscriptions.append(sub1)
 
-    # Billing history for Development Team (last 3 months)
-    for months_ago in range(3):
-        billing_records.append(
-            BillingHistory(
-                subscription_id=sub1.id,
-                stripe_invoice_id=f'inv_dev_{months_ago}_001',
-                stripe_payment_intent_id=f'pi_dev_{months_ago}_001',
-                amount=plans['enterprise'].price_monthly_usd,
-                currency='usd',
-                status='paid',
-                invoice_date=datetime.now(UTC)
-                - timedelta(days=30 * months_ago),
-                paid_at=datetime.now(UTC)
-                - timedelta(days=30 * months_ago, hours=1),
-                description=f'Enterprise Solution - Monthly subscription (Month {3 - months_ago})',
-            )
-        )
-
-    # Marketing Team - Premium plan (active)
+    # Marketing Team - Pro plan (active)
     sub2 = CustomerSubscription(
         organization_id=organizations[1].id,
-        plan_id=plans['premium'].id,
+        plan_id=plans['pro'].id,
         stripe_customer_id='cus_marketing_001',
         stripe_subscription_id='sub_marketing_001',
         status='active',
@@ -65,28 +45,10 @@ def create_subscriptions_and_billing(organizations, plans):
     )
     subscriptions.append(sub2)
 
-    # Billing history for Marketing Team (last 2 months)
-    for months_ago in range(2):
-        billing_records.append(
-            BillingHistory(
-                subscription_id=sub2.id,
-                stripe_invoice_id=f'inv_marketing_{months_ago}_001',
-                stripe_payment_intent_id=f'pi_marketing_{months_ago}_001',
-                amount=plans['premium'].price_monthly_usd,
-                currency='usd',
-                status='paid',
-                invoice_date=datetime.now(UTC)
-                - timedelta(days=30 * months_ago),
-                paid_at=datetime.now(UTC)
-                - timedelta(days=30 * months_ago, hours=2),
-                description=f'Premium Subscription - Monthly subscription (Month {2 - months_ago})',
-            )
-        )
-
-    # Research Team - Basic plan (active)
+    # Research Team - Starter plan (active)
     sub3 = CustomerSubscription(
         organization_id=organizations[2].id,
-        plan_id=plans['basic'].id,
+        plan_id=plans['starter'].id,
         stripe_customer_id='cus_research_001',
         stripe_subscription_id='sub_research_001',
         status='active',
@@ -100,25 +62,10 @@ def create_subscriptions_and_billing(organizations, plans):
     )
     subscriptions.append(sub3)
 
-    # Billing history for Research Team (last month)
-    billing_records.append(
-        BillingHistory(
-            subscription_id=sub3.id,
-            stripe_invoice_id='inv_research_0_001',
-            stripe_payment_intent_id='pi_research_0_001',
-            amount=plans['basic'].price_monthly_usd,
-            currency='usd',
-            status='paid',
-            invoice_date=datetime.now(UTC) - timedelta(days=30),
-            paid_at=datetime.now(UTC) - timedelta(days=30, hours=1),
-            description='Basic Plan - Monthly subscription',
-        )
-    )
-
-    # Sales Department - Premium plan (trialing)
+    # Sales Department - Pro plan (trialing)
     sub4 = CustomerSubscription(
         organization_id=organizations[3].id,
-        plan_id=plans['premium'].id,
+        plan_id=plans['pro'].id,
         stripe_customer_id='cus_sales_001',
         stripe_subscription_id='sub_sales_001',
         status='trialing',
@@ -149,29 +96,84 @@ def create_subscriptions_and_billing(organizations, plans):
     )
     subscriptions.append(sub5)
 
+    return subscriptions
+
+
+def create_billing_history(subscriptions, plans):
+    """Create billing history and payment activities seed data."""
+    billing_records = []
+    payment_activities = []
+
+    # Development Team - Business plan (active subscription) - sub1
+    for months_ago in range(3):
+        billing_records.append(
+            BillingHistory(
+                subscription_id=subscriptions[0].id,
+                stripe_invoice_id=f'inv_dev_{months_ago}_001',
+                stripe_payment_intent_id=f'pi_dev_{months_ago}_001',
+                amount=plans['business'].price_monthly_usd,
+                currency='usd',
+                status='paid',
+                invoice_date=datetime.now(UTC)
+                - timedelta(days=30 * months_ago),
+                paid_at=datetime.now(UTC)
+                - timedelta(days=30 * months_ago, hours=1),
+                description=f'Business Plan - Monthly subscription (Month {3 - months_ago})',
+            )
+        )
+
+    # Marketing Team - Pro plan (active) - sub2
+    for months_ago in range(2):
+        billing_records.append(
+            BillingHistory(
+                subscription_id=subscriptions[1].id,
+                stripe_invoice_id=f'inv_marketing_{months_ago}_001',
+                stripe_payment_intent_id=f'pi_marketing_{months_ago}_001',
+                amount=plans['pro'].price_monthly_usd,
+                currency='usd',
+                status='paid',
+                invoice_date=datetime.now(UTC)
+                - timedelta(days=30 * months_ago),
+                paid_at=datetime.now(UTC)
+                - timedelta(days=30 * months_ago, hours=2),
+                description=f'Pro Plan - Monthly subscription (Month {2 - months_ago})',
+            )
+        )
+
+    # Research Team - Starter plan (active) - sub3
+    billing_records.append(
+        BillingHistory(
+            subscription_id=subscriptions[2].id,
+            stripe_invoice_id='inv_research_0_001',
+            stripe_payment_intent_id='pi_research_0_001',
+            amount=plans['starter'].price_monthly_usd,
+            currency='usd',
+            status='paid',
+            invoice_date=datetime.now(UTC) - timedelta(days=30),
+            paid_at=datetime.now(UTC) - timedelta(days=30, hours=1),
+            description='Starter Plan - Monthly subscription',
+        )
+    )
+
     # Create payment activity logs for each billing record
     from src.activity_log.models import ActivityLog
 
     for billing in billing_records:
-        # Determine which organization based on subscription
-        org_id = None
-        if billing.subscription_id == sub1.id:
-            org_id = organizations[0].id
-        elif billing.subscription_id == sub2.id:
-            org_id = organizations[1].id
-        elif billing.subscription_id == sub3.id:
-            org_id = organizations[2].id
+        # Get the subscription to find the organization
+        subscription = next(
+            s for s in subscriptions if s.id == billing.subscription_id
+        )
 
         payment_activities.append(
             ActivityLog(
                 action='payment.succeeded',
                 action_type='payment',
                 description=f'Payment successful: ${billing.amount / 100:.2f} {billing.currency.upper()}',
-                organization_id=org_id,
+                organization_id=subscription.organization_id,
                 ip_address=random_ip(),
                 user_agent=random_user_agent(),
                 created_at=billing.paid_at,
             )
         )
 
-    return subscriptions, billing_records, payment_activities
+    return billing_records, payment_activities

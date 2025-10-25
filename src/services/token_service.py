@@ -106,6 +106,82 @@ class TokenService:
 
         return token
 
+    async def create_otp_token(
+        self, session: AsyncSession, email: str, otp_code: str
+    ) -> str:
+        """
+        Create an OTP token for email verification.
+
+        Args:
+            session: Database session
+            email: User's email address
+            otp_code: 6-digit OTP code
+
+        Returns:
+            str: Plain text OTP code (to be sent in email)
+        """
+        # Delete any existing OTP tokens for this email
+        await session.execute(
+            delete(EmailToken).where(
+                EmailToken.user_email == email,
+                EmailToken.token_type == 'otp',
+            )
+        )
+
+        # Hash the OTP code for storage
+        token_hash = self.hash_token(otp_code)
+
+        # Create token record
+        email_token = EmailToken(
+            id=secrets.token_urlsafe(16),
+            user_email=email,
+            token_type='otp',
+            token_hash=token_hash,
+            expires_at=datetime.now(timezone.utc)
+            + timedelta(minutes=15),  # 15 minute expiry
+        )
+
+        session.add(email_token)
+        await session.commit()
+
+        return otp_code
+
+    async def verify_otp_token(
+        self, session: AsyncSession, email: str, otp_code: str
+    ) -> Optional[str]:
+        """
+        Verify an OTP token and return the associated email if valid.
+
+        Args:
+            session: Database session
+            email: User's email address
+            otp_code: 6-digit OTP code to verify
+
+        Returns:
+            Optional[str]: Email address if OTP is valid, None otherwise
+        """
+        token_hash = self.hash_token(otp_code)
+
+        # Find matching OTP token
+        result = await session.execute(
+            select(EmailToken).where(
+                EmailToken.user_email == email,
+                EmailToken.token_hash == token_hash,
+                EmailToken.token_type == 'otp',
+                EmailToken.expires_at > datetime.now(timezone.utc),
+            )
+        )
+
+        email_token = result.scalars().first()
+
+        if email_token:
+            # OTP is valid, delete it (one-time use)
+            await session.delete(email_token)
+            await session.commit()
+            return email_token.user_email
+
+        return None
+
     async def verify_token(
         self, session: AsyncSession, token: str, token_type: str
     ) -> Optional[str]:

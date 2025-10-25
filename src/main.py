@@ -13,6 +13,12 @@ from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
+from src.ai_analytics.routes import router as ai_analytics_router
+from src.ai_content.routes import router as ai_content_router
+from src.ai_core.billing_routes import router as ai_billing_router
+from src.ai_core.dashboard_routes import router as ai_dashboard_router
+from src.ai_core.routes import router as ai_usage_router
+from src.ai_documents.routes import router as ai_documents_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
@@ -177,6 +183,38 @@ app.include_router(
 )
 app.include_router(
     uploads_router, prefix=f'{settings.API_V1_STR}/uploads', tags=['uploads']
+)
+
+# AI Features
+app.include_router(
+    ai_usage_router,
+    prefix=f'{settings.API_V1_STR}/ai-usage',
+    tags=['AI Usage'],
+)
+app.include_router(
+    ai_billing_router,
+    prefix=f'{settings.API_V1_STR}/ai-billing',
+    tags=['AI Billing'],
+)
+app.include_router(
+    ai_dashboard_router,
+    prefix=f'{settings.API_V1_STR}/ai-dashboard',
+    tags=['AI Dashboard'],
+)
+app.include_router(
+    ai_documents_router,
+    prefix=f'{settings.API_V1_STR}/ai-documents',
+    tags=['AI Documents'],
+)
+app.include_router(
+    ai_content_router,
+    prefix=f'{settings.API_V1_STR}/ai-content',
+    tags=['AI Content'],
+)
+app.include_router(
+    ai_analytics_router,
+    prefix=f'{settings.API_V1_STR}/ai-analytics',
+    tags=['AI Analytics'],
 )
 
 # Custom OpenAPI schema

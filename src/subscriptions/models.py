@@ -55,6 +55,10 @@ class SubscriptionPlan(Base):
     max_users: Mapped[int] = mapped_column(Integer, default=1)
     max_storage_gb: Mapped[int] = mapped_column(Integer, default=1)
 
+    # AI limits
+    max_ai_credits_monthly: Mapped[int] = mapped_column(Integer, default=0)
+    ai_features_enabled: Mapped[dict] = mapped_column(JSON, default=dict)
+
     # Features (JSON array of feature keys)
     features: Mapped[dict] = mapped_column(JSON, default=dict)
 
