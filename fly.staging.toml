@@ -1,0 +1,40 @@
+# fly.toml app configuration file generated for fastapi-boilerplate-backend-staging on 2025-10-14T22:46:28-03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'fastapi-boilerplate-backend-staging'
+primary_region = 'iad'
+
+[build]
+  dockerfile = 'docker/Dockerfile.prod'
+
+[env]
+  ENVIRONMENT = 'staging'
+  PORT = '8000'
+  PYTHONUNBUFFERED = '1'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop' # on, off, stop - stop is the default and will stop the machines after 10 minutes of inactivity. In production change it to 'off'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [http_service.concurrency]
+    type = 'connections'
+    hard_limit = 50
+    soft_limit = 40
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/api/v1/health'
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
