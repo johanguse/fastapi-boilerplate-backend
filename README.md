@@ -1,8 +1,16 @@
-# Project Management API
+# AI-Powered SaaS Boilerplate
 
 ## Description
 
-This is a project management API that allows you to manage users, organizations, and projects.
+This is a comprehensive SaaS boilerplate with AI-powered features including document intelligence, content generation, and analytics. Built with FastAPI, React, and modern AI capabilities.
+
+## 🚀 AI Features
+
+- **AI Document Intelligence**: Upload, process, and chat with documents using AI
+- **AI Content Generation**: Generate blog posts, emails, social media content, and more
+- **AI Analytics**: Natural language queries to generate insights and charts
+- **Usage Tracking**: Credit-based billing system with real-time usage monitoring
+- **Multi-provider Support**: OpenAI and Anthropic integration
 
 ## Technologies
 
@@ -18,11 +26,13 @@ This is a project management API that allows you to manage users, organizations,
 - Poetry
 - Ruff
 - Docker
+- **AI Integration**: OpenAI, Anthropic, LangChain
 
 ## 📚 Documentation
 
 Comprehensive documentation is available in the `/docs` folder:
 
+- **[AI Features Guide](docs/AI_FEATURES.md)** - Complete AI features documentation and API reference
 - **[Production Deployment Guide](docs/production-deployment.md)** - Complete production setup and deployment instructions
 - **[Performance Optimization Guide](docs/performance-optimization.md)** - Detailed performance optimizations and benchmarks
 - **[Monitoring & Metrics Guide](docs/monitoring-metrics.md)** - Real-time monitoring and performance tracking
@@ -187,6 +197,11 @@ poetry run python scripts/seed.py
 # Using Docker
 docker-compose -f docker/docker-compose.yml exec web poetry run python scripts/seed.py
 ```
+
+**Or run fresh seed** (deletes all data first):
+   ```bash
+   poetry run python scripts/seed_fresh.py
+   ```
 
 ### Seed Data Includes
 
@@ -425,19 +440,6 @@ Content-Type: application/json
 }
 ```
 
-## Todo
-
-- Add tests
-- Add documentation
-- Add <https://www.literalai.com/>
-
-## Additional Notes
-
-- Never commit `.env` files to version control
-- Use different environment variables for development and production
-- Always use HTTPS in production
-- Regularly update dependencies and base images
-- Monitor container logs and health checks in production
 
 ## Deployment
 

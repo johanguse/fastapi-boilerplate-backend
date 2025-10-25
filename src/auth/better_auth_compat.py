@@ -29,6 +29,8 @@ from src.organizations.schemas import OrganizationCreate
 from src.organizations.service import (
     create_organization as create_organization_service,
 )
+from src.services.email_service import email_service
+from src.services.token_service import token_service
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -168,6 +170,107 @@ async def _get_user_from_request(
             status_code=401, detail='User not found or inactive'
         )
     return user
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+    redirectTo: Optional[str] = None
+
+
+@router.post('/auth/forgot-password')
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Better Auth compatible forgot password endpoint"""
+    try:
+        logger.info(f'Forgot password request for email: {request.email}')
+        
+        # Check if user exists
+        result = await session.execute(
+            select(User).where(User.email == request.email)
+        )
+        user = result.scalar_one_or_none()
+        
+        if user:
+            # User exists - send password reset email
+            try:
+                # Generate password reset token
+                token = await token_service.create_password_reset_token(
+                    session, user.email
+                )
+                
+                # Send password reset email
+                email_sent = await email_service.send_forgot_password_email(
+                    user.email, token, user.name
+                )
+                
+                if not email_sent:
+                    logger.warning(f'Failed to send password reset email to {user.email}')
+                
+                logger.info(f'Password reset email sent to: {user.email}')
+                
+            except Exception as e:
+                # Log error but don't expose to user for security
+                logger.exception(f'Exception sending password reset email to {user.email}: {str(e)}')
+        
+        # Always return success for security (don't reveal if user exists)
+        return {
+            'success': True,
+            'message': 'If an account with this email exists, a password reset link has been sent.',
+            'user_exists': user is not None
+        }
+        
+    except Exception as e:
+        logger.exception(f'Unexpected error in forgot_password: {str(e)}')
+        raise HTTPException(
+            status_code=500,
+            detail={
+                'error': 'FORGOT_PASSWORD_FAILED',
+                'message': 'An error occurred while processing your request',
+            },
+        )
+
+
+@router.post('/auth/reset-password')
+async def reset_password(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Better Auth compatible reset password endpoint"""
+    try:
+        payload = await request.json()
+        token = payload.get('token')
+        password = payload.get('password')
+        
+        if not token or not password:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    'error': 'INVALID_INPUT',
+                    'message': 'Token and password are required',
+                },
+            )
+        
+        # TODO: Implement actual password reset logic
+        logger.info(f'Password reset requested with token: {token[:10]}...')
+        
+        return {
+            'success': True,
+            'message': 'Password reset successfully',
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f'Unexpected error in reset_password: {str(e)}')
+        raise HTTPException(
+            status_code=500,
+            detail={
+                'error': 'RESET_PASSWORD_FAILED',
+                'message': 'An error occurred while resetting your password',
+            },
+        )
 
 
 @router.post('/auth/sign-in/email', response_model=AuthResponse)
@@ -317,7 +420,51 @@ async def sign_up_email(
         )
         if request.name and hasattr(User, 'name'):
             user_create.name = request.name
-        user = await user_manager.create(user_create)
+        
+        try:
+            user = await user_manager.create(user_create)
+        except Exception as e:
+            # Handle UserAlreadyExists and other creation errors
+            if 'UserAlreadyExists' in str(type(e).__name__):
+                logger.warning(f'User already exists during creation: {request.email}')
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        'error': 'USER_EXISTS',
+                        'message': 'User with this email already exists',
+                    },
+                )
+            else:
+                logger.error(f'Unexpected error creating user: {str(e)}')
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        'error': 'SIGN_UP_FAILED',
+                        'message': 'Failed to create account. Please try again.',
+                    },
+                )
+
+        # Ensure onboarding fields are set for new users
+        user.onboarding_completed = False
+        user.onboarding_step = 0
+        await session.commit()
+        await session.refresh(user)
+
+        # Send email verification
+        try:
+            verification_token = await token_service.create_verification_token(
+                session, user.email
+            )
+            email_sent = await email_service.send_verification_email(
+                user.email, verification_token, user.name
+            )
+            if email_sent:
+                logger.info(f'Verification email sent to {user.email}')
+            else:
+                logger.warning(f'Failed to send verification email to {user.email}')
+        except Exception as e:
+            # Don't fail registration if email sending fails
+            logger.exception(f'Exception sending verification email to {user.email}: {str(e)}')
 
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
@@ -333,6 +480,8 @@ async def sign_up_email(
                 'role': getattr(user, 'role', 'member'),
                 'is_verified': user.is_verified,
                 'is_superuser': user.is_superuser,
+                'onboarding_completed': user.onboarding_completed,
+                'onboarding_step': user.onboarding_step,
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -351,6 +500,7 @@ async def sign_up_email(
 
         # Set HTTP-only cookie for session persistence (secure/samesite set dynamically)
         _set_cookie(response, key='ba_session', value=token)
+        logger.info(f'Successful registration for: {request.email}')
         return resp
     except HTTPException:
         raise

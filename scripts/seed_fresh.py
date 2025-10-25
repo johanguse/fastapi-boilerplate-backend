@@ -10,9 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.activity_log.models import ActivityLog
+from src.ai_core.usage import AIUsageLog
 
 # Import all models
-from src.auth.models import User
+from src.auth.models import User, EmailToken
 from src.common.config import settings
 from src.organizations.models import Organization, OrganizationMember
 from src.projects.models import Project
@@ -26,8 +27,8 @@ from src.subscriptions.models import (
 async def delete_all_data():
     """Delete all existing data from the database."""
     print('⚠️  WARNING: This will delete ALL data from the database!')
-    print('Press Ctrl+C within 3 seconds to cancel...')
-    await asyncio.sleep(3)
+    print('Press Ctrl+C within 5 seconds to cancel...')
+    await asyncio.sleep(5)
 
     database_url = str(settings.DATABASE_URL).replace(
         'postgresql://', 'postgresql+asyncpg://'
@@ -41,18 +42,30 @@ async def delete_all_data():
     async with async_session() as session:
         print('🗑️  Deleting existing data...')
 
-        # Delete in reverse order of dependencies
-        await session.execute(delete(BillingHistory))
-        await session.execute(delete(CustomerSubscription))
-        await session.execute(delete(ActivityLog))
-        await session.execute(delete(Project))
-        await session.execute(delete(OrganizationMember))
-        await session.execute(delete(Organization))
-        await session.execute(delete(User))
-        await session.execute(delete(SubscriptionPlan))
+        # Delete in reverse order of dependencies with error handling
+        tables_to_delete = [
+            ('AI Usage Logs', AIUsageLog),
+            ('Billing History', BillingHistory),
+            ('Customer Subscriptions', CustomerSubscription),
+            ('Activity Logs', ActivityLog),
+            ('Projects', Project),
+            ('Organization Members', OrganizationMember),
+            ('Organizations', Organization),
+            ('Email Tokens', EmailToken),
+            ('Users', User),
+            ('Subscription Plans', SubscriptionPlan),
+        ]
+
+        for table_name, model in tables_to_delete:
+            try:
+                await session.execute(delete(model))
+                print(f'   ✓ Deleted {table_name}')
+            except Exception as e:
+                print(f'   ⚠️  Skipped {table_name} (table may not exist): {str(e).split(":")[-1].strip()}')
+                continue
 
         await session.commit()
-        print('✅ All data deleted')
+        print('✅ All existing data deleted')
 
     await engine.dispose()
 

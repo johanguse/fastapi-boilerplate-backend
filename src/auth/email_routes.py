@@ -7,6 +7,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from loguru import logger
 
 from ..auth.models import User
 from ..common.rate_limiter import (
@@ -61,9 +62,8 @@ async def forgot_password(
     )
     user = result.scalars().first()
 
-    # Always return success to prevent email enumeration
-    # But only send email if user actually exists
     if user:
+        # User exists - send password reset email
         try:
             # Generate password reset token
             token = await token_service.create_password_reset_token(
@@ -77,16 +77,29 @@ async def forgot_password(
 
             if not email_sent:
                 # Log error but don't expose to user
-                pass
+                logger.warning(f'Failed to send password reset email to {user.email} - email_sent returned False')
 
-        except Exception:
+            return {
+                'success': True,
+                'message': 'Password reset link sent to your email address.',
+                'user_exists': True
+            }
+
+        except Exception as e:
             # Log error but don't expose to user
-            pass
-
-    return {
-        'success': True,
-        'message': "If an account with that email exists, we've sent a password reset link.",
-    }
+            logger.exception(f'Exception in forgot_password for {request.email}: {str(e)}')
+            return {
+                'success': False,
+                'message': 'Unable to send password reset email. Please try again later.',
+                'user_exists': True
+            }
+    else:
+        # User doesn't exist
+        return {
+            'success': False,
+            'message': 'No account found with this email address. Would you like to create an account?',
+            'user_exists': False
+        }
 
 
 @router.post('/reset-password')
@@ -164,10 +177,12 @@ async def verify_email(
 
     # Send welcome email
     try:
-        await email_service.send_welcome_email(user.email, user.name)
-    except Exception:
+        welcome_sent = await email_service.send_welcome_email(user.email, user.name)
+        if not welcome_sent:
+            logger.warning(f'Failed to send welcome email to {user.email} - email_sent returned False')
+    except Exception as e:
         # Don't fail verification if welcome email fails
-        pass
+        logger.exception(f'Exception sending welcome email to {user.email}: {str(e)}')
 
     return {'success': True, 'message': 'Email verified successfully'}
 
@@ -188,8 +203,23 @@ async def resend_verification(
     )
     user = result.scalars().first()
 
-    # Always return success to prevent email enumeration
-    if user and not user.is_verified:
+    if not user:
+        # User doesn't exist
+        return {
+            'success': False,
+            'message': 'No account found with this email address. Please sign up first.',
+            'user_exists': False
+        }
+    elif user.is_verified:
+        # User already verified
+        return {
+            'success': False,
+            'message': 'This email address is already verified.',
+            'user_exists': True,
+            'already_verified': True
+        }
+    else:
+        # User exists but not verified - send verification email
         try:
             # Generate verification token
             token = await token_service.create_verification_token(
@@ -203,13 +233,19 @@ async def resend_verification(
 
             if not email_sent:
                 # Log error but don't expose to user
-                pass
+                logger.warning(f'Failed to send verification email to {user.email} - email_sent returned False')
 
-        except Exception:
+            return {
+                'success': True,
+                'message': 'Verification email sent to your email address.',
+                'user_exists': True
+            }
+
+        except Exception as e:
             # Log error but don't expose to user
-            pass
-
-    return {
-        'success': True,
-        'message': "If your account needs verification, we've sent a new verification email.",
-    }
+            logger.exception(f'Exception in resend_verification for {request.email}: {str(e)}')
+            return {
+                'success': False,
+                'message': 'Unable to send verification email. Please try again later.',
+                'user_exists': True
+            }

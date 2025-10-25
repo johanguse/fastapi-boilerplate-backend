@@ -15,6 +15,19 @@ from src.invitations.email_templates import (
 logger = logging.getLogger(__name__)
 
 
+def _validate_resend_config() -> bool:
+    """Validate Resend configuration."""
+    if not settings.RESEND_API_KEY:
+        logger.error('RESEND_API_KEY not configured - email functionality disabled')
+        return False
+    
+    if not settings.FROM_EMAIL:
+        logger.warning('FROM_EMAIL not configured - using default')
+    
+    logger.info(f'Resend configuration validated - FROM_EMAIL: {settings.FROM_EMAIL}')
+    return True
+
+
 async def send_email_verification(
     email: str,
     name: str,
@@ -23,6 +36,10 @@ async def send_email_verification(
     background_tasks: Optional[BackgroundTasks] = None,
 ):
     """Send email verification email."""
+    if not _validate_resend_config():
+        logger.error(f'Cannot send verification email to {email} - Resend not configured')
+        return
+        
     template = get_email_verification_template(
         name, verification_link, language
     )
@@ -42,7 +59,7 @@ async def send_email_verification(
             })
             logger.info(f'Email verification sent to {email}')
         except Exception as e:
-            logger.error(
+            logger.exception(
                 f'Failed to send verification email to {email}: {str(e)}'
             )
 
@@ -63,6 +80,10 @@ async def send_team_invitation(
     background_tasks: Optional[BackgroundTasks] = None,
 ):
     """Send team invitation email."""
+    if not _validate_resend_config():
+        logger.error(f'Cannot send team invitation to {email} - Resend not configured')
+        return
+        
     template = get_team_invitation_template(
         invited_by_name,
         organization_name,
@@ -86,7 +107,7 @@ async def send_team_invitation(
             })
             logger.info(f'Team invitation sent to {email}')
         except Exception as e:
-            logger.error(f'Failed to send invitation to {email}: {str(e)}')
+            logger.exception(f'Failed to send invitation to {email}: {str(e)}')
 
     if background_tasks:
         background_tasks.add_task(send)
@@ -102,6 +123,10 @@ async def send_password_reset(
     background_tasks: Optional[BackgroundTasks] = None,
 ):
     """Send password reset email."""
+    if not _validate_resend_config():
+        logger.error(f'Cannot send password reset to {email} - Resend not configured')
+        return
+        
     template = get_password_reset_template(name, reset_link, language)
 
     def send():
@@ -118,7 +143,7 @@ async def send_password_reset(
             })
             logger.info(f'Password reset email sent to {email}')
         except Exception as e:
-            logger.error(f'Failed to send password reset to {email}: {str(e)}')
+            logger.exception(f'Failed to send password reset to {email}: {str(e)}')
 
     if background_tasks:
         background_tasks.add_task(send)

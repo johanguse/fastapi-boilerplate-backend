@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
 from src.auth.better_auth_compat import router as better_auth_router
+from src.auth.onboarding_routes import router as onboarding_router
+from src.auth.otp_routes import router as otp_router
 from src.auth.schemas import UserCreate, UserRead
 from src.auth.users import auth_backend, fastapi_users
 
@@ -11,6 +13,12 @@ AUTH_PREFIX = '/auth'
 
 # Better Auth compatibility routes
 router.include_router(better_auth_router, tags=['better-auth'])
+
+# Onboarding routes
+router.include_router(onboarding_router, prefix='/auth', tags=['onboarding'])
+
+# OTP routes
+router.include_router(otp_router, tags=['otp'])
 
 # Auth routes (login, register, reset password, verify)
 auth_router = fastapi_users.get_auth_router(auth_backend)
