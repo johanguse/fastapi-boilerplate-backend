@@ -4,11 +4,11 @@ import logging
 from datetime import UTC, datetime
 from typing import Optional
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.ai_core.usage import AIUsageLog, get_monthly_usage
-from src.subscriptions.models import SubscriptionPlan, CustomerSubscription
+from src.ai_core.usage import get_monthly_usage
+from src.subscriptions.models import CustomerSubscription, SubscriptionPlan
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +48,10 @@ class AIUsageLimitService:
             )
 
             total_tokens = usage_stats.get('total_tokens', 0)
-            
+
             # Convert tokens to credits (1 credit ≈ 1000 tokens)
             credits_used = total_tokens // 1000
-            
+
             if credits_used >= max_credits:
                 return False, f"Monthly AI credit limit reached ({max_credits} credits)"
 
@@ -77,7 +77,7 @@ class AIUsageLimitService:
 
             plan = subscription.plan
             current_month = datetime.now(UTC)
-            
+
             # Get usage stats
             usage_stats = await get_monthly_usage(
                 self.db, organization_id, current_month.year, current_month.month

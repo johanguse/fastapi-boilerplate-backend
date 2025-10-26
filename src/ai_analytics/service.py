@@ -2,14 +2,13 @@
 
 import json
 import logging
-import re
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_core.service import AIService
-from src.ai_core.usage import track_ai_usage
+
 from .models import AIAnalyticsQuery
 
 logger = logging.getLogger(__name__)
@@ -271,7 +270,7 @@ class AIAnalyticsService:
 
             chart_type = chart_type.strip().lower()
             valid_types = ['bar', 'line', 'pie', 'table', 'area', 'scatter']
-            
+
             if chart_type in valid_types:
                 return chart_type
             else:

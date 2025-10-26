@@ -7,8 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_core.service import AIService
-from src.ai_core.usage import track_ai_usage
-from .models import AIContentTemplate, AIContentGeneration
+
+from .models import AIContentGeneration, AIContentTemplate
 
 logger = logging.getLogger(__name__)
 
@@ -232,22 +232,22 @@ class AIContentService:
             Length: {length}. Language: {language}.
             Include an engaging title, introduction, main points, and conclusion.
             {additional_instructions or ""}""",
-            
+
             "email": f"""Write a {tone} email about "{topic}". 
             Length: {length}. Language: {language}.
             Make it engaging and actionable.
             {additional_instructions or ""}""",
-            
+
             "social_media": f"""Write a {tone} social media post about "{topic}". 
             Length: {length}. Language: {language}.
             Make it engaging and include relevant hashtags.
             {additional_instructions or ""}""",
-            
+
             "product_description": f"""Write a {tone} product description for "{topic}". 
             Length: {length}. Language: {language}.
             Highlight key features and benefits.
             {additional_instructions or ""}""",
-            
+
             "marketing_copy": f"""Write {tone} marketing copy about "{topic}". 
             Length: {length}. Language: {language}.
             Focus on benefits and call-to-action.

@@ -1,8 +1,7 @@
 """AI service layer with error handling and retries."""
 
-import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -42,7 +41,7 @@ class AIService:
         try:
             # Count input tokens
             input_tokens = self.provider.count_tokens(prompt)
-            
+
             # Generate text
             response = await self.provider.generate_text(
                 prompt=prompt,
@@ -50,10 +49,10 @@ class AIService:
                 temperature=temperature,
                 **kwargs,
             )
-            
+
             # Count output tokens
             output_tokens = self.provider.count_tokens(response)
-            
+
             # Track usage
             if organization_id and user_id:
                 cost = self.provider.estimate_cost(input_tokens, output_tokens)
@@ -65,14 +64,14 @@ class AIService:
                     tokens_used=input_tokens + output_tokens,
                     cost=cost,
                 )
-            
+
             logger.info(
                 f"AI text generation completed: {input_tokens} input, "
                 f"{output_tokens} output tokens"
             )
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"AI text generation failed: {str(e)}")
             raise
@@ -92,10 +91,10 @@ class AIService:
         try:
             # Count tokens
             total_tokens = sum(self.provider.count_tokens(text) for text in texts)
-            
+
             # Generate embeddings
             embeddings = await self.provider.generate_embeddings(texts)
-            
+
             # Track usage
             if organization_id and user_id:
                 cost = self.provider.estimate_cost(total_tokens, 0)
@@ -107,11 +106,11 @@ class AIService:
                     tokens_used=total_tokens,
                     cost=cost,
                 )
-            
+
             logger.info(f"AI embeddings generated: {len(texts)} texts, {total_tokens} tokens")
-            
+
             return embeddings
-            
+
         except Exception as e:
             logger.error(f"AI embeddings generation failed: {str(e)}")
             raise
@@ -129,7 +128,7 @@ class AIService:
 {text}
 
 Summary:"""
-        
+
         return await self.generate_text(
             prompt=prompt,
             max_tokens=max_length * 2,  # Rough estimate
@@ -152,7 +151,7 @@ Summary:"""
 {text}
 
 Key points:"""
-        
+
         response = await self.generate_text(
             prompt=prompt,
             max_tokens=max_points * 50,  # Rough estimate
@@ -161,7 +160,7 @@ Key points:"""
             user_id=user_id,
             feature="key_points_extraction",
         )
-        
+
         # Parse numbered list
         points = []
         for line in response.split('\n'):
@@ -171,7 +170,7 @@ Key points:"""
                 point = line.split('.', 1)[-1].strip()
                 if point:
                     points.append(point)
-        
+
         return points[:max_points]
 
     async def chat_with_context(
@@ -190,7 +189,7 @@ Context:
 Question: {question}
 
 Answer:"""
-        
+
         return await self.generate_text(
             prompt=prompt,
             temperature=0.3,
@@ -212,19 +211,19 @@ Answer:"""
         prompts = {
             "blog_post": f"""Write a {tone} blog post about "{topic}". 
             Length: {length}. Include an engaging title, introduction, main points, and conclusion.""",
-            
+
             "email": f"""Write a {tone} email about "{topic}". 
             Length: {length}. Make it engaging and actionable.""",
-            
+
             "social_media": f"""Write a {tone} social media post about "{topic}". 
             Length: {length}. Make it engaging and include relevant hashtags.""",
-            
+
             "product_description": f"""Write a {tone} product description for "{topic}". 
             Length: {length}. Highlight key features and benefits.""",
         }
-        
+
         prompt = prompts.get(content_type, f"Write {tone} content about {topic}")
-        
+
         return await self.generate_text(
             prompt=prompt,
             temperature=0.7,

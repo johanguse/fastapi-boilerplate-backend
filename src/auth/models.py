@@ -56,7 +56,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     timezone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     bio: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     website: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    
+
     # Onboarding completion tracking
     onboarding_completed: Mapped[bool] = mapped_column(default=False, nullable=False)
     onboarding_step: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

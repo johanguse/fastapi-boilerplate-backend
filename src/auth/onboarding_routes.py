@@ -3,19 +3,25 @@ Onboarding routes for user profile completion and organization setup.
 """
 
 import logging
-from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.models import User
-from src.auth.schemas import OnboardingComplete, OnboardingProfileUpdate, OnboardingStepUpdate
+from src.auth.schemas import (
+    OnboardingComplete,
+    OnboardingProfileUpdate,
+    OnboardingStepUpdate,
+)
 from src.common.security import get_current_active_user
 from src.common.session import get_async_session
+from src.common.utils import translate_message
 from src.organizations.models import Organization, OrganizationMember
 from src.organizations.schemas import OrganizationCreate
-from src.organizations.service import create_organization as create_organization_service
+from src.organizations.service import (
+    create_organization as create_organization_service,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +41,15 @@ async def get_onboarding_status(
         .where(OrganizationMember.user_id == current_user.id)
     )
     has_organization = result.scalar_one_or_none() is not None
-    
+
     return {
         'user_id': current_user.id,
         'onboarding_completed': current_user.onboarding_completed,
         'onboarding_step': current_user.onboarding_step,
         'has_organization': has_organization,
         'profile_complete': bool(
-            current_user.name and 
-            current_user.company and 
+            current_user.name and
+            current_user.company and
             current_user.country
         ),
         'next_step': _get_next_onboarding_step(current_user, has_organization)
@@ -53,6 +59,7 @@ async def get_onboarding_status(
 @router.patch('/onboarding/profile')
 async def update_onboarding_profile(
     profile_data: OnboardingProfileUpdate,
+    request: Request,
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -62,18 +69,18 @@ async def update_onboarding_profile(
         for field, value in profile_data.model_dump(exclude_unset=True).items():
             if hasattr(current_user, field):
                 setattr(current_user, field, value)
-        
+
         # Update onboarding step
         current_user.onboarding_step = max(current_user.onboarding_step, 1)
-        
+
         await session.commit()
         await session.refresh(current_user)
-        
+
         logger.info(f'Updated onboarding profile for user {current_user.id}')
-        
+
         return {
             'success': True,
-            'message': 'Profile updated successfully',
+            'message': translate_message('success.updated', request),
             'user': {
                 'id': current_user.id,
                 'name': current_user.name,
@@ -82,12 +89,13 @@ async def update_onboarding_profile(
                 'onboarding_step': current_user.onboarding_step
             }
         }
-        
+
     except Exception as e:
         logger.exception(f'Error updating onboarding profile for user {current_user.id}: {str(e)}')
+        error_msg = translate_message('onboarding.profile_update_failed', request)
         raise HTTPException(
             status_code=500,
-            detail='Failed to update profile'
+            detail=error_msg
         )
 
 
@@ -104,26 +112,26 @@ async def create_onboarding_organization(
             body = await request.json()
         except Exception:
             body = {}
-        
+
         # Use company name or default to user's name
         org_name = body.get('name') or current_user.company or f"{current_user.name}'s Organization"
         org_slug = body.get('slug')
-        
+
         # Create organization
         org_create = OrganizationCreate(name=org_name, slug=org_slug)
         organization = await create_organization_service(session, org_create, current_user)
-        
+
         # Update onboarding step
         current_user.onboarding_step = max(current_user.onboarding_step, 2)
-        
+
         await session.commit()
         await session.refresh(current_user)
-        
+
         logger.info(f'Created onboarding organization for user {current_user.id}: {organization.name}')
-        
+
         return {
             'success': True,
-            'message': 'Organization created successfully',
+            'message': translate_message('organization.created', request),
             'organization': {
                 'id': organization.id,
                 'name': organization.name,
@@ -131,18 +139,20 @@ async def create_onboarding_organization(
             },
             'onboarding_step': current_user.onboarding_step
         }
-        
+
     except Exception as e:
         logger.exception(f'Error creating onboarding organization for user {current_user.id}: {str(e)}')
+        error_msg = translate_message('organization.failed_to_create', request)
         raise HTTPException(
             status_code=500,
-            detail='Failed to create organization'
+            detail=error_msg
         )
 
 
 @router.patch('/onboarding/step')
 async def update_onboarding_step(
     step_data: OnboardingStepUpdate,
+    request: Request,
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ):
@@ -151,24 +161,25 @@ async def update_onboarding_step(
         current_user.onboarding_step = step_data.step
         if step_data.completed:
             current_user.onboarding_completed = True
-        
+
         await session.commit()
         await session.refresh(current_user)
-        
+
         logger.info(f'Updated onboarding step for user {current_user.id} to step {step_data.step}')
-        
+
         return {
             'success': True,
-            'message': 'Onboarding step updated successfully',
+            'message': translate_message('success.updated', request),
             'onboarding_step': current_user.onboarding_step,
             'onboarding_completed': current_user.onboarding_completed
         }
-        
+
     except Exception as e:
         logger.exception(f'Error updating onboarding step for user {current_user.id}: {str(e)}')
+        error_msg = translate_message('onboarding.step_update_failed', request)
         raise HTTPException(
             status_code=500,
-            detail='Failed to update onboarding step'
+            detail=error_msg
         )
 
 
@@ -182,19 +193,19 @@ async def complete_onboarding(
     try:
         current_user.onboarding_completed = True
         current_user.onboarding_step = 3  # Final step
-        
+
         await session.commit()
         await session.refresh(current_user)
-        
+
         logger.info(f'Completed onboarding for user {current_user.id}')
-        
+
         return {
             'success': True,
             'message': 'Onboarding completed successfully',
             'onboarding_completed': current_user.onboarding_completed,
             'onboarding_step': current_user.onboarding_step
         }
-        
+
     except Exception as e:
         logger.exception(f'Error completing onboarding for user {current_user.id}: {str(e)}')
         raise HTTPException(

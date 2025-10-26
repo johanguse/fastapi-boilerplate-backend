@@ -9,16 +9,16 @@ from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
 from slowapi.errors import RateLimitExceeded
 
-from src.auth.admin_routes import router as admin_router
-from src.auth.email_routes import router as auth_email_router
-from src.auth.routes import router as auth_router
-from src.auth.user_routes import router as user_router
 from src.ai_analytics.routes import router as ai_analytics_router
 from src.ai_content.routes import router as ai_content_router
 from src.ai_core.billing_routes import router as ai_billing_router
 from src.ai_core.dashboard_routes import router as ai_dashboard_router
 from src.ai_core.routes import router as ai_usage_router
 from src.ai_documents.routes import router as ai_documents_router
+from src.auth.admin_routes import router as admin_router
+from src.auth.email_routes import router as auth_email_router
+from src.auth.routes import router as auth_router
+from src.auth.user_routes import router as user_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router

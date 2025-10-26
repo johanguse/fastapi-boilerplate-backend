@@ -1,22 +1,20 @@
 """AI Analytics routes."""
 
 import logging
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page, Params
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.common.session import get_async_session
-from src.common.security import get_current_active_user
 from src.auth.models import User
-from .models import AIAnalyticsQuery
+from src.common.security import get_current_active_user
+from src.common.session import get_async_session
+
 from .schemas import (
-    AIAnalyticsQueryCreate,
     AIAnalyticsQueryResponse,
+    AnalyticsInsightResponse,
     AnalyticsQueryRequest,
     AnalyticsQueryResponse,
-    AnalyticsInsightResponse,
 )
 from .service import AIAnalyticsService
 
@@ -37,7 +35,7 @@ async def process_analytics_query(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIAnalyticsService(db)
@@ -97,7 +95,7 @@ async def get_queries(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIAnalyticsService(db)
@@ -138,7 +136,7 @@ async def get_query(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIAnalyticsService(db)
@@ -168,7 +166,7 @@ async def get_analytics_stats(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIAnalyticsService(db)
@@ -193,12 +191,12 @@ async def get_quick_insights(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         # Generate some quick insights about the organization
         service = AIAnalyticsService(db)
-        
+
         # This would typically run some predefined queries
         # For now, return placeholder insights
         insights = [

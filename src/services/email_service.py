@@ -2,7 +2,6 @@
 Email service using Resend for sending verification and password reset emails.
 """
 
-import os
 from typing import Optional
 
 import resend
@@ -29,7 +28,7 @@ class EmailService:
         self.from_email = settings.RESEND_FROM_EMAIL or 'onboarding@resend.dev'
         self.app_name = settings.PROJECT_NAME or 'Your App'
         self.frontend_url = settings.FRONTEND_URL or 'http://localhost:5173'
-        
+
         # Validate configuration
         self._validate_configuration()
 
@@ -254,8 +253,8 @@ class EmailService:
             return False
 
         try:
-            display_name = name or email.split('@')[0]
-            
+            display_name = name or email.split('@', maxsplit=1)[0]
+
             params = {
                 'from': f'{self.app_name} <{self.from_email}>',
                 'to': [email],
@@ -317,14 +316,14 @@ class EmailService:
         if not self.api_key:
             logger.error('Email service disabled: RESEND_API_KEY not configured')
             return
-            
+
         if not self.from_email or self.from_email == 'onboarding@resend.dev':
             logger.warning(
                 f'Using default FROM_EMAIL: {self.from_email}. Consider setting RESEND_FROM_EMAIL to your domain.'
             )
         else:
             logger.info(f'FROM_EMAIL configured: {self.from_email}')
-            
+
         logger.info(f'Email service initialized with APP_NAME: {self.app_name}, FRONTEND_URL: {self.frontend_url}')
 
 

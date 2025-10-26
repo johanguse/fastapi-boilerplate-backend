@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import desc, func, select
+from sqlalchemy import String, cast, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.activity_log.models import ActivityLog
@@ -11,6 +11,7 @@ from src.auth.models import User
 from src.auth.schemas import UserCreate, UserRead
 from src.common.pagination import CustomParams, Paginated
 from src.common.session import get_async_session
+from src.common.utils import translate_message
 
 router = APIRouter(prefix='/admin', tags=['admin'])
 
@@ -19,27 +20,26 @@ async def get_current_user_from_cookie(
     request: Request, db: AsyncSession = Depends(get_async_session)
 ) -> User:
     """Get current user from Better Auth cookie"""
-    from src.auth.better_auth_compat import (
-        get_token_from_request,
-        verify_better_auth_jwt,
-    )
+    from src.auth.better_auth.jwt_utils import verify_better_auth_jwt
+    from src.auth.better_auth.request_utils import get_token_from_request
 
     token = get_token_from_request(request)
     if not token:
-        raise HTTPException(status_code=401, detail='Not authenticated')
+        error_msg = translate_message('auth.not_authenticated', request)
+        raise HTTPException(status_code=401, detail=error_msg)
 
     payload = verify_better_auth_jwt(token)
     if not payload:
-        raise HTTPException(status_code=401, detail='Invalid token')
+        error_msg = translate_message('auth.invalid_token', request)
+        raise HTTPException(status_code=401, detail=error_msg)
 
     user_id = int(payload['sub'])
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
-        raise HTTPException(
-            status_code=401, detail='User not found or inactive'
-        )
+        error_msg = translate_message('auth.user_not_found_or_inactive', request)
+        raise HTTPException(status_code=401, detail=error_msg)
 
     return user
 
@@ -47,6 +47,7 @@ async def get_current_user_from_cookie(
 def require_admin(current_user: User = Depends(get_current_user_from_cookie)):
     """Dependency to check if user is admin"""
     if current_user.role != 'admin' and not current_user.is_superuser:
+        # We can't use translate_message here as we don't have request context
         raise HTTPException(status_code=403, detail='Admin access required')
     return current_user
 
@@ -58,7 +59,7 @@ async def list_all_users(
     role: str = Query(None, description='Filter by role'),
     db: AsyncSession = Depends(get_async_session),
     _admin: User = Depends(require_admin),
-):
+) -> Paginated[UserRead]:
     """
     List all users with pagination and search (Admin only)
     """
@@ -68,8 +69,8 @@ async def list_all_users(
     if search:
         search_filter = f'%{search}%'
         query = query.where(
-            (User.name.ilike(search_filter))
-            | (User.email.ilike(search_filter))
+            (cast(User.name, String).ilike(search_filter))
+            | (cast(User.email, String).ilike(search_filter))
         )
 
     # Apply role filter
@@ -90,8 +91,8 @@ async def list_all_users(
     if search:
         search_filter = f'%{search}%'
         count_query = count_query.where(
-            (User.name.ilike(search_filter))
-            | (User.email.ilike(search_filter))
+            (cast(User.name, String).ilike(search_filter))
+            | (cast(User.email, String).ilike(search_filter))
         )
     if role:
         count_query = count_query.where(User.role == role)
@@ -114,6 +115,7 @@ async def list_all_users(
 @router.get('/users/{user_id}', response_model=UserRead)
 async def get_user_by_id(
     user_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_async_session),
     _admin: User = Depends(require_admin),
 ):
@@ -124,7 +126,8 @@ async def get_user_by_id(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(status_code=404, detail='User not found')
+        error_msg = translate_message('auth.user_not_found', request)
+        raise HTTPException(status_code=404, detail=error_msg)
 
     return user
 
@@ -143,13 +146,13 @@ async def get_admin_stats(
 
     # Verified users
     verified_users_result = await db.execute(
-        select(User).where(User.is_verified)
+        select(User).where(User.is_verified)  # type: ignore
     )
     verified_users = len(verified_users_result.scalars().all())
 
     # Active users (is_active=True AND status is not suspended)
     active_users_result = await db.execute(
-        select(User).where(User.is_active, User.status != 'suspended')
+        select(User).where(User.is_active & (User.status != 'suspended'))  # type: ignore
     )
     active_users = len(active_users_result.scalars().all())
 
@@ -197,6 +200,7 @@ class UserInvite(BaseModel):
 async def update_user(
     user_id: int,
     user_update: UserUpdateAdmin,
+    request: Request,
     db: AsyncSession = Depends(get_async_session),
     _admin: User = Depends(require_admin),
 ):
@@ -207,7 +211,8 @@ async def update_user(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(status_code=404, detail='User not found')
+        error_msg = translate_message('auth.user_not_found', request)
+        raise HTTPException(status_code=404, detail=error_msg)
 
     # Update fields
     if user_update.name is not None:
@@ -235,6 +240,7 @@ async def update_user(
 @router.delete('/users/{user_id}')
 async def delete_user(
     user_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_async_session),
     _admin: User = Depends(require_admin),
 ):
@@ -243,15 +249,15 @@ async def delete_user(
     """
     # Prevent admin from deleting themselves
     if _admin.id == user_id:
-        raise HTTPException(
-            status_code=400, detail='Cannot delete your own account'
-        )
+        error_msg = translate_message('auth.cannot_delete_own_account', request)
+        raise HTTPException(status_code=400, detail=error_msg)
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(status_code=404, detail='User not found')
+        error_msg = translate_message('auth.user_not_found', request)
+        raise HTTPException(status_code=404, detail=error_msg)
 
     await db.delete(user)
     await db.commit()
@@ -262,6 +268,7 @@ async def delete_user(
 @router.post('/users/invite', response_model=UserRead)
 async def invite_user(
     invite: UserInvite,
+    request: Request,
     db: AsyncSession = Depends(get_async_session),
     _admin: User = Depends(require_admin),
 ):
@@ -271,33 +278,37 @@ async def invite_user(
     """
     import secrets
 
-    from src.auth.users import get_user_manager
+    from fastapi_users.db import SQLAlchemyUserDatabase
+
+    from src.auth.users import UserManager
 
     # Check if user already exists
     existing_result = await db.execute(
-        select(User).where(User.email == invite.email)
+        select(User).where(User.email == invite.email)  # type: ignore
     )
     if existing_result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=400, detail='User with this email already exists'
-        )
+        error_msg = translate_message('auth.user_already_exists', request)
+        raise HTTPException(status_code=400, detail=error_msg)
 
     # Create user with random password (they'll need to reset)
     temp_password = secrets.token_urlsafe(16)
-    user_manager = get_user_manager()
+
+    # Get user database and manager
+    user_db: SQLAlchemyUserDatabase[User, int] = SQLAlchemyUserDatabase(db, User)
+    user_manager = UserManager(user_db)
 
     user_create = UserCreate(
         email=invite.email,
         password=temp_password,
         name=invite.name,
-        role=invite.role,
         is_active=True,
         is_verified=False,
     )
 
-    user = await user_manager.create(user_create, safe=False)
+    user = await user_manager.create(user_create, safe=False, request=None)
 
-    # Set status to 'invited'
+    # Set role and status
+    user.role = invite.role
     user.status = 'invited'
     await db.commit()
     await db.refresh(user)
@@ -471,7 +482,7 @@ class ActivityLogRead(BaseModel):
     action: str
     action_type: str
     description: str
-    action_metadata: Optional[dict] = None
+    action_metadata: Optional[dict[str, Any]] = None
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
     created_at: datetime
@@ -495,7 +506,7 @@ async def list_activity_logs(
     ),
     db: AsyncSession = Depends(get_async_session),
     _admin: User = Depends(require_admin),
-):
+) -> Paginated[ActivityLogRead]:
     """
     List activity logs with pagination and filters (Admin only)
     """
@@ -524,24 +535,24 @@ async def list_activity_logs(
     # Convert to ActivityLogRead objects
     logs = []
     for activity_log in activity_logs:
-        log_dict = {
-            'id': activity_log.id,
-            'action': activity_log.action,
-            'action_type': activity_log.action_type,
-            'description': activity_log.description,
-            'action_metadata': activity_log.action_metadata,
-            'ip_address': activity_log.ip_address,
-            'user_agent': activity_log.user_agent,
-            'created_at': activity_log.created_at,
-            'user_id': activity_log.user_id,
-            'organization_id': activity_log.organization_id,
-            'project_id': activity_log.project_id,
-            'user_name': activity_log.user.name if activity_log.user else None,
-            'user_email': activity_log.user.email
+        log_entry = ActivityLogRead(
+            id=activity_log.id,
+            action=activity_log.action,
+            action_type=activity_log.action_type,
+            description=activity_log.description,
+            action_metadata=activity_log.action_metadata,  # type: ignore
+            ip_address=activity_log.ip_address,
+            user_agent=activity_log.user_agent,
+            created_at=activity_log.created_at,
+            user_id=activity_log.user_id,
+            organization_id=activity_log.organization_id,
+            project_id=activity_log.project_id,
+            user_name=activity_log.user.name if activity_log.user else None,
+            user_email=activity_log.user.email
             if activity_log.user
             else None,
-        }
-        logs.append(ActivityLogRead(**log_dict))
+        )
+        logs.append(log_entry)  # type: ignore
 
     # Count total with optimized query
     count_query = select(func.count()).select_from(ActivityLog)

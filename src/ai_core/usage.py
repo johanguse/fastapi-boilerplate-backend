@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Float
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -22,13 +22,13 @@ class AIUsageLog(Base):
     user_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True
     )
-    
+
     # Usage details
     feature: Mapped[str] = mapped_column(String(50), index=True)  # documents, content, analytics
     operation: Mapped[str] = mapped_column(String(50), index=True)  # generate_text, embeddings, etc.
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
     cost: Mapped[float] = mapped_column(Float, default=0.0)
-    
+
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
@@ -60,7 +60,7 @@ async def track_ai_usage(
         tokens_used=tokens_used,
         cost=cost,
     )
-    
+
     db.add(usage_log)
     await db.commit()
 
@@ -73,24 +73,24 @@ async def get_usage_stats(
 ) -> dict:
     """Get AI usage statistics for an organization."""
     from sqlalchemy import func, select
-    
+
     query = select(
         AIUsageLog.feature,
         func.sum(AIUsageLog.tokens_used).label('total_tokens'),
         func.sum(AIUsageLog.cost).label('total_cost'),
         func.count(AIUsageLog.id).label('total_operations'),
     ).where(AIUsageLog.organization_id == organization_id)
-    
+
     if start_date:
         query = query.where(AIUsageLog.created_at >= start_date)
     if end_date:
         query = query.where(AIUsageLog.created_at <= end_date)
-    
+
     query = query.group_by(AIUsageLog.feature)
-    
+
     result = await db.execute(query)
     stats = result.fetchall()
-    
+
     return {
         'by_feature': {
             row.feature: {
@@ -113,13 +113,11 @@ async def get_monthly_usage(
     month: int,
 ) -> dict:
     """Get AI usage for a specific month."""
-    from datetime import date
-    from sqlalchemy import and_, extract
-    
+
     start_date = datetime(year, month, 1, tzinfo=UTC)
     if month == 12:
         end_date = datetime(year + 1, 1, 1, tzinfo=UTC)
     else:
         end_date = datetime(year, month + 1, 1, tzinfo=UTC)
-    
+
     return await get_usage_stats(db, organization_id, start_date, end_date)

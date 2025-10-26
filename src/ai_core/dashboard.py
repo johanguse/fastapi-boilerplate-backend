@@ -2,17 +2,16 @@
 
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import select, func, and_, desc
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.ai_analytics.models import AIAnalyticsQuery
+from src.ai_content.models import AIContentGeneration
 from src.ai_core.usage import AIUsageLog
 from src.ai_documents.models import AIDocument
-from src.ai_content.models import AIContentGeneration
-from src.ai_analytics.models import AIAnalyticsQuery
 from src.subscriptions.models import CustomerSubscription, SubscriptionPlan
-from src.organizations.models import Organization
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class AIDashboardService:
             # Get current month stats
             current_month = datetime.now(UTC)
             month_start = current_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            
+
             # Get subscription info
             subscription = await self._get_active_subscription(organization_id)
             plan_name = subscription.plan.name if subscription and subscription.plan else "No Plan"
@@ -38,7 +37,7 @@ class AIDashboardService:
 
             # Get usage stats
             usage_stats = await self._get_usage_for_period(organization_id, month_start, current_month)
-            
+
             # Get feature-specific counts
             documents_count = await self._get_documents_count(organization_id)
             content_generations_count = await self._get_content_generations_count(organization_id)
@@ -123,7 +122,7 @@ class AIDashboardService:
             mid_point = days // 2
             first_half_tokens = sum(day["tokens"] for day in daily_usage[:mid_point])
             second_half_tokens = sum(day["tokens"] for day in daily_usage[mid_point:])
-            
+
             growth_rate = 0
             if first_half_tokens > 0:
                 growth_rate = ((second_half_tokens - first_half_tokens) / first_half_tokens) * 100
@@ -149,7 +148,7 @@ class AIDashboardService:
             # Get current month usage by feature
             current_month = datetime.now(UTC)
             month_start = current_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            
+
             usage_by_feature = await self._get_usage_by_feature(organization_id, month_start, current_month)
 
             # Get most used features
@@ -231,7 +230,7 @@ class AIDashboardService:
                 )
             ).group_by(AIUsageLog.feature)
         )
-        
+
         by_feature = {}
         for row in feature_result:
             by_feature[row.feature] = {
@@ -380,7 +379,7 @@ class AIDashboardService:
         all_features = ["documents", "content", "analytics"]
         used_features = set(usage_by_feature.keys())
         unused_features = set(all_features) - used_features
-        
+
         if unused_features:
             recommendations.append(
                 f"Try exploring unused AI features: {', '.join(unused_features)}"
@@ -390,7 +389,7 @@ class AIDashboardService:
         if len(features_sorted) > 1:
             most_used = features_sorted[0]
             least_used = features_sorted[-1]
-            
+
             if most_used[1]["tokens"] > least_used[1]["tokens"] * 5:
                 recommendations.append(
                     f"Consider balancing usage between features. {most_used[0]} is used much more than {least_used[0]}"

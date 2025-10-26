@@ -154,7 +154,7 @@ class DatabaseStreamer:
 
             for row in rows:
                 # Convert row to dictionary
-                row_dict = dict(row._mapping)
+                row_dict = dict(row._mapping)  # type: ignore
                 yield row_dict
 
             offset += batch_size
@@ -180,11 +180,11 @@ def create_streaming_response(
     Returns:
         StreamingResponse object
     """
-    headers = {}
+    headers: dict[str, str] = {}
     if filename:
         headers['Content-Disposition'] = f'attachment; filename="{filename}"'
 
-    return StreamingResponse(generator, media_type=media_type, headers=headers)
+    return StreamingResponse(generator, media_type=media_type, headers=headers)  # type: ignore
 
 
 def create_json_streaming_response(

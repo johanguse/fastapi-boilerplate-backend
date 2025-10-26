@@ -3,20 +3,20 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi_pagination import Page, Params
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.common.session import get_async_session
-from src.common.security import get_current_active_user
 from src.auth.models import User
-from .models import AIDocument, AIDocumentChat
+from src.common.security import get_current_active_user
+from src.common.session import get_async_session
+
 from .schemas import (
-    AIDocumentResponse,
     AIDocumentChatCreate,
     AIDocumentChatResponse,
-    DocumentUploadResponse,
+    AIDocumentResponse,
     DocumentProcessingStatus,
+    DocumentUploadResponse,
 )
 from .service import AIDocumentService
 
@@ -39,7 +39,7 @@ async def upload_document(
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'text/plain',
         ]
-        
+
         if file.content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
@@ -48,14 +48,14 @@ async def upload_document(
 
         # Read file content
         content = await file.read()
-        
+
         # Get user's organization (assuming user belongs to one organization)
         if not current_user.organizations:
             raise HTTPException(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         # Upload document
@@ -92,7 +92,7 @@ async def get_documents(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDocumentService(db)
@@ -133,7 +133,7 @@ async def get_document(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDocumentService(db)
@@ -164,7 +164,7 @@ async def get_document_status(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDocumentService(db)
@@ -200,7 +200,7 @@ async def chat_with_document(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDocumentService(db)
@@ -233,7 +233,7 @@ async def get_document_chats(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDocumentService(db)
@@ -262,7 +262,7 @@ async def delete_document(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDocumentService(db)

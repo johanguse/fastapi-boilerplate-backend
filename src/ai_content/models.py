@@ -3,14 +3,14 @@
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
 
 if TYPE_CHECKING:
-    from src.organizations.models import Organization
     from src.auth.models import User
+    from src.organizations.models import Organization
 
 
 class AIContentTemplate(Base):
@@ -25,15 +25,15 @@ class AIContentTemplate(Base):
     created_by: Mapped[int] = mapped_column(
         Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True
     )
-    
+
     # Template details
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     template_type: Mapped[str] = mapped_column(String(50), nullable=False)  # blog_post, email, social_media, etc.
     prompt_template: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Template settings
     settings: Mapped[dict] = mapped_column(JSON, default=dict)  # tone, length, style preferences
-    
+
     # Metadata
     is_active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -68,16 +68,16 @@ class AIContentGeneration(Base):
     template_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey('ai_content_templates.id', ondelete='SET NULL'), nullable=True
     )
-    
+
     # Generation details
     content_type: Mapped[str] = mapped_column(String(50), nullable=False)
     input_data: Mapped[dict] = mapped_column(JSON, default=dict)  # topic, tone, length, etc.
     output_content: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Usage tracking
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
     cost: Mapped[float] = mapped_column(default=0.0)
-    
+
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)

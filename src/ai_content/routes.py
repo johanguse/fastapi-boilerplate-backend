@@ -1,21 +1,19 @@
 """AI Content Generation routes."""
 
 import logging
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page, Params
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.common.session import get_async_session
-from src.common.security import get_current_active_user
 from src.auth.models import User
-from .models import AIContentTemplate, AIContentGeneration
+from src.common.security import get_current_active_user
+from src.common.session import get_async_session
+
 from .schemas import (
-    AIContentTemplateCreate,
+    AIContentGenerationResponse,
     AIContentTemplateResponse,
     AIContentTemplateUpdate,
-    AIContentGenerationResponse,
     ContentGenerationRequest,
     ContentGenerationResponse,
     ContentTemplateRequest,
@@ -40,13 +38,13 @@ async def get_ai_content_info(
                 "organization_id": None,
                 "message": "User must belong to an organization to use AI features"
             }
-        
+
         organization_id = current_user.organizations[0].id
-        
+
         # Get basic stats
         service = AIContentService(db)
         stats = await service.get_organization_stats(organization_id)
-        
+
         return {
             "service": "AI Content Generation",
             "status": "available",
@@ -76,7 +74,7 @@ async def create_template(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIContentService(db)
@@ -109,7 +107,7 @@ async def get_templates(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIContentService(db)
@@ -155,7 +153,7 @@ async def get_template(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIContentService(db)
@@ -187,7 +185,7 @@ async def update_template(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIContentService(db)
@@ -224,7 +222,7 @@ async def delete_template(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIContentService(db)
@@ -255,7 +253,7 @@ async def generate_content(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIContentService(db)
@@ -355,7 +353,7 @@ async def get_content_stats(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIContentService(db)

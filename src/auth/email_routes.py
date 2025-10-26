@@ -3,11 +3,11 @@ Email-related routes for verification and password reset.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from loguru import logger
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from loguru import logger
 
 from ..auth.models import User
 from ..common.rate_limiter import (
@@ -17,6 +17,7 @@ from ..common.rate_limiter import (
     limiter,
 )
 from ..common.session import get_async_session
+from ..common.utils import translate_message
 from ..services.email_service import email_service
 from ..services.token_service import token_service
 
@@ -118,9 +119,10 @@ async def reset_password(
     )
 
     if not email:
+        error_msg = translate_message('auth.invalid_or_expired_reset_token', http_request)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Invalid or expired reset token',
+            detail=error_msg,
         )
 
     # Find user
@@ -128,8 +130,9 @@ async def reset_password(
     user = result.scalars().first()
 
     if not user:
+        error_msg = translate_message('auth.user_not_found', http_request)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail='User not found'
+            status_code=status.HTTP_404_NOT_FOUND, detail=error_msg
         )
 
     # Update password
@@ -157,9 +160,10 @@ async def verify_email(
     )
 
     if not email:
+        error_msg = translate_message('auth.invalid_or_expired_verification_token', http_request)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Invalid or expired verification token',
+            detail=error_msg,
         )
 
     # Find user
@@ -167,8 +171,9 @@ async def verify_email(
     user = result.scalars().first()
 
     if not user:
+        error_msg = translate_message('auth.user_not_found', http_request)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail='User not found'
+            status_code=status.HTTP_404_NOT_FOUND, detail=error_msg
         )
 
     # Mark email as verified

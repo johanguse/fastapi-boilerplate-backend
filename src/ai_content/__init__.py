@@ -1,6 +1,6 @@
 """AI Content Generation module."""
 
-from .models import AIContentTemplate, AIContentGeneration
+from .models import AIContentGeneration, AIContentTemplate
 
 __all__ = [
     "AIContentTemplate",

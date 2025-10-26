@@ -1,9 +1,9 @@
 """AI Document Intelligence module."""
 
-from .models import AIDocument, AIDocumentChunk, AIDocumentChat
+from .models import AIDocument, AIDocumentChat, AIDocumentChunk
 
 __all__ = [
     "AIDocument",
-    "AIDocumentChunk", 
+    "AIDocumentChunk",
     "AIDocumentChat",
 ]

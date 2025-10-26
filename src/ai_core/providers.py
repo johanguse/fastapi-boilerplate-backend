@@ -2,10 +2,8 @@
 
 import asyncio
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, List, Optional
 
-import anthropic
-import openai
 import tiktoken
 from anthropic import Anthropic
 from openai import AsyncOpenAI
@@ -50,7 +48,7 @@ class OpenAIProvider(AIProvider):
         self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         self.model_text = settings.AI_MODEL_TEXT or "gpt-4-turbo"
         self.model_embeddings = settings.AI_MODEL_EMBEDDINGS or "text-embedding-3-small"
-        
+
         # Initialize tokenizer
         try:
             self.tokenizer = tiktoken.encoding_for_model(self.model_text)
@@ -98,7 +96,7 @@ class OpenAIProvider(AIProvider):
         # GPT-4 Turbo pricing (as of 2024)
         input_cost_per_1k = 0.01
         output_cost_per_1k = 0.03
-        
+
         return (input_tokens / 1000 * input_cost_per_1k) + (
             output_tokens / 1000 * output_cost_per_1k
         )
@@ -114,7 +112,7 @@ class OpenRouterProvider(AIProvider):
         )
         self.model_text = settings.AI_MODEL_TEXT or "openai/gpt-4-turbo"
         self.model_embeddings = settings.AI_MODEL_EMBEDDINGS or "openai/text-embedding-3-small"
-        
+
         # Initialize tokenizer
         try:
             self.tokenizer = tiktoken.encoding_for_model("gpt-4")
@@ -162,7 +160,7 @@ class OpenRouterProvider(AIProvider):
         # These are rough estimates - actual costs depend on the specific model
         input_cost_per_1k = 0.002  # Much cheaper than direct OpenAI
         output_cost_per_1k = 0.006
-        
+
         return (input_tokens / 1000 * input_cost_per_1k) + (
             output_tokens / 1000 * output_cost_per_1k
         )
@@ -217,7 +215,7 @@ class AnthropicProvider(AIProvider):
         # Claude 3.5 Sonnet pricing (as of 2024)
         input_cost_per_1k = 0.003
         output_cost_per_1k = 0.015
-        
+
         return (input_tokens / 1000 * input_cost_per_1k) + (
             output_tokens / 1000 * output_cost_per_1k
         )
@@ -225,10 +223,10 @@ class AnthropicProvider(AIProvider):
 
 class MockAIProvider(AIProvider):
     """Mock AI provider for development when no API keys are configured."""
-    
+
     def __init__(self):
         self.name = "Mock Provider"
-    
+
     async def generate_text(
         self,
         prompt: str,
@@ -238,17 +236,17 @@ class MockAIProvider(AIProvider):
     ) -> str:
         """Generate mock text for development."""
         return f"Mock AI Response: {prompt[:100]}..."
-    
+
     async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate mock embeddings for development."""
         # Return random embeddings of dimension 1536 (OpenAI's embedding dimension)
         import random
         return [[random.random() for _ in range(1536)] for _ in texts]
-    
+
     def count_tokens(self, text: str) -> int:
         """Count tokens using simple word count."""
         return len(text.split()) * 1.3  # Rough approximation
-    
+
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
         """Estimate cost (free for mock)."""
         return 0.0
@@ -258,21 +256,21 @@ def get_ai_provider() -> AIProvider:
     """Get the configured AI provider."""
     try:
         provider_name = getattr(settings, 'AI_PROVIDER', None) or "openai"
-        
+
         if provider_name.lower() == "openrouter":
             api_key = getattr(settings, 'OPENROUTER_API_KEY', None)
             if not api_key:
                 logger.warning("OPENROUTER_API_KEY not set, using mock provider")
                 return MockAIProvider()
             return OpenRouterProvider()
-        
+
         if provider_name.lower() == "anthropic":
             api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
             if not api_key:
                 logger.warning("ANTHROPIC_API_KEY not set, using mock provider")
                 return MockAIProvider()
             return AnthropicProvider()
-        
+
         # Default to OpenAI
         api_key = getattr(settings, 'OPENAI_API_KEY', None)
         if not api_key:

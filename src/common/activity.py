@@ -1,5 +1,4 @@
-from types import SimpleNamespace
-from typing import Optional
+from typing import Any, Optional, cast
 
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -17,7 +16,7 @@ class ActivityLogData(BaseModel):
     project_id: Optional[int] = None
     organization_id: Optional[int] = None
     ip_address: Optional[str] = None
-    metadata: Optional[dict] = None
+    metadata: Optional[dict[str, Any]] = None
 
 
 async def log_activity(
@@ -36,7 +35,7 @@ async def log_activity(
     """
     # Build values using DB column names, omitting None values so nullable
     # fields are left to defaults and to keep INSERT column list minimal.
-    values: dict = {
+    values: dict[str, Any] = {
         'action': data.action,
         'action_type': 'OTHER',
         'description': data.description,
@@ -64,9 +63,10 @@ async def log_activity(
 
     # Return a lightweight object to avoid ORM SELECTs that may reference
     # columns not present in legacy schemas (e.g., organization_id).
-    return SimpleNamespace(
+    from types import SimpleNamespace
+    return cast(ActivityLog, SimpleNamespace(
         id=new_id,
         user_id=values.get('user_id'),
         action=values.get('action'),
         description=values.get('description'),
-    )
+    ))

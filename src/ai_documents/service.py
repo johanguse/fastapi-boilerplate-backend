@@ -1,21 +1,18 @@
 """AI Document Intelligence service."""
 
 import asyncio
-import json
 import logging
 from datetime import UTC, datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-from docx import Document as DocxDocument
-from pypdf import PdfReader
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_core.service import AIService
-from src.ai_core.usage import track_ai_usage
 from src.common.config import settings
 from src.utils.storage import upload_file_to_r2
-from .models import AIDocument, AIDocumentChunk, AIDocumentChat
+
+from .models import AIDocument, AIDocumentChat, AIDocumentChunk
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +88,7 @@ class AIDocumentService:
 
             # Extract text based on file type
             extracted_text = await self._extract_text(document.file_path, document.mime_type)
-            
+
             if not extracted_text:
                 raise ValueError("Could not extract text from document")
 
@@ -164,7 +161,7 @@ class AIDocumentService:
 
             # Split text into chunks (simple approach)
             chunk_size = 1000  # characters
-            chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+            chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
 
             # Generate embeddings for chunks
             embeddings = await self.ai_service.generate_embeddings(
@@ -284,14 +281,14 @@ class AIDocumentService:
     def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         """Calculate cosine similarity between two vectors."""
         import math
-        
+
         dot_product = sum(a * b for a, b in zip(vec1, vec2))
         magnitude1 = math.sqrt(sum(a * a for a in vec1))
         magnitude2 = math.sqrt(sum(a * a for a in vec2))
-        
+
         if magnitude1 == 0 or magnitude2 == 0:
             return 0
-        
+
         return dot_product / (magnitude1 * magnitude2)
 
     async def get_documents(
@@ -343,10 +340,10 @@ class AIDocumentService:
             )
         )
         document = result.scalar_one_or_none()
-        
+
         if document:
             await self.db.delete(document)
             await self.db.commit()
             return True
-        
+
         return False

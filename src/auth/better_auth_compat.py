@@ -163,7 +163,7 @@ async def _get_user_from_request(
     if not payload:
         raise HTTPException(status_code=401, detail='Invalid token')
     user_id = int(payload['sub'])  # type: ignore[index]
-    result = await session.execute(select(User).where(User.id == user_id))
+    result = await session.execute(select(User).where(User.id == user_id))  # type: ignore[arg-type]
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(
@@ -181,17 +181,17 @@ class ForgotPasswordRequest(BaseModel):
 async def forgot_password(
     request: ForgotPasswordRequest,
     session: AsyncSession = Depends(get_async_session),
-):
+) -> Dict[str, Any]:
     """Better Auth compatible forgot password endpoint"""
     try:
         logger.info(f'Forgot password request for email: {request.email}')
-        
+
         # Check if user exists
         result = await session.execute(
-            select(User).where(User.email == request.email)
+            select(User).where(User.email == request.email)  # type: ignore[arg-type]
         )
         user = result.scalar_one_or_none()
-        
+
         if user:
             # User exists - send password reset email
             try:
@@ -199,28 +199,28 @@ async def forgot_password(
                 token = await token_service.create_password_reset_token(
                     session, user.email
                 )
-                
+
                 # Send password reset email
                 email_sent = await email_service.send_forgot_password_email(
                     user.email, token, user.name
                 )
-                
+
                 if not email_sent:
                     logger.warning(f'Failed to send password reset email to {user.email}')
-                
+
                 logger.info(f'Password reset email sent to: {user.email}')
-                
+
             except Exception as e:
                 # Log error but don't expose to user for security
                 logger.exception(f'Exception sending password reset email to {user.email}: {str(e)}')
-        
+
         # Always return success for security (don't reveal if user exists)
         return {
             'success': True,
             'message': 'If an account with this email exists, a password reset link has been sent.',
             'user_exists': user is not None
         }
-        
+
     except Exception as e:
         logger.exception(f'Unexpected error in forgot_password: {str(e)}')
         raise HTTPException(
@@ -236,13 +236,13 @@ async def forgot_password(
 async def reset_password(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
-):
+) -> Dict[str, Any]:
     """Better Auth compatible reset password endpoint"""
     try:
         payload = await request.json()
         token = payload.get('token')
         password = payload.get('password')
-        
+
         if not token or not password:
             raise HTTPException(
                 status_code=400,
@@ -251,15 +251,15 @@ async def reset_password(
                     'message': 'Token and password are required',
                 },
             )
-        
+
         # TODO: Implement actual password reset logic
         logger.info(f'Password reset requested with token: {token[:10]}...')
-        
+
         return {
             'success': True,
             'message': 'Password reset successfully',
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -349,6 +349,8 @@ async def sign_in_email(
                 'role': getattr(user, 'role', 'member'),
                 'is_verified': user.is_verified,
                 'is_superuser': user.is_superuser,
+                'onboarding_completed': getattr(user, 'onboarding_completed', False),
+                'onboarding_step': getattr(user, 'onboarding_step', 0),
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -420,7 +422,7 @@ async def sign_up_email(
         )
         if request.name and hasattr(User, 'name'):
             user_create.name = request.name
-        
+
         try:
             user = await user_manager.create(user_create)
         except Exception as e:
@@ -526,7 +528,7 @@ async def sign_out(response: Response):
 @router.get('/auth/session')
 async def get_session(
     request: Request, session: AsyncSession = Depends(get_async_session)
-):
+) -> Dict[str, Any]:
     """Get current session information"""
     # Get token from Authorization header or cookie
     token = get_token_from_request(request)
@@ -539,7 +541,7 @@ async def get_session(
 
     # Get user from database
     user_id = int(payload['sub'])
-    result = await session.execute(select(User).where(User.id == user_id))
+    result = await session.execute(select(User).where(User.id == user_id))  # type: ignore[arg-type]
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
@@ -557,6 +559,8 @@ async def get_session(
             'role': getattr(user, 'role', 'member'),
             'is_verified': user.is_verified,
             'is_superuser': user.is_superuser,
+            'onboarding_completed': getattr(user, 'onboarding_completed', False),
+            'onboarding_step': getattr(user, 'onboarding_step', 0),
             'createdAt': user.created_at.isoformat()
             if hasattr(user, 'created_at') and user.created_at
             else None,
@@ -579,7 +583,7 @@ async def get_session(
 @router.get('/auth/get-session')
 async def get_session_alias(
     request: Request, session: AsyncSession = Depends(get_async_session)
-):
+) -> Dict[str, Any]:
     return await get_session(request, session)
 
 
@@ -588,13 +592,13 @@ async def get_session_alias(
 async def list_organizations(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
-):
+) -> List[Dict[str, Any]]:
     """List user's organizations"""
     user = await _get_user_from_request(request, session)
     result = await session.execute(
         select(Organization)
         .join(OrganizationMember)
-        .where(OrganizationMember.user_id == user.id)
+        .where(OrganizationMember.user_id == user.id)  # type: ignore[arg-type]
     )
     organizations: List[Organization] = result.scalars().all()
     orgs = []
@@ -617,7 +621,7 @@ async def list_organizations(
 async def list_organizations_compat(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
-):
+) -> List[Dict[str, Any]]:
     """Better Auth plugin expects /auth/organization/list. Return an array."""
     return await list_organizations(request, session)
 
@@ -627,7 +631,7 @@ async def create_organization(
     request: Request,
     response: Response,
     session: AsyncSession = Depends(get_async_session),
-):
+) -> Dict[str, Any]:
     """Create organization"""
     try:
         payload = await request.json()
@@ -722,8 +726,8 @@ async def set_active_organization(
         select(Organization.id)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id_int,
-            OrganizationMember.user_id == user.id,
+            Organization.id == org_id_int,  # type: ignore[arg-type]
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
         )
     )
     if result.scalar_one_or_none() is None:
@@ -809,7 +813,7 @@ async def get_organization(
         select(Organization)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id, OrganizationMember.user_id == user.id
+            Organization.id == org_id, OrganizationMember.user_id == user.id  # type: ignore[arg-type]
         )
     )
     organization = result.scalar_one_or_none()
@@ -852,9 +856,9 @@ async def update_organization(
         select(Organization, OrganizationMember.role)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id,
-            OrganizationMember.user_id == user.id,
-            OrganizationMember.role.in_(['owner', 'admin']),
+            Organization.id == org_id,  # type: ignore[arg-type]
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
+            OrganizationMember.role.in_(['owner', 'admin']),  # type: ignore[arg-type]
         )
     )
     org_and_role = result.first()
@@ -908,9 +912,9 @@ async def delete_organization(
         select(Organization, OrganizationMember.role)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id,
-            OrganizationMember.user_id == user.id,
-            OrganizationMember.role == 'owner',
+            Organization.id == org_id,  # type: ignore[arg-type]
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
+            OrganizationMember.role == 'owner',  # type: ignore[arg-type]
         )
     )
     org_and_role = result.first()
@@ -929,12 +933,12 @@ async def delete_organization(
     # Delete organization members first (due to foreign key constraints)
     await session.execute(
         select(OrganizationMember).where(
-            OrganizationMember.organization_id == org_id
+            OrganizationMember.organization_id == org_id  # type: ignore[arg-type]
         )
     )
     await session.execute(
         OrganizationMember.__table__.delete().where(
-            OrganizationMember.organization_id == org_id
+            OrganizationMember.organization_id == org_id  # type: ignore[arg-type]
         )
     )
 
@@ -1070,7 +1074,7 @@ async def oauth_callback(
 
         # Check if user exists by email
         result = await session.execute(
-            select(User).where(User.email == user_info['email'])
+            select(User).where(User.email == user_info['email'])  # type: ignore[arg-type]
         )
         user = result.scalar_one_or_none()
 
@@ -1176,8 +1180,8 @@ async def oauth_link_callback(
         # Check if this OAuth account is already linked to another user
         result = await session.execute(
             select(User).where(
-                User.oauth_provider == provider,
-                User.oauth_provider_id == user_info['id'],
+                User.oauth_provider == provider,  # type: ignore[arg-type]
+                User.oauth_provider_id == user_info['id'],  # type: ignore[arg-type]
             )
         )
         existing_user = result.scalar_one_or_none()

@@ -2,14 +2,13 @@
 
 import logging
 from datetime import UTC, datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.ai_core.usage import AIUsageLog
 from src.subscriptions.models import CustomerSubscription, SubscriptionPlan
-from src.organizations.models import Organization
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ class AIBillingService:
             # Calculate costs
             total_tokens = usage_stats.get("total_tokens", 0)
             total_cost = usage_stats.get("total_cost", 0.0)
-            
+
             # Get plan limits
             plan = subscription.plan
             monthly_credits = plan.max_ai_credits_monthly or 0
@@ -136,7 +135,7 @@ class AIBillingService:
 
             plan = subscription.plan
             monthly_credits = plan.max_ai_credits_monthly or 0
-            
+
             if monthly_credits <= 0:
                 return False, "No AI credits available in your plan"
 
@@ -171,7 +170,7 @@ class AIBillingService:
             # Get current month stats
             current_month = datetime.now(UTC)
             month_start = current_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            
+
             current_month_usage = await self._get_usage_for_period(
                 organization_id, month_start, current_month
             )
@@ -190,7 +189,7 @@ class AIBillingService:
             # Calculate trends
             current_tokens = current_month_usage.get("total_tokens", 0)
             week_tokens = week_usage.get("total_tokens", 0)
-            
+
             # Estimate daily usage from last week
             daily_avg = week_tokens / 7 if week_tokens > 0 else 0
             projected_monthly = daily_avg * 30
@@ -269,7 +268,7 @@ class AIBillingService:
                 )
             ).group_by(AIUsageLog.feature)
         )
-        
+
         by_feature = {}
         for row in feature_result:
             by_feature[row.feature] = {

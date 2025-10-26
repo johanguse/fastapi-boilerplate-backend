@@ -3,14 +3,14 @@
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
 
 if TYPE_CHECKING:
-    from src.organizations.models import Organization
     from src.auth.models import User
+    from src.organizations.models import Organization
 
 
 class AIAnalyticsQuery(Base):
@@ -25,23 +25,23 @@ class AIAnalyticsQuery(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey('users.id', ondelete='CASCADE'), index=True
     )
-    
+
     # Query details
     natural_query: Mapped[str] = mapped_column(Text, nullable=False)
     sql_query: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Results and visualization
     results: Mapped[dict] = mapped_column(JSON, default=dict)
     chart_config: Mapped[dict] = mapped_column(JSON, default=dict)
-    
+
     # Status and metadata
     status: Mapped[str] = mapped_column(String(20), default='pending')  # pending, completed, failed
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Usage tracking
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
     cost: Mapped[float] = mapped_column(default=0.0)
-    
+
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)

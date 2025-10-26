@@ -3,14 +3,14 @@
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, JSON, Float
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
 
 if TYPE_CHECKING:
-    from src.organizations.models import Organization
     from src.auth.models import User
+    from src.organizations.models import Organization
 
 
 class AIDocument(Base):
@@ -25,23 +25,23 @@ class AIDocument(Base):
     uploaded_by: Mapped[int] = mapped_column(
         Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True
     )
-    
+
     # Document metadata
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     file_path: Mapped[str] = mapped_column(String(500), nullable=False)
     file_size: Mapped[int] = mapped_column(Integer, default=0)
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    
+
     # Processing status
     status: Mapped[str] = mapped_column(
         String(20), default='pending', index=True
     )  # pending, processing, completed, failed
-    
+
     # AI processing results
     summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     key_points: Mapped[dict] = mapped_column(JSON, default=list)
     extracted_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Document metadata
     document_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
     processed_at: Mapped[Optional[datetime]] = mapped_column(
@@ -79,14 +79,14 @@ class AIDocumentChunk(Base):
     document_id: Mapped[int] = mapped_column(
         Integer, ForeignKey('ai_documents.id', ondelete='CASCADE'), index=True
     )
-    
+
     # Chunk content
     content: Mapped[str] = mapped_column(Text, nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, default=0)
-    
+
     # Embedding for semantic search (stored as JSON array)
     embedding: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    
+
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)
@@ -111,14 +111,14 @@ class AIDocumentChat(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey('users.id', ondelete='CASCADE'), index=True
     )
-    
+
     # Chat content
     question: Mapped[str] = mapped_column(Text, nullable=False)
     answer: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # Context used for answer
     context_chunks: Mapped[dict] = mapped_column(JSON, default=list)
-    
+
     # Metadata
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC)

@@ -9,12 +9,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.models import User
-from src.auth.schemas import OTPResponse, OTPVerifyRequest, OTPSendRequest
+from src.auth.schemas import OTPResponse, OTPSendRequest, OTPVerifyRequest
 from src.auth.users import UserManager, get_user_manager
 from src.common.config import settings
 from src.common.session import get_async_session
@@ -88,17 +87,17 @@ async def send_otp(
     """Send OTP code to email for registration or login."""
     try:
         logger.info(f'OTP send request for email: {request.email}')
-        
+
         # Check if user exists
         result = await session.execute(
             select(User).where(User.email == request.email)
         )
         user = result.scalar_one_or_none()
         user_exists = user is not None
-        
+
         # Generate 6-digit OTP code
         otp_code = f"{secrets.randbelow(1000000):06d}"
-        
+
         # Store OTP token in database
         try:
             await token_service.create_otp_token(
@@ -113,13 +112,13 @@ async def send_otp(
                     'message': 'Failed to generate verification code',
                 },
             )
-        
+
         # Send OTP email
         try:
             email_sent = await email_service.send_otp_email(
                 request.email, otp_code, user.name if user else None
             )
-            
+
             if not email_sent:
                 logger.warning(f'Failed to send OTP email to {request.email}')
                 raise HTTPException(
@@ -129,9 +128,9 @@ async def send_otp(
                         'message': 'Failed to send verification code. Please try again.',
                     },
                 )
-            
+
             logger.info(f'OTP email sent to {request.email}')
-            
+
         except HTTPException:
             raise
         except Exception as e:
@@ -143,13 +142,13 @@ async def send_otp(
                     'message': 'Failed to send verification code. Please try again.',
                 },
             )
-        
+
         return OTPResponse(
             success=True,
             message='Verification code sent to your email address',
             user_exists=user_exists
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -173,12 +172,12 @@ async def verify_otp(
     """Verify OTP code and complete registration or login."""
     try:
         logger.info(f'OTP verify request for email: {request.email}')
-        
+
         # Verify OTP token
         email = await token_service.verify_otp_token(
             session, request.email, request.code
         )
-        
+
         if not email:
             logger.warning(f'Invalid or expired OTP for {request.email}')
             raise HTTPException(
@@ -188,29 +187,29 @@ async def verify_otp(
                     'message': 'Invalid or expired verification code',
                 },
             )
-        
+
         # Check if user exists
         result = await session.execute(
             select(User).where(User.email == request.email)
         )
         user = result.scalar_one_or_none()
-        
+
         if user:
             # Existing user - login
             logger.info(f'OTP login for existing user: {request.email}')
-            
+
             # Update user info if name provided
             if request.name and not user.name:
                 user.name = request.name
                 await session.commit()
                 await session.refresh(user)
-            
+
         else:
             # New user - create account
             logger.info(f'OTP registration for new user: {request.email}')
-            
+
             from src.auth.schemas import UserCreate
-            
+
             user_create = UserCreate(
                 email=request.email,
                 password=secrets.token_urlsafe(32),  # Random password for OTP users
@@ -219,18 +218,18 @@ async def verify_otp(
                 is_superuser=False,
                 is_verified=True,  # OTP verification counts as email verification
             )
-            
+
             try:
                 user = await user_manager.create(user_create)
-                
+
                 # Set onboarding fields for new users
                 user.onboarding_completed = False
                 user.onboarding_step = 0
                 await session.commit()
                 await session.refresh(user)
-                
+
                 logger.info(f'Created new user via OTP: {request.email}')
-                
+
             except Exception as e:
                 logger.error(f'Failed to create user via OTP: {str(e)}')
                 raise HTTPException(
@@ -240,13 +239,13 @@ async def verify_otp(
                         'message': 'Failed to create account. Please try again.',
                     },
                 )
-        
+
         # Create JWT token
         token = create_better_auth_jwt(user)
-        
+
         # Set session cookie
         _set_cookie(response, key='ba_session', value=token)
-        
+
         # Return auth response
         auth_response = {
             'user': {
@@ -274,10 +273,10 @@ async def verify_otp(
                 ).isoformat(),
             },
         }
-        
+
         logger.info(f'Successful OTP verification for: {request.email}')
         return auth_response
-        
+
     except HTTPException:
         raise
     except Exception as e:

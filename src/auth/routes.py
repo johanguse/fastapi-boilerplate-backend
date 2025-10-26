@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 
-from src.auth.better_auth_compat import router as better_auth_router
+from src.auth.better_auth import router as better_auth_router
 from src.auth.onboarding_routes import router as onboarding_router
 from src.auth.otp_routes import router as otp_router
 from src.auth.schemas import UserCreate, UserRead
-from src.auth.users import auth_backend, fastapi_users
+from src.auth.users import auth_backend, fastapi_users  # type: ignore
 
 router = APIRouter()
 
@@ -21,9 +21,9 @@ router.include_router(onboarding_router, prefix='/auth', tags=['onboarding'])
 router.include_router(otp_router, tags=['otp'])
 
 # Auth routes (login, register, reset password, verify)
-auth_router = fastapi_users.get_auth_router(auth_backend)
+auth_router = fastapi_users.get_auth_router(auth_backend)  # type: ignore
 for route in auth_router.routes:
-    route.tags = ['auth']
+    route.tags = ['auth']  # type: ignore
 router.include_router(
     auth_router,
     prefix='/auth/jwt',
@@ -31,7 +31,7 @@ router.include_router(
 
 register_router = fastapi_users.get_register_router(UserRead, UserCreate)
 for route in register_router.routes:
-    route.tags = ['auth']
+    route.tags = ['auth']  # type: ignore
 router.include_router(
     register_router,
     prefix=AUTH_PREFIX,
@@ -39,7 +39,7 @@ router.include_router(
 
 reset_router = fastapi_users.get_reset_password_router()
 for route in reset_router.routes:
-    route.tags = ['auth']
+    route.tags = ['auth']  # type: ignore
 router.include_router(
     reset_router,
     prefix=AUTH_PREFIX,
@@ -47,7 +47,7 @@ router.include_router(
 
 verify_router = fastapi_users.get_verify_router(UserRead)
 for route in verify_router.routes:
-    route.tags = ['auth']
+    route.tags = ['auth']  # type: ignore
 router.include_router(
     verify_router,
     prefix=AUTH_PREFIX,

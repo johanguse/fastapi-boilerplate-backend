@@ -1,14 +1,15 @@
 """AI dashboard routes for comprehensive metrics and insights."""
 
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.common.session import get_async_session
-from src.common.security import get_current_active_user
 from src.auth.models import User
+from src.common.security import get_current_active_user
+from src.common.session import get_async_session
+
 from .dashboard import AIDashboardService
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ async def get_dashboard_overview(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDashboardService(db)
@@ -58,7 +59,7 @@ async def get_usage_trends(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDashboardService(db)
@@ -88,7 +89,7 @@ async def get_feature_insights(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDashboardService(db)
@@ -118,7 +119,7 @@ async def get_ai_metrics(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIDashboardService(db)

@@ -1,15 +1,15 @@
 """AI usage dashboard routes."""
 
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.common.session import get_async_session
-from src.common.security import get_current_active_user
-from src.auth.models import User
 from src.ai_core.usage_limits import AIUsageLimitService
+from src.auth.models import User
+from src.common.security import get_current_active_user
+from src.common.session import get_async_session
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["AI Usage"])
@@ -39,17 +39,17 @@ async def get_ai_usage_dashboard(
                 },
                 "organization_id": None,
             }
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIUsageLimitService(db)
-        
+
         # Get usage summary
         usage_summary = await service.get_usage_summary(organization_id)
-        
+
         # Get features status
         features_status = await service.get_ai_features_status(organization_id)
-        
+
         return {
             "usage_summary": usage_summary,
             "features_status": features_status,
@@ -73,12 +73,12 @@ async def get_usage_limits(
                 status_code=400,
                 detail="User must belong to an organization"
             )
-        
+
         organization_id = current_user.organizations[0].id
 
         service = AIUsageLimitService(db)
         usage_summary = await service.get_usage_summary(organization_id)
-        
+
         return usage_summary
 
     except Exception as e:
@@ -98,17 +98,19 @@ async def get_recent_ai_activity(
                 "activities": [],
                 "message": "User must belong to an organization"
             }
-        
+
         organization_id = current_user.organizations[0].id
 
         # Get recent AI usage logs
-        from src.ai_core.usage import AIUsageLog
-        from sqlalchemy import select, desc
         from datetime import datetime, timedelta
-        
+
+        from sqlalchemy import desc, select
+
+        from src.ai_core.usage import AIUsageLog
+
         # Get activities from the last 7 days
         since_date = datetime.utcnow() - timedelta(days=7)
-        
+
         result = await db.execute(
             select(AIUsageLog)
             .where(
@@ -118,9 +120,9 @@ async def get_recent_ai_activity(
             .order_by(desc(AIUsageLog.created_at))
             .limit(10)
         )
-        
+
         activities = result.scalars().all()
-        
+
         # Format activities for frontend
         formatted_activities = []
         for activity in activities:
@@ -133,7 +135,7 @@ async def get_recent_ai_activity(
                 "created_at": activity.created_at.isoformat(),
                 "metadata": activity.metadata or {}
             })
-        
+
         return {
             "activities": formatted_activities,
             "organization_id": organization_id,

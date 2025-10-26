@@ -36,8 +36,8 @@ class AIUsageLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Check usage limits
-        from src.common.database import get_async_session
         from src.ai_core.usage_limits import AIUsageLimitService
+        from src.common.database import get_async_session
 
         async with get_async_session() as db:
             usage_service = AIUsageLimitService(db)

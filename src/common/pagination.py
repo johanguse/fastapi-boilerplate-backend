@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from fastapi import Query
 from fastapi_pagination import Page, Params
@@ -24,10 +24,8 @@ class Paginated(Page[T], Generic[T]):
     """
     Custom pagination class that uses settings for default page size
     """
-
-    class Config:
-        from_attributes = True
+    pass
 
 
-def paginate(query, params: CustomParams):
+def paginate(query: Any, params: CustomParams):  # type: ignore
     return _paginate(query, params)

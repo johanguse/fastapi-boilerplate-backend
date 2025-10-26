@@ -15,12 +15,12 @@ class UserRead(schemas.BaseUser[int]):
     created_at: datetime
     updated_at: Optional[datetime] = None
     max_teams: int = 3
-    
+
     # OAuth fields
     oauth_provider: Optional[str] = None
     oauth_provider_id: Optional[str] = None
     avatar_url: Optional[str] = None
-    
+
     # Profile fields
     phone: Optional[str] = None
     company: Optional[str] = None
@@ -29,7 +29,7 @@ class UserRead(schemas.BaseUser[int]):
     timezone: Optional[str] = None
     bio: Optional[str] = None
     website: Optional[str] = None
-    
+
     # Onboarding tracking
     onboarding_completed: bool = False
     onboarding_step: int = 0

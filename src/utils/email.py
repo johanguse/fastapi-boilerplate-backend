@@ -22,7 +22,7 @@ async def send_email(
     if not settings.RESEND_API_KEY:
         logger.error(f'Cannot send email to {to_email} - RESEND_API_KEY not configured')
         return False
-        
+
     try:
         params = {
             'from': from_email or settings.RESEND_FROM_EMAIL,
