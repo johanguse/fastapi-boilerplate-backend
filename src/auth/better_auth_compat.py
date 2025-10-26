@@ -146,6 +146,8 @@ def _set_cookie(
         path=path,
         domain=opts['domain'],
     )
+    # Log cookie being set for debugging
+    logger.info(f'Setting cookie {key} with options: secure={opts["secure"]}, samesite={opts["samesite"]}, domain={opts["domain"]}')
 
 
 def _delete_cookie(response: Response, key: str, path: str = '/') -> None:
@@ -1291,4 +1293,100 @@ async def get_oauth_providers():
                 ),
             },
         ]
+    }
+
+
+# Onboarding endpoints
+@router.get('/auth/onboarding/status')
+async def get_onboarding_status(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Get user onboarding status"""
+    user = await _get_user_from_request(request, session)
+    
+    return {
+        'onboarding_completed': user.onboarding_completed,
+        'onboarding_step': user.onboarding_step,
+        'has_organization': False,  # TODO: Check if user has organization
+        'profile_complete': bool(user.name),
+        'next_step': 'profile' if not user.name else 'organization'
+    }
+
+
+class ProfileUpdateRequest(BaseModel):
+    name: str
+    company: Optional[str] = None
+    job_title: Optional[str] = None
+    country: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    website: Optional[str] = None
+
+
+@router.patch('/auth/onboarding/profile')
+async def update_onboarding_profile(
+    profile_data: ProfileUpdateRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Update user profile during onboarding"""
+    # Debug logging
+    logger.info(f'Profile update request - Cookies: {request.cookies}')
+    logger.info(f'Profile update request - Headers: {dict(request.headers)}')
+    
+    user = await _get_user_from_request(request, session)
+    
+    # Update user fields
+    user.name = profile_data.name
+    if hasattr(user, 'company'):
+        user.company = profile_data.company  # type: ignore
+    if hasattr(user, 'job_title'):
+        user.job_title = profile_data.job_title  # type: ignore
+    if hasattr(user, 'country'):
+        user.country = profile_data.country  # type: ignore
+    if hasattr(user, 'phone'):
+        user.phone = profile_data.phone  # type: ignore
+    if hasattr(user, 'bio'):
+        user.bio = profile_data.bio  # type: ignore
+    if hasattr(user, 'website'):
+        user.website = profile_data.website  # type: ignore
+    
+    # Update onboarding progress
+    user.onboarding_step = 1
+    
+    await session.commit()
+    
+    return {
+        'success': True,
+        'user': {
+            'id': str(user.id),
+            'email': user.email,
+            'name': user.name,
+            'onboarding_step': user.onboarding_step
+        }
+    }
+
+
+@router.post('/auth/onboarding/complete')
+async def complete_onboarding(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Mark onboarding as complete"""
+    user = await _get_user_from_request(request, session)
+    
+    # Update user onboarding status
+    user.onboarding_completed = True
+    user.onboarding_step = 3  # Final step
+    await session.commit()
+    
+    return {
+        'success': True,
+        'user': {
+            'id': str(user.id),
+            'email': user.email,
+            'name': user.name,
+            'onboarding_completed': True
+        }
     }

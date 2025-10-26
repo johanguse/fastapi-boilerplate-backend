@@ -102,6 +102,22 @@ async def sign_in_email(
                 },
             )
 
+        # Check if email is verified
+        if not user.is_verified:
+            logger.warning(f'Unverified user attempted login: {request.email}')
+            error_msg = translate_message(
+                'auth.email_not_verified',
+                http_request,
+                fallback='Please verify your email address before logging in. Check your inbox for the verification link.',
+            )
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    'error': 'EMAIL_NOT_VERIFIED',
+                    'message': error_msg,
+                },
+            )
+
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
 

@@ -19,6 +19,7 @@ from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
+from src.invitations.routes import router as invitations_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
@@ -151,6 +152,11 @@ app.include_router(
 app.include_router(
     admin_router,
     prefix=settings.API_V1_STR,
+)
+app.include_router(
+    invitations_router,
+    prefix=f'{settings.API_V1_STR}/invitations',
+    tags=['invitations'],
 )
 # Legacy Teams router removed from public API (replaced by Organizations)
 app.include_router(
