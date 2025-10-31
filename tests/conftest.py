@@ -60,6 +60,13 @@ async def clean_test_data():
         )
         async with async_session_factory() as session:
             try:
+                # Delete all test users created during tests (those with @example.com)
+                await session.execute(
+                    text(
+                        "DELETE FROM users WHERE email LIKE '%@example.com'"
+                    )
+                )
+                # Also delete the hardcoded test emails
                 await session.execute(
                     text(
                         "DELETE FROM users WHERE email IN ('test@example.com', 'new@example.com', 'act@test.com')"

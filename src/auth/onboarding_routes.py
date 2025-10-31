@@ -186,10 +186,11 @@ async def update_onboarding_step(
 @router.post('/onboarding/complete')
 async def complete_onboarding(
     completion_data: OnboardingComplete,
+    request: Request,
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_async_session),
 ):
-    """Mark onboarding as completed."""
+    """Mark onboarding as completed and send welcome email."""
     try:
         current_user.onboarding_completed = True
         current_user.onboarding_step = 3  # Final step
@@ -198,6 +199,20 @@ async def complete_onboarding(
         await session.refresh(current_user)
 
         logger.info(f'Completed onboarding for user {current_user.id}')
+
+        # Send welcome email after onboarding completion
+        try:
+            from src.services.email_service import email_service
+            welcome_sent = await email_service.send_welcome_email(
+                current_user.email, current_user.name, is_onboarding=True
+            )
+            if welcome_sent:
+                logger.info(f'Welcome email sent to {current_user.email} after onboarding completion')
+            else:
+                logger.warning(f'Failed to send welcome email to {current_user.email} after onboarding completion')
+        except Exception as e:
+            # Don't fail onboarding completion if welcome email fails
+            logger.exception(f'Exception sending welcome email to {current_user.email} after onboarding completion: {str(e)}')
 
         return {
             'success': True,
@@ -211,6 +226,109 @@ async def complete_onboarding(
         raise HTTPException(
             status_code=500,
             detail='Failed to complete onboarding'
+        )
+
+
+@router.post('/onboarding/save-all')
+async def save_all_onboarding_data(
+    request: Request,
+    current_user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Save all onboarding data at once (profile + organization)."""
+    try:
+        # Parse request body
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+
+        profile_data = body.get('profile', {})
+        organization_data = body.get('organization', {})
+
+        # Update user profile fields
+        if profile_data:
+            for field, value in profile_data.items():
+                if hasattr(current_user, field):
+                    setattr(current_user, field, value)
+
+        # Create organization if data provided
+        organization = None
+        organization_data_response = None
+        if organization_data:
+            org_name = organization_data.get('name') or current_user.company or f"{current_user.name}'s Organization"
+            org_slug = organization_data.get('slug')
+            org_description = organization_data.get('description')
+            
+            org_create = OrganizationCreate(
+                name=org_name, 
+                slug=org_slug,
+                description=org_description
+            )
+            try:
+                organization = await create_organization_service(session, org_create, current_user)
+                # Capture organization data before commit to avoid lazy loading issues
+                organization_data_response = {
+                    'id': organization.id,
+                    'name': organization.name,
+                    'slug': organization.slug
+                }
+            except HTTPException as e:
+                # Re-raise HTTPException (like 409 for duplicate) with proper status code
+                raise e
+
+        # Mark onboarding as completed
+        current_user.onboarding_completed = True
+        current_user.onboarding_step = 3  # Final step
+
+        await session.commit()
+        await session.refresh(current_user)
+
+        logger.info(f'Saved all onboarding data for user {current_user.id}')
+
+        # Send welcome email after onboarding completion
+        try:
+            from src.services.email_service import email_service
+            welcome_sent = await email_service.send_welcome_email(
+                current_user.email, current_user.name, is_onboarding=True
+            )
+            if welcome_sent:
+                logger.info(f'Welcome email sent to {current_user.email} after onboarding completion')
+            else:
+                logger.warning(f'Failed to send welcome email to {current_user.email} after onboarding completion')
+        except Exception as e:
+            # Don't fail onboarding completion if welcome email fails
+            logger.exception(f'Exception sending welcome email to {current_user.email} after onboarding completion: {str(e)}')
+
+        response_data = {
+            'success': True,
+            'message': translate_message('onboarding.completed', request),
+            'user': {
+                'id': current_user.id,
+                'name': current_user.name,
+                'company': current_user.company,
+                'country': current_user.country,
+                'onboarding_completed': current_user.onboarding_completed,
+                'onboarding_step': current_user.onboarding_step
+            }
+        }
+
+        if organization_data_response:
+            response_data['organization'] = organization_data_response
+
+        return response_data
+
+    except HTTPException as e:
+        # Re-raise HTTPException (like 409 for duplicate organization) as-is
+        logger.warning(f'HTTPException saving onboarding data for user {current_user.id}: {e.status_code} - {e.detail}')
+        raise e
+    except Exception as e:
+        # Avoid accessing ORM attributes during exception (can trigger async lazy loads)
+        logger.exception(f'Error saving onboarding data: {str(e)}')
+        error_msg = translate_message('onboarding.save_failed', request)
+        raise HTTPException(
+            status_code=500,
+            detail=error_msg
         )
 
 

@@ -199,6 +199,7 @@ docker-compose -f docker/docker-compose.yml exec web poetry run python scripts/s
 ```
 
 **Or run fresh seed** (deletes all data first):
+
    ```bash
    poetry run python scripts/seed_fresh.py
    ```
@@ -246,6 +247,7 @@ All seed users share the same password: **`admin123`**
 Run `task test`
 
 For running specific test files:
+
 ```bash
 # Run all auth tests
 task test-auth
@@ -261,9 +263,10 @@ task test-watch
 
 When writing tests for FastAPI endpoints that use SQLAlchemy models, you might encounter issues like `UnmappedClassError: Class 'typing.Any' is not mapped`. This is common when trying to instantiate SQLAlchemy models directly in tests.
 
-#### Solutions:
+#### Solutions
 
 1. **Use Mock Objects**: Instead of real SQLAlchemy models, create simple mock classes:
+
    ```python
    class MockUser:
        def __init__(self, **kwargs):
@@ -272,6 +275,7 @@ When writing tests for FastAPI endpoints that use SQLAlchemy models, you might e
    ```
 
 2. **Mock Dependency Injection**: Override FastAPI dependencies:
+
    ```python
    async def override_dependency():
        return mock_object
@@ -280,6 +284,7 @@ When writing tests for FastAPI endpoints that use SQLAlchemy models, you might e
    ```
 
 3. **Mock HTTP Responses**: For complete isolation, mock the HTTP client itself:
+
    ```python
    mock_response = Response(
        status_code=200,
@@ -295,6 +300,7 @@ When writing tests for FastAPI endpoints that use SQLAlchemy models, you might e
    ```
 
 4. **Clean Up After Tests**: Always restore original dependencies and methods:
+
    ```python
    try:
        # Test code
@@ -380,7 +386,7 @@ RESEND_API_KEY=your-resend-api-key
 RESEND_FROM_EMAIL=your-email@domain.com
 
 # Frontend
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173
 
 # Better Auth (optional)
 BETTER_AUTH_ENABLED=false
@@ -439,7 +445,6 @@ Content-Type: application/json
     "role": "member"
 }
 ```
-
 
 ## Deployment
 

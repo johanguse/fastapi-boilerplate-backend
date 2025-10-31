@@ -3,17 +3,17 @@ Tests for OTP authentication routes.
 """
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.models import User
-from src.main import app
-from tests.conftest import get_test_db_session
+from tests.helpers.auth_helpers import (
+    create_test_user_with_password,
+    get_auth_headers,
+)
 
 
-client = TestClient(app)
-
-
+@pytest.mark.asyncio
 class TestOTPRoutes:
     """Test OTP authentication endpoints."""
 

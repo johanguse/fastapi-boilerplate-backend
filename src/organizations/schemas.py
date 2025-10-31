@@ -8,6 +8,7 @@ class OrganizationBase(BaseModel):
     name: str
     slug: Optional[str] = None
     logo_url: Optional[str] = None
+    description: Optional[str] = None
 
 
 class OrganizationCreate(OrganizationBase):

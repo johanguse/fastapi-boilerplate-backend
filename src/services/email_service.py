@@ -168,14 +168,15 @@ class EmailService:
             return False
 
     async def send_welcome_email(
-        self, email: str, name: Optional[str] = None
+        self, email: str, name: Optional[str] = None, is_onboarding: bool = False
     ) -> bool:
         """
-        Send welcome email after successful verification.
+        Send welcome email after successful verification or onboarding completion.
 
         Args:
             email: User's email address
             name: User's name (optional)
+            is_onboarding: If True, send onboarding completion welcome email
 
         Returns:
             bool: True if email sent successfully, False otherwise
@@ -185,18 +186,40 @@ class EmailService:
             return False
 
         display_name = name if name else email.split('@', maxsplit=1)[0]
-        dashboard_link = f'{self.frontend_url}/dashboard'
+        dashboard_link = f'{self.frontend_url}'
+
+        # Different subject and content for onboarding completion
+        if is_onboarding:
+            subject = 'Welcome to AI Project Management! 🎉'
+            heading = 'Welcome to AI Project Management! 🎉'
+            main_message = 'Congratulations! Your onboarding is complete and your workspace is ready. You can now start collaborating with your team and exploring all the features we have to offer.'
+            next_steps = [
+                'Explore your dashboard',
+                'Invite team members',
+                'Create your first project',
+                'Explore AI-powered features',
+            ]
+        else:
+            subject = f'Welcome to {self.app_name}! 🎉'
+            heading = f'Welcome to {self.app_name}! 🎉'
+            main_message = 'Your account has been successfully verified! You\'re now ready to get started.'
+            next_steps = [
+                'Complete your profile',
+                'Create your first organization',
+                'Invite team members',
+                'Explore all features',
+            ]
 
         try:
             params = {
                 'from': self.from_email,
                 'to': [email],
-                'subject': f'Welcome to {self.app_name}! 🎉',
+                'subject': subject,
                 'html': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Welcome to {self.app_name}! 🎉</h2>
+                    <h2>{heading}</h2>
                     <p>Hi {display_name},</p>
-                    <p>Your account has been successfully verified! You're now ready to get started.</p>
+                    <p>{main_message}</p>
 
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="{dashboard_link}"
@@ -208,10 +231,7 @@ class EmailService:
 
                     <p>Here's what you can do next:</p>
                     <ul>
-                        <li>Complete your profile</li>
-                        <li>Create your first organization</li>
-                        <li>Invite team members</li>
-                        <li>Explore all features</li>
+                        {''.join([f'<li>{step}</li>' for step in next_steps])}
                     </ul>
 
                     <hr style="border: 1px solid #e9ecef; margin: 30px 0;">
@@ -255,8 +275,14 @@ class EmailService:
         try:
             display_name = name or email.split('@', maxsplit=1)[0]
 
+            # Use from_email as-is if it already contains a name format, otherwise add app_name
+            if '<' in self.from_email and '>' in self.from_email:
+                from_address = self.from_email
+            else:
+                from_address = f'{self.app_name} <{self.from_email}>'
+
             params = {
-                'from': f'{self.app_name} <{self.from_email}>',
+                'from': from_address,
                 'to': [email],
                 'subject': f'Your {self.app_name} verification code',
                 'html': f"""

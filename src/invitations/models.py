@@ -51,7 +51,7 @@ class EmailVerificationToken(Base):
 
     def is_valid(self) -> bool:
         """Check if token is valid (not expired and not used)."""
-        return not self.is_expired() and not self.used_at
+        return not self.is_expired() and self.used_at is None
 
     def __repr__(self) -> str:
         return f'<EmailVerificationToken {self.email}>'
@@ -85,7 +85,7 @@ class PasswordResetToken(Base):
 
     def is_valid(self) -> bool:
         """Check if token is valid (not expired and not used)."""
-        return not self.is_expired() and not self.used_at
+        return not self.is_expired() and self.used_at is None
 
     def __repr__(self) -> str:
         return f'<PasswordResetToken {self.email}>'

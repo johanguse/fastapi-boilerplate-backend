@@ -75,6 +75,12 @@ class OnboardingComplete(BaseModel):
     completed: bool = True
 
 
+class OnboardingDataComplete(BaseModel):
+    """Schema for completing onboarding with all data at once."""
+    profile: Optional[OnboardingProfileUpdate] = None
+    organization: Optional[dict] = None  # OrganizationCreate is in organizations module
+
+
 class OTPSendRequest(BaseModel):
     """Schema for sending OTP code."""
     email: EmailStr

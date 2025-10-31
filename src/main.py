@@ -17,6 +17,7 @@ from src.ai_core.routes import router as ai_usage_router
 from src.ai_documents.routes import router as ai_documents_router
 from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
+from src.auth.profile_routes import router as profile_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
 from src.invitations.routes import router as invitations_router
@@ -117,10 +118,7 @@ app.state.limiter = limiter
 # Add rate limit exception handler
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
-# Add middleware
-add_performance_monitoring(app)  # Add first for accurate timing
-add_i18n_middleware(app)
-add_logging_middleware(app)
+# Add middleware - CORS must be FIRST to handle preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -128,6 +126,9 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+add_performance_monitoring(app)  # Add for accurate timing
+add_i18n_middleware(app)
+add_logging_middleware(app)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 add_pagination(app)
@@ -151,6 +152,10 @@ app.include_router(
 )
 app.include_router(
     admin_router,
+    prefix=settings.API_V1_STR,
+)
+app.include_router(
+    profile_router,
     prefix=settings.API_V1_STR,
 )
 app.include_router(

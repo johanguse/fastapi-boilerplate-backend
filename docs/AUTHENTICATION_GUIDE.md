@@ -5,18 +5,40 @@ This document provides a comprehensive overview of the authentication system imp
 ## Overview
 
 The authentication system supports multiple authentication methods:
+
 - **Password-based authentication** (email + password)
-- **OTP-based authentication** (email + verification code)
+- **OTP-based authentication** (email + verification code) - Available on both login and registration
+- **Hybrid login** - Users can switch between password and code on the login page
 - **Social login** (Google, GitHub, Microsoft, Apple)
-- **Email verification** for enhanced security
+- **Email verification** for enhanced security (optional - doesn't block access)
 - **Onboarding flow** for new users
+
+### Login Methods
+
+#### Password Login
+
+Users can log in with their email and password. A "Get a code instead" button allows switching to OTP login without leaving the page.
+
+#### Code Login (OTP)
+
+Users can request a 6-digit code sent to their email. This provides a passwordless login option and is useful when users forget their password or prefer not to type it.
+
+#### Flexible Authentication
+
+On the login page, users can:
+
+1. Start with password login and switch to code
+2. Start with code login and switch back to password
+3. The email field is preserved when switching methods
 
 ## Architecture
 
 ### Backend Components
 
 #### 1. Better Auth Compatibility Layer (`src/auth/better_auth_compat.py`)
+
 Provides Better Auth-compatible endpoints that work with FastAPI Users:
+
 - `/auth/sign-in/email` - Email/password login
 - `/auth/sign-up/email` - Email/password registration
 - `/auth/forgot-password` - Password reset request
@@ -25,12 +47,16 @@ Provides Better Auth-compatible endpoints that work with FastAPI Users:
 - `/auth/sign-out` - Logout
 
 #### 2. OTP Authentication (`src/auth/otp_routes.py`)
+
 Passwordless authentication using email verification codes:
+
 - `/auth/otp/send` - Send OTP code to email
 - `/auth/otp/verify` - Verify OTP and complete login/registration
 
 #### 3. Onboarding Routes (`src/auth/onboarding_routes.py`)
+
 User onboarding and profile completion:
+
 - `/auth/onboarding/status` - Get onboarding status
 - `/auth/onboarding/profile` - Update user profile
 - `/auth/onboarding/organization` - Create first organization
@@ -38,7 +64,9 @@ User onboarding and profile completion:
 - `/auth/onboarding/complete` - Complete onboarding
 
 #### 4. Email Routes (`src/auth/email_routes.py`)
+
 Email verification and password reset:
+
 - `/auth/forgot-password` - Request password reset
 - `/auth/reset-password` - Reset password with token
 - `/auth/verify-email` - Verify email with token
@@ -47,18 +75,22 @@ Email verification and password reset:
 ### Frontend Components
 
 #### 1. Authentication Store (`src/stores/auth-store.ts`)
+
 Centralized state management for authentication:
+
 - User session management
 - Login/logout functionality
 - Error handling and message normalization
 
 #### 2. Authentication Forms
+
 - **Sign-up Form** (`src/features/auth/sign-up/components/sign-up-form.tsx`)
 - **Sign-in Form** (`src/features/auth/sign-in/components/user-auth-form.tsx`)
 - **OTP Form** (`src/features/auth/otp/components/otp-form.tsx`)
 - **Forgot Password Form** (`src/features/auth/forgot-password/components/forgot-password-form.tsx`)
 
 #### 3. Route Protection
+
 - **Authenticated Routes** (`src/routes/_authenticated/route.tsx`) - Requires authentication and completed onboarding
 - **Onboarding Route** (`src/routes/(auth)/onboarding.tsx`) - Requires authentication but not completed onboarding
 
@@ -171,28 +203,33 @@ sequenceDiagram
 ## Security Features
 
 ### 1. JWT Tokens
+
 - **Algorithm**: HS256
 - **Lifetime**: Configurable (default: 24 hours)
 - **Audience**: `fastapi-users:auth`
 - **Issuer**: `better-auth-compat`
 
 ### 2. Password Security
+
 - **Hashing**: Argon2 (via PassLib)
 - **Minimum Requirements**: Enforced by frontend validation
 - **Reset Tokens**: 1-hour expiration
 
 ### 3. OTP Security
+
 - **Code Length**: 6 digits
 - **Expiration**: 15 minutes
 - **One-time Use**: Codes are deleted after verification
 - **Rate Limiting**: Applied to prevent abuse
 
 ### 4. Email Verification
+
 - **Verification Tokens**: 24-hour expiration
 - **Required for**: Full dashboard access
 - **Banner Display**: Shows when email not verified
 
 ### 5. Rate Limiting
+
 - **Password Reset**: 3 requests per hour, 10 per day
 - **Email Verification**: 10 requests per hour
 - **OTP Requests**: Built-in rate limiting
@@ -254,6 +291,7 @@ if (authState.user && !authState.user.onboarding_completed) {
 ## Error Handling
 
 ### Backend Error Format
+
 ```json
 {
   "error": "ERROR_CODE",
@@ -262,6 +300,7 @@ if (authState.user && !authState.user.onboarding_completed) {
 ```
 
 ### Common Error Codes
+
 - `INVALID_CREDENTIALS` - Wrong email/password
 - `USER_EXISTS` - Email already registered
 - `USER_NOT_FOUND` - No account with email
@@ -270,6 +309,7 @@ if (authState.user && !authState.user.onboarding_completed) {
 - `RATE_LIMITED` - Too many requests
 
 ### Frontend Error Handling
+
 - **Toast Notifications**: User-friendly error messages
 - **Form Validation**: Real-time validation feedback
 - **Rate Limiting**: Visual countdown timers
@@ -308,12 +348,14 @@ VITE_API_URL=http://localhost:8000
 ## Testing
 
 ### Backend Tests
+
 - Unit tests for authentication logic
 - Integration tests for API endpoints
 - OTP flow testing
 - Social login testing
 
 ### Frontend Tests
+
 - Component testing for auth forms
 - Integration testing for auth flows
 - Error handling testing
@@ -345,6 +387,7 @@ VITE_API_URL=http://localhost:8000
 ### Debug Mode
 
 Enable debug logging:
+
 ```python
 import logging
 logging.getLogger('src.auth').setLevel(logging.DEBUG)

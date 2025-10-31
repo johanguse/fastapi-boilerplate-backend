@@ -37,7 +37,7 @@ class Settings(BaseSettings):
         os.getenv('REFRESH_TOKEN_EXPIRE_MINUTES', '10080')
     )
 
-    FRONTEND_URL: str = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    FRONTEND_URL: str = os.getenv('FRONTEND_URL', 'http://localhost:5173')
     ALLOWED_ORIGINS: list[str] = [
         FRONTEND_URL,
         'http://localhost:5173',
@@ -180,6 +180,13 @@ class Settings(BaseSettings):
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'image/png',
         'image/jpeg',
+    ]
+    
+    ALLOWED_IMAGE_TYPES: list[str] = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
     ]
 
     # AI Configuration
