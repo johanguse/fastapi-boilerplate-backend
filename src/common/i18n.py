@@ -115,7 +115,7 @@ class I18nManager:
 
         # Parse Accept-Language header (simplified)
         # Format: "en-US,en;q=0.9,es;q=0.8,fr;q=0.7"
-        languages = []
+        languages: list[str] = []
         for lang_entry in accept_language.split(','):
             # Extract language code (before any ';' for q-value)
             lang_code = lang_entry.strip().split(';')[0].strip()
@@ -130,7 +130,7 @@ class I18nManager:
         return languages[0] if languages else cls.DEFAULT_LANGUAGE
 
     def translate(
-        self, key: str, language: Optional[str] = None, **kwargs
+        self, key: str, language: Optional[str] = None, **kwargs: Any
     ) -> str:
         """
         Translate a message key to the specified language.
@@ -169,7 +169,7 @@ class I18nManager:
 
         # Format the message with provided variables
         try:
-            return message.format(**kwargs)
+            return message.format(**kwargs)  # type: ignore
         except (KeyError, ValueError):
             # Return the unformatted message if formatting fails
             return message
@@ -194,7 +194,7 @@ class I18nManager:
             return 'other'  # Fallback to 'other' if something goes wrong
 
     def translate_plural(
-        self, key: str, count: int, language: Optional[str] = None, **kwargs
+        self, key: str, count: int, language: Optional[str] = None, **kwargs: Any
     ) -> str:
         """
         Translate a pluralized message key.
@@ -221,12 +221,12 @@ class I18nManager:
         plural_key = f'{key}.{plural_form}'
 
         # Try to get the specific plural form first
-        message = self.translate(plural_key, language, count=count, **kwargs)
+        message = self.translate(plural_key, language, count=count, **kwargs)  # type: ignore
 
         # If not found, try the 'other' form as fallback
         if message == plural_key:
             other_key = f'{key}.other'
-            message = self.translate(
+            message = self.translate(  # type: ignore
                 other_key, language, count=count, **kwargs
             )
 
@@ -238,7 +238,7 @@ class I18nManager:
 
     @classmethod
     @lru_cache(maxsize=64)
-    def get_locale_info(cls, language: str) -> dict:
+    def get_locale_info(cls, language: str) -> dict[str, Any]:
         """
         Get locale information for a language.
 
@@ -280,7 +280,7 @@ def get_i18n_manager() -> I18nManager:
     return I18nManager()
 
 
-def t(key: str, language: Optional[str] = None, **kwargs) -> str:
+def t(key: str, language: Optional[str] = None, **kwargs: Any) -> str:
     """
     Convenience function for translation.
 
@@ -292,4 +292,4 @@ def t(key: str, language: Optional[str] = None, **kwargs) -> str:
     Returns:
         Translated message
     """
-    return i18n.translate(key, language, **kwargs)
+    return i18n.translate(key, language, **kwargs)  # type: ignore

@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
+from fastapi_users import exceptions as fastapi_users_exceptions
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,6 +30,8 @@ from src.organizations.schemas import OrganizationCreate
 from src.organizations.service import (
     create_organization as create_organization_service,
 )
+from src.services.email_service import email_service
+from src.services.token_service import token_service
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -144,6 +147,8 @@ def _set_cookie(
         path=path,
         domain=opts['domain'],
     )
+    # Log cookie being set for debugging
+    logger.info(f'Setting cookie {key} with options: secure={opts["secure"]}, samesite={opts["samesite"]}, domain={opts["domain"]}')
 
 
 def _delete_cookie(response: Response, key: str, path: str = '/') -> None:
@@ -161,13 +166,158 @@ async def _get_user_from_request(
     if not payload:
         raise HTTPException(status_code=401, detail='Invalid token')
     user_id = int(payload['sub'])  # type: ignore[index]
-    result = await session.execute(select(User).where(User.id == user_id))
+    result = await session.execute(select(User).where(User.id == user_id))  # type: ignore[arg-type]
     user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(
             status_code=401, detail='User not found or inactive'
         )
     return user
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+    redirectTo: Optional[str] = None
+
+
+@router.post('/auth/forgot-password')
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    session: AsyncSession = Depends(get_async_session),
+) -> Dict[str, Any]:
+    """Better Auth compatible forgot password endpoint"""
+    try:
+        logger.info(f'Forgot password request for email: {request.email}')
+
+        # Check if user exists
+        result = await session.execute(
+            select(User).where(User.email == request.email)  # type: ignore[arg-type]
+        )
+        user = result.scalar_one_or_none()
+
+        if user:
+            # User exists - send password reset email
+            try:
+                # Generate password reset token
+                token = await token_service.create_password_reset_token(
+                    session, user.email
+                )
+
+                # Send password reset email
+                email_sent = await email_service.send_forgot_password_email(
+                    user.email, token, user.name
+                )
+
+                if not email_sent:
+                    logger.warning(f'Failed to send password reset email to {user.email}')
+
+                logger.info(f'Password reset email sent to: {user.email}')
+
+            except Exception as e:
+                # Log error but don't expose to user for security
+                logger.exception(f'Exception sending password reset email to {user.email}: {str(e)}')
+
+        # Always return success for security (don't reveal if user exists)
+        return {
+            'success': True,
+            'message': 'If an account with this email exists, a password reset link has been sent.',
+            'user_exists': user is not None
+        }
+
+    except Exception as e:
+        logger.exception(f'Unexpected error in forgot_password: {str(e)}')
+        raise HTTPException(
+            status_code=500,
+            detail={
+                'error': 'FORGOT_PASSWORD_FAILED',
+                'message': 'An error occurred while processing your request',
+            },
+        )
+
+
+@router.post('/auth/reset-password')
+async def reset_password(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+) -> Dict[str, Any]:
+    """Better Auth compatible reset password endpoint"""
+    try:
+        payload = await request.json()
+        token = payload.get('token')
+        password = payload.get('password')
+
+        if not token or not password:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    'error': 'INVALID_INPUT',
+                    'message': 'Token and password are required',
+                },
+            )
+
+        # Validate password strength
+        if len(password) < 6:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    'error': 'INVALID_PASSWORD',
+                    'message': 'Password must be at least 6 characters long',
+                },
+            )
+
+        # Verify token and get email
+        email = await token_service.verify_token(
+            session, token, 'password_reset'
+        )
+
+        if not email:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    'error': 'INVALID_TOKEN',
+                    'message': 'Invalid or expired reset token. Please request a new password reset link.',
+                },
+            )
+
+        # Find user by email
+        result = await session.execute(
+            select(User).where(User.email == email)  # type: ignore[arg-type]
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    'error': 'USER_NOT_FOUND',
+                    'message': 'User not found',
+                },
+            )
+
+        # Update user's password using FastAPI Users password helper
+        user_manager: UserManager = get_user_manager()
+        user.hashed_password = user_manager.password_helper.hash(password)
+        await session.commit()
+        await session.refresh(user)
+
+        logger.info(f'Password reset successful for user: {email}')
+
+        return {
+            'success': True,
+            'message': 'Password reset successfully',
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f'Unexpected error in reset_password: {str(e)}')
+        raise HTTPException(
+            status_code=500,
+            detail={
+                'error': 'RESET_PASSWORD_FAILED',
+                'message': 'An error occurred while resetting your password',
+            },
+        )
 
 
 @router.post('/auth/sign-in/email', response_model=AuthResponse)
@@ -246,6 +396,8 @@ async def sign_in_email(
                 'role': getattr(user, 'role', 'member'),
                 'is_verified': user.is_verified,
                 'is_superuser': user.is_superuser,
+                'onboarding_completed': getattr(user, 'onboarding_completed', False),
+                'onboarding_step': getattr(user, 'onboarding_step', 0),
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -264,6 +416,8 @@ async def sign_in_email(
 
         # Set HTTP-only cookie for session persistence (secure/samesite set dynamically)
         _set_cookie(response, key='ba_session', value=token)
+        # Clear any previous active organization selection from other sessions/users
+        _delete_cookie(response, key='ba_active_org', path='/')
         logger.info(f'Successful login for: {request.email}')
         return response_data
     except HTTPException:
@@ -303,9 +457,12 @@ async def sign_up_email(
                     'message': 'User with this email already exists',
                 },
             )
-        except Exception:
-            # Expected path: user not found
+        except fastapi_users_exceptions.UserNotExists:
+            # Expected path: user not found - continue with registration
             pass
+        except HTTPException:
+            # Re-raise HTTPException (from the check above)
+            raise
 
         # Create user using FastAPI Users
         user_create = UserCreate(
@@ -317,7 +474,51 @@ async def sign_up_email(
         )
         if request.name and hasattr(User, 'name'):
             user_create.name = request.name
-        user = await user_manager.create(user_create)
+
+        try:
+            user = await user_manager.create(user_create)
+        except Exception as e:
+            # Handle UserAlreadyExists and other creation errors
+            if 'UserAlreadyExists' in str(type(e).__name__):
+                logger.warning(f'User already exists during creation: {request.email}')
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        'error': 'USER_EXISTS',
+                        'message': 'User with this email already exists',
+                    },
+                )
+            else:
+                logger.error(f'Unexpected error creating user: {str(e)}')
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        'error': 'SIGN_UP_FAILED',
+                        'message': 'Failed to create account. Please try again.',
+                    },
+                )
+
+        # Ensure onboarding fields are set for new users
+        user.onboarding_completed = False
+        user.onboarding_step = 0
+        await session.commit()
+        await session.refresh(user)
+
+        # Send email verification
+        try:
+            verification_token = await token_service.create_verification_token(
+                session, user.email
+            )
+            email_sent = await email_service.send_verification_email(
+                user.email, verification_token, user.name
+            )
+            if email_sent:
+                logger.info(f'Verification email sent to {user.email}')
+            else:
+                logger.warning(f'Failed to send verification email to {user.email}')
+        except Exception as e:
+            # Don't fail registration if email sending fails
+            logger.exception(f'Exception sending verification email to {user.email}: {str(e)}')
 
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
@@ -333,6 +534,8 @@ async def sign_up_email(
                 'role': getattr(user, 'role', 'member'),
                 'is_verified': user.is_verified,
                 'is_superuser': user.is_superuser,
+                'onboarding_completed': user.onboarding_completed,
+                'onboarding_step': user.onboarding_step,
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
                 else None,
@@ -351,6 +554,7 @@ async def sign_up_email(
 
         # Set HTTP-only cookie for session persistence (secure/samesite set dynamically)
         _set_cookie(response, key='ba_session', value=token)
+        logger.info(f'Successful registration for: {request.email}')
         return resp
     except HTTPException:
         raise
@@ -376,7 +580,7 @@ async def sign_out(response: Response):
 @router.get('/auth/session')
 async def get_session(
     request: Request, session: AsyncSession = Depends(get_async_session)
-):
+) -> Dict[str, Any]:
     """Get current session information"""
     # Get token from Authorization header or cookie
     token = get_token_from_request(request)
@@ -389,7 +593,7 @@ async def get_session(
 
     # Get user from database
     user_id = int(payload['sub'])
-    result = await session.execute(select(User).where(User.id == user_id))
+    result = await session.execute(select(User).where(User.id == user_id))  # type: ignore[arg-type]
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
@@ -407,6 +611,8 @@ async def get_session(
             'role': getattr(user, 'role', 'member'),
             'is_verified': user.is_verified,
             'is_superuser': user.is_superuser,
+            'onboarding_completed': getattr(user, 'onboarding_completed', False),
+            'onboarding_step': getattr(user, 'onboarding_step', 0),
             'createdAt': user.created_at.isoformat()
             if hasattr(user, 'created_at') and user.created_at
             else None,
@@ -429,7 +635,7 @@ async def get_session(
 @router.get('/auth/get-session')
 async def get_session_alias(
     request: Request, session: AsyncSession = Depends(get_async_session)
-):
+) -> Dict[str, Any]:
     return await get_session(request, session)
 
 
@@ -438,13 +644,14 @@ async def get_session_alias(
 async def list_organizations(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
-):
+    response: Response = None,
+) -> List[Dict[str, Any]]:
     """List user's organizations"""
     user = await _get_user_from_request(request, session)
     result = await session.execute(
         select(Organization)
         .join(OrganizationMember)
-        .where(OrganizationMember.user_id == user.id)
+        .where(OrganizationMember.user_id == user.id)  # type: ignore[arg-type]
     )
     organizations: List[Organization] = result.scalars().all()
     orgs = []
@@ -460,6 +667,11 @@ async def list_organizations(
             if getattr(org, 'created_at', None)
             else None,
         })
+    # Ensure no intermediate caches serve cross-user data
+    if response is not None:
+        response.headers['Cache-Control'] = 'no-store'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Vary'] = 'Authorization, Cookie'
     return orgs
 
 
@@ -467,9 +679,10 @@ async def list_organizations(
 async def list_organizations_compat(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
-):
+    response: Response = None,
+) -> List[Dict[str, Any]]:
     """Better Auth plugin expects /auth/organization/list. Return an array."""
-    return await list_organizations(request, session)
+    return await list_organizations(request, session, response)
 
 
 @router.post('/auth/organization')
@@ -477,7 +690,7 @@ async def create_organization(
     request: Request,
     response: Response,
     session: AsyncSession = Depends(get_async_session),
-):
+) -> Dict[str, Any]:
     """Create organization"""
     try:
         payload = await request.json()
@@ -572,8 +785,8 @@ async def set_active_organization(
         select(Organization.id)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id_int,
-            OrganizationMember.user_id == user.id,
+            Organization.id == org_id_int,  # type: ignore[arg-type]
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
         )
     )
     if result.scalar_one_or_none() is None:
@@ -659,7 +872,7 @@ async def get_organization(
         select(Organization)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id, OrganizationMember.user_id == user.id
+            Organization.id == org_id, OrganizationMember.user_id == user.id  # type: ignore[arg-type]
         )
     )
     organization = result.scalar_one_or_none()
@@ -702,9 +915,9 @@ async def update_organization(
         select(Organization, OrganizationMember.role)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id,
-            OrganizationMember.user_id == user.id,
-            OrganizationMember.role.in_(['owner', 'admin']),
+            Organization.id == org_id,  # type: ignore[arg-type]
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
+            OrganizationMember.role.in_(['owner', 'admin']),  # type: ignore[arg-type]
         )
     )
     org_and_role = result.first()
@@ -758,9 +971,9 @@ async def delete_organization(
         select(Organization, OrganizationMember.role)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id,
-            OrganizationMember.user_id == user.id,
-            OrganizationMember.role == 'owner',
+            Organization.id == org_id,  # type: ignore[arg-type]
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
+            OrganizationMember.role == 'owner',  # type: ignore[arg-type]
         )
     )
     org_and_role = result.first()
@@ -779,12 +992,12 @@ async def delete_organization(
     # Delete organization members first (due to foreign key constraints)
     await session.execute(
         select(OrganizationMember).where(
-            OrganizationMember.organization_id == org_id
+            OrganizationMember.organization_id == org_id  # type: ignore[arg-type]
         )
     )
     await session.execute(
         OrganizationMember.__table__.delete().where(
-            OrganizationMember.organization_id == org_id
+            OrganizationMember.organization_id == org_id  # type: ignore[arg-type]
         )
     )
 
@@ -920,7 +1133,7 @@ async def oauth_callback(
 
         # Check if user exists by email
         result = await session.execute(
-            select(User).where(User.email == user_info['email'])
+            select(User).where(User.email == user_info['email'])  # type: ignore[arg-type]
         )
         user = result.scalar_one_or_none()
 
@@ -1026,8 +1239,8 @@ async def oauth_link_callback(
         # Check if this OAuth account is already linked to another user
         result = await session.execute(
             select(User).where(
-                User.oauth_provider == provider,
-                User.oauth_provider_id == user_info['id'],
+                User.oauth_provider == provider,  # type: ignore[arg-type]
+                User.oauth_provider_id == user_info['id'],  # type: ignore[arg-type]
             )
         )
         existing_user = result.scalar_one_or_none()
@@ -1138,3 +1351,165 @@ async def get_oauth_providers():
             },
         ]
     }
+
+
+# Onboarding endpoints
+@router.get('/auth/onboarding/status')
+async def get_onboarding_status(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Get user onboarding status"""
+    user = await _get_user_from_request(request, session)
+    
+    return {
+        'onboarding_completed': user.onboarding_completed,
+        'onboarding_step': user.onboarding_step,
+        'has_organization': False,  # TODO: Check if user has organization
+        'profile_complete': bool(user.name),
+        'next_step': 'profile' if not user.name else 'organization'
+    }
+
+
+class ProfileUpdateRequest(BaseModel):
+    name: str
+    company: Optional[str] = None
+    job_title: Optional[str] = None
+    country: Optional[str] = None
+    phone: Optional[str] = None
+    bio: Optional[str] = None
+    website: Optional[str] = None
+
+
+@router.patch('/auth/onboarding/profile')
+async def update_onboarding_profile(
+    profile_data: ProfileUpdateRequest,
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Update user profile during onboarding"""
+    # Debug logging
+    logger.info(f'Profile update request - Cookies: {request.cookies}')
+    logger.info(f'Profile update request - Headers: {dict(request.headers)}')
+    
+    user = await _get_user_from_request(request, session)
+    
+    # Update user fields
+    user.name = profile_data.name
+    if hasattr(user, 'company'):
+        user.company = profile_data.company  # type: ignore
+    if hasattr(user, 'job_title'):
+        user.job_title = profile_data.job_title  # type: ignore
+    if hasattr(user, 'country'):
+        user.country = profile_data.country  # type: ignore
+    if hasattr(user, 'phone'):
+        user.phone = profile_data.phone  # type: ignore
+    if hasattr(user, 'bio'):
+        user.bio = profile_data.bio  # type: ignore
+    if hasattr(user, 'website'):
+        user.website = profile_data.website  # type: ignore
+    
+    # Update onboarding progress
+    user.onboarding_step = 1
+    
+    await session.commit()
+    
+    return {
+        'success': True,
+        'user': {
+            'id': str(user.id),
+            'email': user.email,
+            'name': user.name,
+            'onboarding_step': user.onboarding_step
+        }
+    }
+
+
+@router.post('/auth/onboarding/complete')
+async def complete_onboarding(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Mark onboarding as complete"""
+    user = await _get_user_from_request(request, session)
+    
+    # Update user onboarding status
+    user.onboarding_completed = True
+    user.onboarding_step = 3  # Final step
+    await session.commit()
+    
+    return {
+        'success': True,
+        'user': {
+            'id': str(user.id),
+            'email': user.email,
+            'name': user.name,
+            'onboarding_completed': True
+        }
+    }
+
+
+@router.post('/auth/onboarding/organization')
+async def create_onboarding_organization(
+    request: Request,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """Create user's first organization during onboarding"""
+    user = await _get_user_from_request(request, session)
+    
+    try:
+        # Parse request body
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    
+    # Get organization details from request
+    org_name = payload.get('name') or f"{user.name}'s Organization"
+    org_slug = payload.get('slug')
+    
+    # Create organization
+    from src.organizations.schemas import OrganizationCreate
+    from src.organizations.service import create_organization as create_organization_service
+    
+    try:
+        org_create = OrganizationCreate(name=org_name, slug=org_slug)
+        organization = await create_organization_service(session, org_create, user)
+        
+        # Update onboarding step
+        user.onboarding_step = 2
+        await session.commit()
+        
+        return {
+            'success': True,
+            'organization': {
+                'id': str(organization.id),
+                'name': organization.name,
+                'slug': organization.slug or (organization.name or '').lower().replace(' ', '-')[:48]
+            },
+            'user': {
+                'id': str(user.id),
+                'email': user.email,
+                'name': user.name,
+                'onboarding_step': user.onboarding_step
+            }
+        }
+    except HTTPException as e:
+        # Handle organization creation errors (e.g., duplicate name/slug)
+        if e.status_code == 409:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    'error': 'ORGANIZATION_EXISTS',
+                    'message': 'An organization with this name or slug already exists. Please choose a different name.',
+                }
+            )
+        raise
+    except Exception as e:
+        logger.exception(f'Error creating organization during onboarding: {str(e)}')
+        raise HTTPException(
+            status_code=500,
+            detail={
+                'error': 'ORGANIZATION_CREATE_FAILED',
+                'message': 'Failed to create organization. Please try again.',
+            }
+        )

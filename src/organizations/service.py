@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.activity_log import service as activity_log
@@ -49,18 +50,27 @@ async def create_organization(
     )
     db.add(db_member)
     await db.commit()
+    await db.refresh(db_org)
 
-    await activity_log.log_activity(
-        db,
-        {
-            'action': 'org_created',
-            'description': f"Organization '{org.name}' created",
-            'user': {'id': current_user.id},
-            'team_id': db_org.id,  # kept for backward compat in activity service
-            'project_id': 0,  # System project
-            'action_type': 'organization',
-        },
-    )
+    # Log activity - wrap in try/except to prevent activity logging from breaking org creation
+    try:
+        await activity_log.log_activity(
+            db,
+            {
+                'action': 'org_created',
+                'description': f"Organization '{org.name}' created",
+                'user': {'id': current_user.id},
+                'team_id': db_org.id,  # kept for backward compat in activity service
+                # no project_id for org-only events
+                'action_type': 'organization',
+            },
+        )
+    except Exception as e:
+        # Log but don't fail organization creation if activity logging fails
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f'Failed to log activity for organization creation: {str(e)}')
+
     return db_org
 
 
@@ -79,6 +89,9 @@ async def get_user_organizations(
 ) -> list[Organization]:
     result = await db.execute(
         select(Organization)
+        .options(
+            selectinload(Organization.members).selectinload(OrganizationMember.user)
+        )
         .join(OrganizationMember)
         .filter(OrganizationMember.user_id == user.id)
     )
@@ -148,7 +161,7 @@ async def invite_to_organization(
             'description': f'Invited {invite.email} to organization {org.name}',
             'user': {'id': current_user.id},
             'team_id': org.id,
-            'project_id': 0,
+            # no project_id for org-only events
             'action_type': 'organization',
             'metadata': {'invite_email': invite.email, 'role': invite.role},
         },

@@ -48,6 +48,19 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         String(500), nullable=True
     )
 
+    # Profile fields for onboarding
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    company: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    job_title: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    timezone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    bio: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    website: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+
+    # Onboarding completion tracking
+    onboarding_completed: Mapped[bool] = mapped_column(default=False, nullable=False)
+    onboarding_step: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
     # Relationships
     activities: Mapped[list['ActivityLog']] = relationship(
         'ActivityLog',

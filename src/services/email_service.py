@@ -2,11 +2,12 @@
 Email service using Resend for sending verification and password reset emails.
 """
 
-import os
 from typing import Optional
 
 import resend
 from loguru import logger
+
+from src.common.config import settings
 
 
 class EmailService:
@@ -14,20 +15,22 @@ class EmailService:
 
     def __init__(self):
         """Initialize Resend with API key from environment."""
-        api_key = os.getenv('RESEND_API_KEY')
+        api_key = settings.RESEND_API_KEY
         if not api_key:
-            logger.warning('RESEND_API_KEY not found in environment variables')
+            logger.error('RESEND_API_KEY not found in environment variables - email functionality will not work')
             self.api_key = None
         else:
             # Set the API key for the resend module
             resend.api_key = api_key
             self.api_key = api_key
+            logger.info('Resend API key configured successfully')
 
-        self.from_email = os.getenv(
-            'RESEND_FROM_EMAIL', 'onboarding@resend.dev'
-        )
-        self.app_name = os.getenv('APP_NAME', 'Your App')
-        self.frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+        self.from_email = settings.RESEND_FROM_EMAIL or 'onboarding@resend.dev'
+        self.app_name = settings.PROJECT_NAME or 'Your App'
+        self.frontend_url = settings.FRONTEND_URL or 'http://localhost:5173'
+
+        # Validate configuration
+        self._validate_configuration()
 
     async def send_verification_email(
         self, email: str, token: str, name: Optional[str] = None
@@ -44,7 +47,7 @@ class EmailService:
             bool: True if email sent successfully, False otherwise
         """
         if not self.api_key:
-            logger.error('Resend API key not found - check RESEND_API_KEY')
+            logger.error(f'Resend API key not found - check RESEND_API_KEY. Cannot send verification email to {email}')
             return False
 
         verification_link = f'{self.frontend_url}/verify-email?token={token}'
@@ -84,15 +87,15 @@ class EmailService:
                 """,
             }
 
-            response = resend.emails.send(params)
+            response = resend.Emails.send(params)
             logger.info(
                 f'Verification email sent to {email}, ID: {response.get("id")}'
             )
             return True
 
         except Exception as e:
-            logger.error(
-                f'Failed to send verification email to {email}: {str(e)}'
+            logger.exception(
+                f'Failed to send verification email to {email}: {str(e)}. Response: {response if "response" in locals() else "No response"}'
             )
             return False
 
@@ -111,7 +114,7 @@ class EmailService:
             bool: True if email sent successfully, False otherwise
         """
         if not self.api_key:
-            logger.error('Resend API key not found - check RESEND_API_KEY')
+            logger.error(f'Resend API key not found - check RESEND_API_KEY. Cannot send password reset email to {email}')
             return False
 
         reset_link = f'{self.frontend_url}/reset-password?token={token}'
@@ -152,48 +155,71 @@ class EmailService:
                 """,
             }
 
-            response = resend.emails.send(params)
+            response = resend.Emails.send(params)
             logger.info(
                 f'Password reset email sent to {email}, ID: {response.get("id")}'
             )
             return True
 
         except Exception as e:
-            logger.error(
-                f'Failed to send password reset email to {email}: {str(e)}'
+            logger.exception(
+                f'Failed to send password reset email to {email}: {str(e)}. Response: {response if "response" in locals() else "No response"}'
             )
             return False
 
     async def send_welcome_email(
-        self, email: str, name: Optional[str] = None
+        self, email: str, name: Optional[str] = None, is_onboarding: bool = False
     ) -> bool:
         """
-        Send welcome email after successful verification.
+        Send welcome email after successful verification or onboarding completion.
 
         Args:
             email: User's email address
             name: User's name (optional)
+            is_onboarding: If True, send onboarding completion welcome email
 
         Returns:
             bool: True if email sent successfully, False otherwise
         """
         if not self.api_key:
-            logger.error('Resend API key not found - check RESEND_API_KEY')
+            logger.error(f'Resend API key not found - check RESEND_API_KEY. Cannot send welcome email to {email}')
             return False
 
         display_name = name if name else email.split('@', maxsplit=1)[0]
-        dashboard_link = f'{self.frontend_url}/dashboard'
+        dashboard_link = f'{self.frontend_url}'
+
+        # Different subject and content for onboarding completion
+        if is_onboarding:
+            subject = 'Welcome to AI Project Management! 🎉'
+            heading = 'Welcome to AI Project Management! 🎉'
+            main_message = 'Congratulations! Your onboarding is complete and your workspace is ready. You can now start collaborating with your team and exploring all the features we have to offer.'
+            next_steps = [
+                'Explore your dashboard',
+                'Invite team members',
+                'Create your first project',
+                'Explore AI-powered features',
+            ]
+        else:
+            subject = f'Welcome to {self.app_name}! 🎉'
+            heading = f'Welcome to {self.app_name}! 🎉'
+            main_message = 'Your account has been successfully verified! You\'re now ready to get started.'
+            next_steps = [
+                'Complete your profile',
+                'Create your first organization',
+                'Invite team members',
+                'Explore all features',
+            ]
 
         try:
             params = {
                 'from': self.from_email,
                 'to': [email],
-                'subject': f'Welcome to {self.app_name}! 🎉',
+                'subject': subject,
                 'html': f"""
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2>Welcome to {self.app_name}! 🎉</h2>
+                    <h2>{heading}</h2>
                     <p>Hi {display_name},</p>
-                    <p>Your account has been successfully verified! You're now ready to get started.</p>
+                    <p>{main_message}</p>
 
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="{dashboard_link}"
@@ -205,10 +231,7 @@ class EmailService:
 
                     <p>Here's what you can do next:</p>
                     <ul>
-                        <li>Complete your profile</li>
-                        <li>Create your first organization</li>
-                        <li>Invite team members</li>
-                        <li>Explore all features</li>
+                        {''.join([f'<li>{step}</li>' for step in next_steps])}
                     </ul>
 
                     <hr style="border: 1px solid #e9ecef; margin: 30px 0;">
@@ -219,15 +242,115 @@ class EmailService:
                 """,
             }
 
-            response = resend.emails.send(params)
+            response = resend.Emails.send(params)
             logger.info(
                 f'Welcome email sent to {email}, ID: {response.get("id")}'
             )
             return True
 
         except Exception as e:
-            logger.error(f'Failed to send welcome email to {email}: {str(e)}')
+            logger.exception(
+                f'Failed to send welcome email to {email}: {str(e)}. Response: {response if "response" in locals() else "No response"}'
+            )
             return False
+
+    async def send_otp_email(
+        self, email: str, otp_code: str, name: Optional[str] = None
+    ) -> bool:
+        """
+        Send OTP code email to user.
+
+        Args:
+            email: User's email address
+            otp_code: 6-digit OTP code
+            name: User's name (optional)
+
+        Returns:
+            bool: True if email sent successfully, False otherwise
+        """
+        if not self.api_key:
+            logger.warning('Cannot send OTP email: RESEND_API_KEY not configured')
+            return False
+
+        try:
+            display_name = name or email.split('@', maxsplit=1)[0]
+
+            # Use from_email as-is if it already contains a name format, otherwise add app_name
+            if '<' in self.from_email and '>' in self.from_email:
+                from_address = self.from_email
+            else:
+                from_address = f'{self.app_name} <{self.from_email}>'
+
+            params = {
+                'from': from_address,
+                'to': [email],
+                'subject': f'Your {self.app_name} verification code',
+                'html': f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #333; margin: 0;">{self.app_name}</h1>
+                    </div>
+
+                    <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+                        <h2 style="color: #333; margin-top: 0;">Your verification code</h2>
+                        <p>Hi {display_name},</p>
+                        <p>Use this code to complete your registration or login:</p>
+                        
+                        <div style="text-align: center; margin: 30px 0;">
+                            <div style="background-color: #007bff; color: white; padding: 20px; 
+                                        border-radius: 10px; font-size: 32px; font-weight: bold; 
+                                        letter-spacing: 5px; display: inline-block;">
+                                {otp_code}
+                            </div>
+                        </div>
+                        
+                        <p><strong>This code expires in 15 minutes.</strong></p>
+                        <p>If you didn't request this code, you can safely ignore this email.</p>
+                    </div>
+
+                    <div style="background-color: #e9ecef; padding: 20px; border-radius: 5px;">
+                        <h3 style="color: #495057; margin-top: 0;">Security Tips:</h3>
+                        <ul style="color: #6c757d;">
+                            <li>Never share this code with anyone</li>
+                            <li>Our team will never ask for your verification code</li>
+                            <li>If you suspect unauthorized access, contact us immediately</li>
+                        </ul>
+                    </div>
+
+                    <hr style="border: 1px solid #e9ecef; margin: 30px 0;">
+                    <p style="color: #6c757d; font-size: 14px; text-align: center;">
+                        This is an automated message. Please do not reply to this email.
+                    </p>
+                </div>
+                """,
+            }
+
+            response = resend.Emails.send(params)
+            logger.info(
+                f'OTP email sent to {email}, ID: {response.get("id")}'
+            )
+            return True
+
+        except Exception as e:
+            logger.exception(
+                f'Failed to send OTP email to {email}: {str(e)}. Response: {response if "response" in locals() else "No response"}'
+            )
+            return False
+
+    def _validate_configuration(self) -> None:
+        """Validate Resend configuration and log warnings/errors."""
+        if not self.api_key:
+            logger.error('Email service disabled: RESEND_API_KEY not configured')
+            return
+
+        if not self.from_email or self.from_email == 'onboarding@resend.dev':
+            logger.warning(
+                f'Using default FROM_EMAIL: {self.from_email}. Consider setting RESEND_FROM_EMAIL to your domain.'
+            )
+        else:
+            logger.info(f'FROM_EMAIL configured: {self.from_email}')
+
+        logger.info(f'Email service initialized with APP_NAME: {self.app_name}, FRONTEND_URL: {self.frontend_url}')
 
 
 # Global instance

@@ -1,9 +1,11 @@
+from typing import Any
+
 from fastapi.openapi.utils import get_openapi
 
 from src.common.config import settings
 
 
-def _update_schema_ref(schema: dict) -> None:
+def _update_schema_ref(schema: dict[str, Any]) -> None:
     """Update schema reference to include components."""
     if '$ref' in schema:
         ref = schema['$ref']
@@ -18,27 +20,27 @@ def _update_schema_ref(schema: dict) -> None:
             )
 
 
-def _process_content_schema(content: dict) -> None:
+def _process_content_schema(content: dict[str, Any]) -> None:
     """Process content schema and update references."""
     if 'application/json' in content:
         schema = content['application/json'].get('schema', {})
         _update_schema_ref(schema)
 
 
-def _process_response(response: dict) -> None:
+def _process_response(response: dict[str, Any]) -> None:
     """Process response and update content schemas."""
     if 'content' in response:
         _process_content_schema(response['content'])
 
 
-def _process_method(method: dict) -> None:
+def _process_method(method: dict[str, Any]) -> None:
     """Process method and update responses."""
     if 'responses' in method:
         for response in method['responses'].values():
             _process_response(response)
 
 
-def _process_paths(paths: dict) -> dict:
+def _process_paths(paths: dict[str, Any]) -> dict[str, Any]:
     """Process paths and return updated paths dict."""
     processed_paths = {}
 
@@ -53,10 +55,10 @@ def _process_paths(paths: dict) -> dict:
         for method in path_obj.values():
             _process_method(method)
 
-    return processed_paths
+    return processed_paths  # type: ignore
 
 
-def _initialize_components(schema: dict) -> None:
+def _initialize_components(schema: dict[str, Any]) -> None:
     """Initialize components in OpenAPI schema."""
     if 'components' not in schema:
         schema['components'] = {}
@@ -74,7 +76,7 @@ def _initialize_components(schema: dict) -> None:
         schema['components']['schemas'] = {}
 
 
-def custom_openapi(app):
+def custom_openapi(app: Any) -> dict[str, Any]:
     """Generate custom OpenAPI schema for the application."""
     if app.openapi_schema:
         return app.openapi_schema

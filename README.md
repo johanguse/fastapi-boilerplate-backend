@@ -1,8 +1,16 @@
-# Project Management API
+# AI-Powered SaaS Boilerplate
 
 ## Description
 
-This is a project management API that allows you to manage users, organizations, and projects.
+This is a comprehensive SaaS boilerplate with AI-powered features including document intelligence, content generation, and analytics. Built with FastAPI, React, and modern AI capabilities.
+
+## 🚀 AI Features
+
+- **AI Document Intelligence**: Upload, process, and chat with documents using AI
+- **AI Content Generation**: Generate blog posts, emails, social media content, and more
+- **AI Analytics**: Natural language queries to generate insights and charts
+- **Usage Tracking**: Credit-based billing system with real-time usage monitoring
+- **Multi-provider Support**: OpenAI and Anthropic integration
 
 ## Technologies
 
@@ -18,11 +26,13 @@ This is a project management API that allows you to manage users, organizations,
 - Poetry
 - Ruff
 - Docker
+- **AI Integration**: OpenAI, Anthropic, LangChain
 
 ## 📚 Documentation
 
 Comprehensive documentation is available in the `/docs` folder:
 
+- **[AI Features Guide](docs/AI_FEATURES.md)** - Complete AI features documentation and API reference
 - **[Production Deployment Guide](docs/production-deployment.md)** - Complete production setup and deployment instructions
 - **[Performance Optimization Guide](docs/performance-optimization.md)** - Detailed performance optimizations and benchmarks
 - **[Monitoring & Metrics Guide](docs/monitoring-metrics.md)** - Real-time monitoring and performance tracking
@@ -188,6 +198,12 @@ poetry run python scripts/seed.py
 docker-compose -f docker/docker-compose.yml exec web poetry run python scripts/seed.py
 ```
 
+**Or run fresh seed** (deletes all data first):
+
+   ```bash
+   poetry run python scripts/seed_fresh.py
+   ```
+
 ### Seed Data Includes
 
 The seed script creates comprehensive test data:
@@ -231,6 +247,7 @@ All seed users share the same password: **`admin123`**
 Run `task test`
 
 For running specific test files:
+
 ```bash
 # Run all auth tests
 task test-auth
@@ -246,9 +263,10 @@ task test-watch
 
 When writing tests for FastAPI endpoints that use SQLAlchemy models, you might encounter issues like `UnmappedClassError: Class 'typing.Any' is not mapped`. This is common when trying to instantiate SQLAlchemy models directly in tests.
 
-#### Solutions:
+#### Solutions
 
 1. **Use Mock Objects**: Instead of real SQLAlchemy models, create simple mock classes:
+
    ```python
    class MockUser:
        def __init__(self, **kwargs):
@@ -257,6 +275,7 @@ When writing tests for FastAPI endpoints that use SQLAlchemy models, you might e
    ```
 
 2. **Mock Dependency Injection**: Override FastAPI dependencies:
+
    ```python
    async def override_dependency():
        return mock_object
@@ -265,6 +284,7 @@ When writing tests for FastAPI endpoints that use SQLAlchemy models, you might e
    ```
 
 3. **Mock HTTP Responses**: For complete isolation, mock the HTTP client itself:
+
    ```python
    mock_response = Response(
        status_code=200,
@@ -280,6 +300,7 @@ When writing tests for FastAPI endpoints that use SQLAlchemy models, you might e
    ```
 
 4. **Clean Up After Tests**: Always restore original dependencies and methods:
+
    ```python
    try:
        # Test code
@@ -365,7 +386,7 @@ RESEND_API_KEY=your-resend-api-key
 RESEND_FROM_EMAIL=your-email@domain.com
 
 # Frontend
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173
 
 # Better Auth (optional)
 BETTER_AUTH_ENABLED=false
@@ -424,20 +445,6 @@ Content-Type: application/json
     "role": "member"
 }
 ```
-
-## Todo
-
-- Add tests
-- Add documentation
-- Add <https://www.literalai.com/>
-
-## Additional Notes
-
-- Never commit `.env` files to version control
-- Use different environment variables for development and production
-- Always use HTTPS in production
-- Regularly update dependencies and base images
-- Monitor container logs and health checks in production
 
 ## Deployment
 

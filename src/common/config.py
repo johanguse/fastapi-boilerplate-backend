@@ -1,6 +1,6 @@
 import os
 from functools import lru_cache
-from typing import Union
+from typing import Any, Union
 
 from dotenv import load_dotenv
 from pydantic import PostgresDsn
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
 
     DEFAULT_PAGE_SIZE: int = int(os.getenv('DEFAULT_PAGE_SIZE', '30'))
 
-    SECRET_KEY: str = os.getenv('SECRET_KEY')
+    SECRET_KEY: str = os.getenv('SECRET_KEY', 'change-me-secret-key')
     JWT_SECRET: str = os.getenv('JWT_SECRET', 'your-secret-key')
     JWT_LIFETIME_SECONDS: int = int(os.getenv('JWT_LIFETIME_SECONDS', '3600'))
 
@@ -37,14 +37,14 @@ class Settings(BaseSettings):
         os.getenv('REFRESH_TOKEN_EXPIRE_MINUTES', '10080')
     )
 
-    FRONTEND_URL: str = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    FRONTEND_URL: str = os.getenv('FRONTEND_URL', 'http://localhost:5173')
     ALLOWED_ORIGINS: list[str] = [
         FRONTEND_URL,
         'http://localhost:5173',
         'http://127.0.0.1:5173',
     ]
 
-    DATABASE_URL: Union[str, PostgresDsn]
+    DATABASE_URL: Union[str, PostgresDsn] = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost/dbname')
 
     # Better Auth (optional) JWT acceptance alongside FastAPI Users
     BETTER_AUTH_ENABLED: bool = bool(os.getenv('BETTER_AUTH_ENABLED', ''))
@@ -62,34 +62,53 @@ class Settings(BaseSettings):
         os.getenv('BETTER_AUTH_SUB_IS_EMAIL', 'false').lower() == 'true'
     )
 
-    RESEND_API_KEY: str = os.getenv('RESEND_API_KEY')
-    RESEND_FROM_EMAIL: str = os.getenv('RESEND_FROM_EMAIL')
+    RESEND_API_KEY: str = os.getenv('RESEND_API_KEY', '')
+    RESEND_FROM_EMAIL: str = os.getenv('RESEND_FROM_EMAIL', '')
     FROM_EMAIL: str = os.getenv(
         'FROM_EMAIL', os.getenv('RESEND_FROM_EMAIL', 'noreply@example.com')
     )
 
-    R2_ENDPOINT_URL: str = os.getenv('R2_ENDPOINT_URL')
-    R2_ACCESS_KEY_ID: str = os.getenv('R2_ACCESS_KEY_ID')
-    R2_SECRET_ACCESS_KEY: str = os.getenv('R2_SECRET_ACCESS_KEY')
-    R2_BUCKET_NAME: str = os.getenv('R2_BUCKET_NAME')
+    R2_ENDPOINT_URL: str = os.getenv('R2_ENDPOINT_URL', '')
+    R2_ACCESS_KEY_ID: str = os.getenv('R2_ACCESS_KEY_ID', '')
+    R2_SECRET_ACCESS_KEY: str = os.getenv('R2_SECRET_ACCESS_KEY', '')
+    R2_BUCKET_NAME: str = os.getenv('R2_BUCKET_NAME', '')
 
     # Stripe
     STRIPE_SECRET_KEY: str = ''
     STRIPE_WEBHOOK_SECRET: str = ''
     STRIPE_PUBLIC_KEY: str = ''
-    STRIPE_PLANS: dict = {
+    STRIPE_PLANS: dict[str, Any] = {
+        # Free
+        'price_free': {
+            'name': 'free',
+            'price': 0,
+            'interval': 'month',
+            'max_projects': 1,
+            'max_users': 1,
+            'max_storage_gb': 1,
+            'max_ai_credits_monthly': 10,
+            'ai_features_enabled': ['documents'],
+        },
         # Starter
         'price_1M': {
             'name': 'starter',
             'price': 990,
             'interval': 'month',
             'max_projects': 1,
+            'max_users': 3,
+            'max_storage_gb': 5,
+            'max_ai_credits_monthly': 1000,
+            'ai_features_enabled': ['documents', 'content'],
         },
         'price_1Y': {
             'name': 'starter',
             'price': 9900,
             'interval': 'year',
             'max_projects': 1,
+            'max_users': 3,
+            'max_storage_gb': 5,
+            'max_ai_credits_monthly': 1000,
+            'ai_features_enabled': ['documents', 'content'],
         },
         # Pro
         'price_2M': {
@@ -97,12 +116,20 @@ class Settings(BaseSettings):
             'price': 2990,
             'interval': 'month',
             'max_projects': 5,
+            'max_users': 10,
+            'max_storage_gb': 20,
+            'max_ai_credits_monthly': 5000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
         'price_2Y': {
             'name': 'pro',
             'price': 29900,
             'interval': 'year',
             'max_projects': 5,
+            'max_users': 10,
+            'max_storage_gb': 20,
+            'max_ai_credits_monthly': 5000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
         # Business
         'price_3M': {
@@ -110,12 +137,20 @@ class Settings(BaseSettings):
             'price': 9990,
             'interval': 'month',
             'max_projects': 20,
+            'max_users': 50,
+            'max_storage_gb': 100,
+            'max_ai_credits_monthly': 25000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
         'price_3Y': {
             'name': 'business',
             'price': 99900,
             'interval': 'year',
             'max_projects': 20,
+            'max_users': 50,
+            'max_storage_gb': 100,
+            'max_ai_credits_monthly': 25000,
+            'ai_features_enabled': ['documents', 'content', 'analytics'],
         },
     }
     PAYMENT_SUCCESS_URL: str = 'https://yourapp.com/success'
@@ -138,7 +173,7 @@ class Settings(BaseSettings):
     APPLE_PRIVATE_KEY: str = os.getenv('APPLE_PRIVATE_KEY', '')
 
     # Uploads
-    ALLOWED_FILE_TYPES: list = [
+    ALLOWED_FILE_TYPES: list[str] = [
         'text/plain',
         'application/pdf',
         'application/msword',
@@ -146,6 +181,22 @@ class Settings(BaseSettings):
         'image/png',
         'image/jpeg',
     ]
+    
+    ALLOWED_IMAGE_TYPES: list[str] = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+    ]
+
+    # AI Configuration
+    OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY', '')
+    ANTHROPIC_API_KEY: str = os.getenv('ANTHROPIC_API_KEY', '')
+    OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
+    AI_PROVIDER: str = os.getenv('AI_PROVIDER', 'openai')  # openai, anthropic, or openrouter
+    AI_MODEL_TEXT: str = os.getenv('AI_MODEL_TEXT', 'gpt-4-turbo')
+    AI_MODEL_EMBEDDINGS: str = os.getenv('AI_MODEL_EMBEDDINGS', 'text-embedding-3-small')
+    AI_MAX_TOKENS: int = int(os.getenv('AI_MAX_TOKENS', '4096'))
 
 
 settings = Settings()

@@ -9,6 +9,7 @@ from fastapi_users.authentication import (
     JWTStrategy,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users.exceptions import UserNotExists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.models import User
@@ -23,6 +24,60 @@ async def get_user_db(session: AsyncSession = Depends(get_async_session)):
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = settings.JWT_SECRET
     verification_token_secret = settings.JWT_SECRET
+    
+    # Override to allow unverified users to login
+    # Email verification is optional - users will see a banner to verify
+    async def authenticate(self, credentials):
+        """
+        Authenticate a user. Allow login regardless of verification status.
+        Override the default behavior which blocks unverified users.
+        """
+        try:
+            user = await self.get_by_email(credentials.username)
+        except UserNotExists:
+            # Run the hasher to mitigate timing attack
+            # Inspired from Django: https://code.djangoproject.com/ticket/20760
+            self.password_helper.hash(credentials.password)
+            return None
+
+        verified, updated_password_hash = self.password_helper.verify_and_update(
+            credentials.password, user.hashed_password
+        )
+        if not verified:
+            return None
+        
+        # Update password hash to a more robust one if needed
+        if updated_password_hash is not None:
+            user.hashed_password = updated_password_hash
+            await self.user_db.update(user)
+
+        # Skip the is_verified check - allow unverified users to login
+        # They will see the email verification banner in the UI
+        return user
+    
+    # Allow unverified users to login - verification is optional
+    # They'll see a banner in the UI to verify their email
+    async def on_after_login(
+        self,
+        user: User,
+        request: Optional[Request] = None,
+        response = None,
+    ):
+        """Override to skip email verification check on login."""
+        if request:
+            from src.activity_log.service import log_activity
+
+            await log_activity(
+                request.state.db,
+                action='user_logged_in',
+                description=f'User {user.email} logged in',
+                user=user,
+                team_id=0,
+                project_id=0,
+                action_type='auth',
+                ip_address=request.client.host,
+                user_agent=request.headers.get('user-agent'),
+            )
 
     @staticmethod
     async def on_after_register(user: User, request: Optional[Request] = None):
@@ -39,23 +94,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                     'project_id': 0,
                     'action_type': 'system',
                 },
-            )
-
-    @staticmethod
-    async def on_after_login(user: User, request: Optional[Request] = None):
-        if request:
-            from src.activity_log.service import log_activity  # Moved import
-
-            await log_activity(
-                request.state.db,
-                action='user_logged_in',
-                description=f'User {user.email} logged in',
-                user=user,
-                team_id=0,
-                project_id=0,
-                action_type='auth',
-                ip_address=request.client.host,
-                user_agent=request.headers.get('user-agent'),
             )
 
     @staticmethod

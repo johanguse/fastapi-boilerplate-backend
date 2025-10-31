@@ -2,13 +2,14 @@
 Email-related routes for verification and password reset.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from loguru import logger
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..auth.models import User
+from ..auth.models import EmailToken, User
 from ..common.rate_limiter import (
     EMAIL_LIMIT,
     PASSWORD_RESET_DAILY,
@@ -16,6 +17,7 @@ from ..common.rate_limiter import (
     limiter,
 )
 from ..common.session import get_async_session
+from ..common.utils import translate_message
 from ..services.email_service import email_service
 from ..services.token_service import token_service
 
@@ -61,9 +63,8 @@ async def forgot_password(
     )
     user = result.scalars().first()
 
-    # Always return success to prevent email enumeration
-    # But only send email if user actually exists
     if user:
+        # User exists - send password reset email
         try:
             # Generate password reset token
             token = await token_service.create_password_reset_token(
@@ -77,16 +78,29 @@ async def forgot_password(
 
             if not email_sent:
                 # Log error but don't expose to user
-                pass
+                logger.warning(f'Failed to send password reset email to {user.email} - email_sent returned False')
 
-        except Exception:
+            return {
+                'success': True,
+                'message': 'Password reset link sent to your email address.',
+                'user_exists': True
+            }
+
+        except Exception as e:
             # Log error but don't expose to user
-            pass
-
-    return {
-        'success': True,
-        'message': "If an account with that email exists, we've sent a password reset link.",
-    }
+            logger.exception(f'Exception in forgot_password for {request.email}: {str(e)}')
+            return {
+                'success': False,
+                'message': 'Unable to send password reset email. Please try again later.',
+                'user_exists': True
+            }
+    else:
+        # User doesn't exist
+        return {
+            'success': False,
+            'message': 'No account found with this email address. Would you like to create an account?',
+            'user_exists': False
+        }
 
 
 @router.post('/reset-password')
@@ -105,9 +119,10 @@ async def reset_password(
     )
 
     if not email:
+        error_msg = translate_message('auth.invalid_or_expired_reset_token', http_request)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Invalid or expired reset token',
+            detail=error_msg,
         )
 
     # Find user
@@ -115,8 +130,9 @@ async def reset_password(
     user = result.scalars().first()
 
     if not user:
+        error_msg = translate_message('auth.user_not_found', http_request)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail='User not found'
+            status_code=status.HTTP_404_NOT_FOUND, detail=error_msg
         )
 
     # Update password
@@ -131,43 +147,115 @@ async def reset_password(
 @router.post('/verify-email')
 @limiter.limit(EMAIL_LIMIT)  # 10 requests per hour
 async def verify_email(
-    http_request: Request,  # Required for rate limiter
-    request: VerifyEmailRequest,
+    request: Request,  # Required for rate limiter
+    response: Response,  # Required for rate limiter to inject headers
+    data: VerifyEmailRequest,
     session: AsyncSession = Depends(get_async_session),
 ):
     """
     Verify user email with token.
     """
-    # Verify token and get email
-    email = await token_service.verify_token(
-        session, request.token, 'verification'
-    )
-
-    if not email:
+    # Look up the token WITHOUT deleting it first
+    from datetime import datetime, timezone
+    
+    if not data.token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Invalid or expired verification token',
+            detail={
+                'error': 'MISSING_TOKEN',
+                'message': 'Verification token is required',
+            },
         )
-
+    
+    logger.info(f'Verifying email with token (hash: {token_service.hash_token(data.token)[:16]}...)')
+    
+    token_hash = token_service.hash_token(data.token)
+    token_result = await session.execute(
+        select(EmailToken).where(
+            EmailToken.token_hash == token_hash,
+            EmailToken.token_type == 'verification',
+        )
+    )
+    email_token_record = token_result.scalars().first()
+    
+    if email_token_record:
+        logger.info(f'Token found for email: {email_token_record.user_email}')
+    else:
+        logger.warning(f'Token not found in database - may have been used or invalid')
+    
+    if not email_token_record:
+        # Token doesn't exist - it might have been used already or invalid
+        # Since we can't determine which user this was for without the token,
+        # we return a clear error message
+        error_msg = translate_message(
+            'auth.invalid_or_expired_verification_token', 
+            request
+        ) or 'Invalid or expired verification token. If you\'ve already verified your email, you can proceed to login.'
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                'error': 'INVALID_TOKEN',
+                'message': error_msg,
+            },
+        )
+    
+    # Check if token is expired
+    if email_token_record.expires_at <= datetime.now(timezone.utc):
+        # Token expired, delete it
+        await session.delete(email_token_record)
+        await session.commit()
+        error_msg = translate_message(
+            'auth.invalid_or_expired_verification_token', 
+            request
+        ) or 'This verification link has expired. Please request a new one.'
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                'error': 'EXPIRED_TOKEN',
+                'message': error_msg,
+            },
+        )
+    
+    # Token is valid - get the email
+    user_email = email_token_record.user_email
+    
     # Find user
-    result = await session.execute(select(User).where(User.email == email))
-    user = result.scalars().first()
+    user_result = await session.execute(
+        select(User).where(User.email == user_email)
+    )
+    user = user_result.scalars().first()
 
     if not user:
+        # Delete the orphaned token
+        await session.delete(email_token_record)
+        await session.commit()
+        error_msg = translate_message('auth.user_not_found', request)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail='User not found'
+            status_code=status.HTTP_404_NOT_FOUND, detail=error_msg
         )
 
-    # Mark email as verified
+    # Check if already verified
+    if user.is_verified:
+        # Already verified - delete the token and return success
+        # This allows users to click the verification link multiple times without error
+        await session.delete(email_token_record)
+        await session.commit()
+        logger.info(f'Email already verified for user {user.email}')
+        return {
+            'success': True,
+            'message': 'Email already verified',
+            'already_verified': True
+        }
+
+    # Mark email as verified and delete the token
     user.is_verified = True
+    await session.delete(email_token_record)
     await session.commit()
 
-    # Send welcome email
-    try:
-        await email_service.send_welcome_email(user.email, user.name)
-    except Exception:
-        # Don't fail verification if welcome email fails
-        pass
+    # Don't send welcome email here - it will be sent after onboarding completion
+    # Welcome email should only be sent after user completes onboarding
 
     return {'success': True, 'message': 'Email verified successfully'}
 
@@ -175,8 +263,9 @@ async def verify_email(
 @router.post('/resend-verification')
 @limiter.limit(EMAIL_LIMIT)  # 10 requests per hour
 async def resend_verification(
-    http_request: Request,  # Required for rate limiter
-    request: ForgotPasswordRequest,  # Reuse same model (just email)
+    request: Request,  # Required for rate limiter
+    response: Response,  # Required for rate limiter to inject headers
+    data: ForgotPasswordRequest,  # Reuse same model (just email)
     session: AsyncSession = Depends(get_async_session),
 ):
     """
@@ -184,12 +273,27 @@ async def resend_verification(
     """
     # Check if user exists and is not verified
     result = await session.execute(
-        select(User).where(User.email == request.email)
+        select(User).where(User.email == data.email)
     )
     user = result.scalars().first()
 
-    # Always return success to prevent email enumeration
-    if user and not user.is_verified:
+    if not user:
+        # User doesn't exist
+        return {
+            'success': False,
+            'message': 'No account found with this email address. Please sign up first.',
+            'user_exists': False
+        }
+    elif user.is_verified:
+        # User already verified
+        return {
+            'success': False,
+            'message': 'This email address is already verified.',
+            'user_exists': True,
+            'already_verified': True
+        }
+    else:
+        # User exists but not verified - send verification email
         try:
             # Generate verification token
             token = await token_service.create_verification_token(
@@ -203,13 +307,19 @@ async def resend_verification(
 
             if not email_sent:
                 # Log error but don't expose to user
-                pass
+                logger.warning(f'Failed to send verification email to {user.email} - email_sent returned False')
 
-        except Exception:
+            return {
+                'success': True,
+                'message': 'Verification email sent to your email address.',
+                'user_exists': True
+            }
+
+        except Exception as e:
             # Log error but don't expose to user
-            pass
-
-    return {
-        'success': True,
-        'message': "If your account needs verification, we've sent a new verification email.",
-    }
+            logger.exception(f'Exception in resend_verification for {data.email}: {str(e)}')
+            return {
+                'success': False,
+                'message': 'Unable to send verification email. Please try again later.',
+                'user_exists': True
+            }

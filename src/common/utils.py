@@ -35,7 +35,7 @@ def translate_message(
     key: str,
     request: Optional[Request] = None,
     language: Optional[str] = None,
-    **kwargs,
+    **kwargs: Any,  # type: ignore
 ) -> str:
     """
     Translate a message using the request's language or provided language.

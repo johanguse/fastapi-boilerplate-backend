@@ -2,13 +2,25 @@
   "auth": {
     "invalid_credentials": "Invalid email or password",
     "user_not_found": "User not found",
+    "user_not_found_or_inactive": "User not found or inactive",
     "email_already_exists": "Email already exists",
     "account_disabled": "Account is disabled",
+    "account_inactive": "User account is inactive",
     "token_expired": "Token has expired",
     "invalid_token": "Invalid token",
+    "no_valid_session": "No valid session",
+    "not_authenticated": "Not authenticated",
     "insufficient_permissions": "Insufficient permissions",
+    "admin_access_required": "Admin access required",
     "password_too_weak": "Password is too weak",
-    "email_not_verified": "Email address is not verified"
+    "email_not_verified": "Email address is not verified",
+    "login_success": "Successfully logged in",
+    "signup_success": "Successfully registered",
+    "logout_success": "Successfully logged out",
+    "user_already_exists": "User with this email already exists",
+    "cannot_delete_own_account": "Cannot delete your own account",
+    "invalid_or_expired_reset_token": "Invalid or expired reset token",
+    "invalid_or_expired_verification_token": "Invalid or expired verification token"
   },
   "validation": {
     "required_field": "This field is required",
@@ -22,7 +34,9 @@
     "access_denied": "Access denied to organization",
     "name_exists": "Organization name already exists",
     "member_not_found": "Member not found",
-    "cannot_remove_owner": "Cannot remove organization owner"
+    "cannot_remove_owner": "Cannot remove organization owner",
+    "failed_to_create": "Failed to create organization",
+    "created": "Organization created successfully"
   },
   "project": {
     "not_found": "Project not found",
@@ -41,7 +55,10 @@
     "not_found": "Resource not found",
     "bad_request": "Bad request",
     "forbidden": "Forbidden",
-    "rate_limit": "Rate limit exceeded"
+    "rate_limit": "Rate limit exceeded",
+    "database_update": "Database update error",
+    "sign_in_failed": "Authentication failed",
+    "sign_up_failed": "Failed to create account. Please try again."
   },
   "success": {
     "created": "Successfully created",
@@ -60,5 +77,9 @@
   "users": {
     "one": "{count} user",
     "other": "{count} users"
+  },
+  "onboarding": {
+    "profile_update_failed": "Failed to update profile",
+    "step_update_failed": "Failed to update onboarding step"
   }
 }

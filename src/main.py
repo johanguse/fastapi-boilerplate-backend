@@ -9,10 +9,18 @@ from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
 from slowapi.errors import RateLimitExceeded
 
+from src.ai_analytics.routes import router as ai_analytics_router
+from src.ai_content.routes import router as ai_content_router
+from src.ai_core.billing_routes import router as ai_billing_router
+from src.ai_core.dashboard_routes import router as ai_dashboard_router
+from src.ai_core.routes import router as ai_usage_router
+from src.ai_documents.routes import router as ai_documents_router
 from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
+from src.auth.profile_routes import router as profile_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
+from src.invitations.routes import router as invitations_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
@@ -110,10 +118,7 @@ app.state.limiter = limiter
 # Add rate limit exception handler
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
-# Add middleware
-add_performance_monitoring(app)  # Add first for accurate timing
-add_i18n_middleware(app)
-add_logging_middleware(app)
+# Add middleware - CORS must be FIRST to handle preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -121,6 +126,9 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+add_performance_monitoring(app)  # Add for accurate timing
+add_i18n_middleware(app)
+add_logging_middleware(app)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 add_pagination(app)
@@ -145,6 +153,15 @@ app.include_router(
 app.include_router(
     admin_router,
     prefix=settings.API_V1_STR,
+)
+app.include_router(
+    profile_router,
+    prefix=settings.API_V1_STR,
+)
+app.include_router(
+    invitations_router,
+    prefix=f'{settings.API_V1_STR}/invitations',
+    tags=['invitations'],
 )
 # Legacy Teams router removed from public API (replaced by Organizations)
 app.include_router(
@@ -177,6 +194,38 @@ app.include_router(
 )
 app.include_router(
     uploads_router, prefix=f'{settings.API_V1_STR}/uploads', tags=['uploads']
+)
+
+# AI Features
+app.include_router(
+    ai_usage_router,
+    prefix=f'{settings.API_V1_STR}/ai-usage',
+    tags=['AI Usage'],
+)
+app.include_router(
+    ai_billing_router,
+    prefix=f'{settings.API_V1_STR}/ai-billing',
+    tags=['AI Billing'],
+)
+app.include_router(
+    ai_dashboard_router,
+    prefix=f'{settings.API_V1_STR}/ai-dashboard',
+    tags=['AI Dashboard'],
+)
+app.include_router(
+    ai_documents_router,
+    prefix=f'{settings.API_V1_STR}/ai-documents',
+    tags=['AI Documents'],
+)
+app.include_router(
+    ai_content_router,
+    prefix=f'{settings.API_V1_STR}/ai-content',
+    tags=['AI Content'],
+)
+app.include_router(
+    ai_analytics_router,
+    prefix=f'{settings.API_V1_STR}/ai-analytics',
+    tags=['AI Analytics'],
 )
 
 # Custom OpenAPI schema
