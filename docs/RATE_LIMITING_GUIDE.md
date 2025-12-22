@@ -3,6 +3,7 @@
 ## ✅ What's Implemented
 
 ### 1. Rate Limiter Module
+
 - **File**: `src/common/rate_limiter.py`
 - **Library**: slowapi (already in your project)
 - **Storage**: In-memory (can upgrade to Redis for production)
@@ -14,14 +15,17 @@
   - Rate limit headers (X-RateLimit-*)
 
 ### 2. Global Configuration
+
 - **File**: `src/main.py`
-- **Default Limits**: 
+- **Default Limits**:
   - 200 requests per minute per IP
   - 2000 requests per hour per IP
 - **Automatic**: Applied to all endpoints unless overridden
 
 ### 3. Pre-defined Rate Limits
+
 Ready-to-use constants for common scenarios:
+
 - `AUTH_LIMIT` - 5/minute (login, register)
 - `PASSWORD_RESET_LIMIT` - 3/hour (password reset)
 - `EMAIL_LIMIT` - 10/hour (email sending)
@@ -158,7 +162,8 @@ async def health_check():
 
 ## 🎯 Recommended Rate Limits by Endpoint Type
 
-### Authentication Endpoints:
+### Authentication Endpoints
+
 ```python
 # Login
 @limiter.limit("5/minute")   # Prevent brute force
@@ -172,7 +177,8 @@ async def health_check():
 @limiter.limit("10/minute")  # Lenient - legitimate use case
 ```
 
-### Password & Email:
+### Password & Email
+
 ```python
 # Password reset request
 @limiter.limit("3/hour")     # Very strict
@@ -185,7 +191,8 @@ async def health_check():
 @limiter.limit("5/minute")   # Moderate
 ```
 
-### Organization Operations:
+### Organization Operations
+
 ```python
 # Create organization
 @limiter.limit("30/minute")  # Moderate
@@ -197,7 +204,8 @@ async def health_check():
 @limiter.limit("5/minute")   # Strict - destructive operation
 ```
 
-### API Endpoints:
+### API Endpoints
+
 ```python
 # List/Read operations
 @limiter.limit("100/minute") # Lenient
@@ -215,7 +223,8 @@ async def health_check():
 @limiter.limit("5/minute")   # Strict - expensive
 ```
 
-### Public Endpoints:
+### Public Endpoints
+
 ```python
 # Health check
 @limiter.exempt              # No limit
@@ -233,7 +242,8 @@ async def health_check():
 
 When a client exceeds the rate limit, they receive:
 
-### Response:
+### Response
+
 ```json
 {
   "detail": "Too many requests. Please slow down and try again later.",
@@ -242,10 +252,12 @@ When a client exceeds the rate limit, they receive:
 }
 ```
 
-### Status Code:
+### Status Code
+
 `429 Too Many Requests`
 
-### Headers:
+### Headers
+
 ```
 X-RateLimit-Limit: 5
 X-RateLimit-Remaining: 0
@@ -257,11 +269,11 @@ Retry-After: 60
 
 ## 🔍 Testing Rate Limits
 
-### Test Locally:
+### Test Locally
 
 ```bash
 # Start the app
-poetry run uvicorn src.main:app --reload
+just dev  # or: uv run uvicorn src.main:app --reload
 
 # Test rate limit (make 6 requests quickly)
 for i in {1..6}; do
@@ -274,7 +286,7 @@ done
 # 6th request should return 429
 ```
 
-### View Rate Limit Headers:
+### View Rate Limit Headers
 
 ```bash
 curl -i -X POST http://localhost:8000/api/v1/auth/login \
@@ -287,7 +299,7 @@ curl -i -X POST http://localhost:8000/api/v1/auth/login \
 # X-RateLimit-Reset: 1696147200
 ```
 
-### Check Audit Logs:
+### Check Audit Logs
 
 ```bash
 # Rate limit violations are logged
@@ -300,7 +312,8 @@ cat logs/audit.log | jq 'select(.action=="rate_limit_exceeded")'
 
 For production with multiple server instances, use Redis:
 
-### 1. Install Redis:
+### 1. Install Redis
+
 ```bash
 # Docker
 docker run -d -p 6379:6379 redis:alpine
@@ -308,7 +321,7 @@ docker run -d -p 6379:6379 redis:alpine
 # Or use managed Redis (AWS ElastiCache, etc.)
 ```
 
-### 2. Update Configuration:
+### 2. Update Configuration
 
 ```python
 # File: src/common/rate_limiter.py
@@ -317,14 +330,15 @@ docker run -d -p 6379:6379 redis:alpine
 storage_uri="redis://localhost:6379/0" if IS_PRODUCTION else "memory://",
 ```
 
-### 3. Add to .env:
+### 3. Add to .env
+
 ```bash
 REDIS_URL=redis://localhost:6379/0
 # Or for production:
 REDIS_URL=redis://your-redis-host:6379/0
 ```
 
-### 4. Update Rate Limiter:
+### 4. Update Rate Limiter
 
 ```python
 import os
@@ -341,7 +355,8 @@ limiter = Limiter(
 
 ## 📋 Implementation Checklist
 
-### ✅ Completed:
+### ✅ Completed
+
 - [x] Created rate limiter module
 - [x] Integrated with main app
 - [x] Added custom error handler
@@ -349,7 +364,8 @@ limiter = Limiter(
 - [x] Added real IP detection (proxy support)
 - [x] Defined rate limit presets
 
-### 🎯 To Do This Week:
+### 🎯 To Do This Week
+
 - [ ] Add rate limits to auth endpoints
   - [ ] `/auth/login`
   - [ ] `/auth/register`
@@ -363,7 +379,8 @@ limiter = Limiter(
 - [ ] Test rate limits locally
 - [ ] Verify audit logging works
 
-### 📅 To Do Next Week:
+### 📅 To Do Next Week
+
 - [ ] Review rate limits after monitoring traffic
 - [ ] Set up Redis for production
 - [ ] Add custom rate limits for specific use cases
@@ -373,7 +390,7 @@ limiter = Limiter(
 
 ## 🎨 Customization
 
-### Custom Rate Limit Key:
+### Custom Rate Limit Key
 
 ```python
 # Rate limit per user instead of per IP
@@ -389,7 +406,7 @@ def get_user_id(request: Request) -> str:
 limiter = Limiter(key_func=get_user_id)
 ```
 
-### Dynamic Rate Limits:
+### Dynamic Rate Limits
 
 ```python
 # Different limits based on user role
@@ -418,7 +435,7 @@ async def get_data(
     ...
 ```
 
-### Per-Endpoint Custom Responses:
+### Per-Endpoint Custom Responses
 
 ```python
 @router.post('/critical-endpoint')
@@ -442,22 +459,26 @@ async def critical_endpoint(request: Request):
 
 ## 🛡️ Security Best Practices
 
-### 1. Rate Limit Critical Endpoints:
+### 1. Rate Limit Critical Endpoints
+
 ✅ Always rate limit:
+
 - Login/authentication
 - Password reset
 - Email sending
 - Account creation
 - Payment operations
 
-### 2. Use Multiple Time Windows:
+### 2. Use Multiple Time Windows
+
 ```python
 @limiter.limit("5/minute")   # Short-term protection
 @limiter.limit("20/hour")    # Medium-term protection
 @limiter.limit("100/day")    # Long-term protection
 ```
 
-### 3. Monitor Rate Limit Violations:
+### 3. Monitor Rate Limit Violations
+
 ```bash
 # Check for suspicious IPs
 cat logs/audit.log | jq -r 'select(.action=="rate_limit_exceeded") | .ip_address' | sort | uniq -c | sort -rn
@@ -466,7 +487,8 @@ cat logs/audit.log | jq -r 'select(.action=="rate_limit_exceeded") | .ip_address
 cat logs/audit.log | jq -r 'select(.action=="rate_limit_exceeded") | .metadata.path' | sort | uniq -c | sort -rn
 ```
 
-### 4. Combine with Other Security:
+### 4. Combine with Other Security
+
 - Rate limiting (this)
 - Audit logging (your custom system)
 - CORS configuration
@@ -477,13 +499,15 @@ cat logs/audit.log | jq -r 'select(.action=="rate_limit_exceeded") | .metadata.p
 
 ## ⚠️ Important Notes
 
-### Rate Limiting Won't Save You From:
+### Rate Limiting Won't Save You From
+
 - ❌ Distributed attacks (use CloudFlare or similar)
 - ❌ SQL injection (use parameterized queries - you have this)
 - ❌ XSS attacks (sanitize inputs)
 - ❌ CSRF (use CSRF tokens if needed)
 
-### Rate Limiting WILL Save You From:
+### Rate Limiting WILL Save You From
+
 - ✅ Brute force attacks (login attempts)
 - ✅ API abuse (single IP spamming)
 - ✅ Email spam (verification/invitation spam)
@@ -491,7 +515,7 @@ cat logs/audit.log | jq -r 'select(.action=="rate_limit_exceeded") | .metadata.p
 
 ---
 
-## 🎉 You're Done!
+## 🎉 You're Done
 
 Rate limiting is now implemented! Next steps:
 

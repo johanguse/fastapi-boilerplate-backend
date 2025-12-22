@@ -7,9 +7,11 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 ## 🚀 AI Features Implemented
 
 ### 1. AI Document Intelligence
+
 **Purpose**: Process documents, extract insights, and enable AI-powered search/chat over documents.
 
 **Key Capabilities**:
+
 - Upload and process PDF, DOCX, and TXT files
 - AI-powered text extraction and summarization
 - Key points extraction from documents
@@ -18,6 +20,7 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 - Document library with search functionality
 
 **API Endpoints**:
+
 - `POST /api/v1/ai-documents/upload` - Upload documents
 - `GET /api/v1/ai-documents/` - List documents
 - `GET /api/v1/ai-documents/{id}` - Get document details
@@ -26,9 +29,11 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 - `DELETE /api/v1/ai-documents/{id}` - Delete document
 
 ### 2. AI Content Generation
+
 **Purpose**: Generate marketing copy, blog posts, social media content, emails, etc.
 
 **Key Capabilities**:
+
 - Blog post generation with tone/style controls
 - Marketing copy (product descriptions, ads, emails)
 - Social media posts with hashtag optimization
@@ -38,6 +43,7 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 - Content history and favorites
 
 **API Endpoints**:
+
 - `POST /api/v1/ai-content/generate` - Generate content
 - `GET /api/v1/ai-content/templates` - List templates
 - `POST /api/v1/ai-content/templates` - Create template
@@ -45,9 +51,11 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 - `GET /api/v1/ai-content/stats` - Get usage statistics
 
 ### 3. AI Analytics
+
 **Purpose**: Natural language queries to generate insights, charts, and reports from organization data.
 
 **Key Capabilities**:
+
 - Natural language to SQL conversion
 - Auto-generate charts from data
 - Trend analysis and predictions
@@ -56,6 +64,7 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 - Query safety validation
 
 **API Endpoints**:
+
 - `POST /api/v1/ai-analytics/query` - Process analytics query
 - `GET /api/v1/ai-analytics/queries` - List query history
 - `GET /api/v1/ai-analytics/queries/{id}` - Get specific query
@@ -63,9 +72,11 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 - `GET /api/v1/ai-analytics/insights` - Get quick insights
 
 ### 4. AI Usage Management
+
 **Purpose**: Track usage, enforce limits, and provide billing integration.
 
 **Key Capabilities**:
+
 - Real-time usage tracking
 - Credit-based billing system
 - Feature access control per subscription plan
@@ -73,30 +84,35 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 - Monthly usage reports
 
 **API Endpoints**:
+
 - `GET /api/v1/ai-usage/dashboard` - Get usage dashboard
 - `GET /api/v1/ai-usage/limits` - Get current limits
 
 ## 💰 Subscription Plans & Pricing
 
 ### Free Plan
+
 - **Price**: $0/month
 - **AI Credits**: 10/month
 - **Features**: Documents only
 - **Limits**: 1 project, 1 user, 1GB storage
 
 ### Starter Plan
+
 - **Price**: $9.90/month
 - **AI Credits**: 1,000/month
 - **Features**: Documents + Content Generation
 - **Limits**: 1 project, 3 users, 5GB storage
 
 ### Professional Plan
+
 - **Price**: $29.90/month
 - **AI Credits**: 5,000/month
 - **Features**: All AI features (Documents + Content + Analytics)
 - **Limits**: 5 projects, 10 users, 20GB storage
 
 ### Business Plan
+
 - **Price**: $99.90/month
 - **AI Credits**: 25,000/month
 - **Features**: All AI features + API access
@@ -105,12 +121,14 @@ This SaaS boilerplate now includes comprehensive AI-powered features that transf
 ## 🔧 Technical Architecture
 
 ### AI Provider Support
+
 - **OpenAI**: GPT-4 Turbo, GPT-4, text-embedding-3-small (Direct API)
 - **OpenRouter**: Access to OpenAI, Anthropic, Google, Meta models via unified API (Cost-effective)
 - **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus (Direct API)
 - **Configurable**: Switch between providers via environment variables
 
 ### Database Schema
+
 ```sql
 -- AI Usage Tracking
 ai_usage_logs (id, organization_id, user_id, feature, operation, tokens_used, cost, created_at)
@@ -132,6 +150,7 @@ subscription_plans (max_ai_credits_monthly, ai_features_enabled)
 ```
 
 ### Credit System
+
 - **1 Credit ≈ 1,000 tokens**
 - **Document processing**: 10-50 credits per document
 - **Content generation**: 5-20 credits per generation
@@ -141,6 +160,7 @@ subscription_plans (max_ai_credits_monthly, ai_features_enabled)
 ## 🚀 Getting Started
 
 ### 1. Environment Setup
+
 Add these environment variables to your `.env` file:
 
 ```env
@@ -165,15 +185,18 @@ AI_MAX_TOKENS=4096
 **Recommendation**: Start with OpenRouter for cost savings, switch to direct APIs for production if needed.
 
 ### 2. Database Migration
+
 Run the migration to create AI tables:
+
 ```bash
-poetry run alembic upgrade head
+just migrate  # or: uv run alembic upgrade head
 ```
 
 ### 3. Test AI Features
+
 ```bash
 # Start the server
-poetry run uvicorn src.main:app --reload
+just dev  # or: uv run uvicorn src.main:app --reload
 
 # Test document upload
 curl -X POST "http://localhost:8000/api/v1/ai-documents/upload" \
@@ -204,14 +227,18 @@ curl -X POST "http://localhost:8000/api/v1/ai-analytics/query" \
 ## 📊 Usage Monitoring
 
 ### Real-time Usage Tracking
+
 All AI operations are automatically tracked:
+
 - Token usage per operation
 - Cost calculation
 - Feature usage by organization
 - Monthly usage summaries
 
 ### Usage Dashboard
+
 Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
+
 - Current credit usage
 - Features enabled for your plan
 - Usage by feature type
@@ -221,12 +248,14 @@ Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
 ## 🔒 Security & Limits
 
 ### Usage Limits
+
 - Automatic enforcement of monthly credit limits
 - Feature access control based on subscription plan
 - Rate limiting on AI endpoints
 - Query safety validation for analytics
 
 ### Data Privacy
+
 - Documents are processed securely
 - No data is stored with AI providers beyond processing
 - All embeddings and processed data stored in your database
@@ -235,16 +264,19 @@ Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
 ## 🎯 Business Value
 
 ### Revenue Generation
+
 - **Credit-based billing**: Direct revenue from AI usage
 - **Tiered pricing**: Higher tiers unlock more AI features
 - **Usage-based scaling**: Revenue grows with customer usage
 
 ### Customer Retention
+
 - **Sticky features**: AI becomes integral to workflows
 - **Value demonstration**: Immediate ROI from AI features
 - **Competitive advantage**: AI-powered differentiation
 
 ### Market Positioning
+
 - **Modern SaaS**: AI-first approach attracts customers
 - **Developer-friendly**: Clean APIs for customization
 - **Scalable architecture**: Ready for enterprise customers
@@ -252,6 +284,7 @@ Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
 ## 🛠 Customization Guide
 
 ### Adding New AI Features
+
 1. Create new model in `src/ai_[feature]/models.py`
 2. Implement service in `src/ai_[feature]/service.py`
 3. Add routes in `src/ai_[feature]/routes.py`
@@ -259,12 +292,14 @@ Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
 5. Add usage tracking
 
 ### Custom AI Providers
+
 1. Extend `AIProvider` base class
 2. Implement required methods
 3. Add configuration options
 4. Update provider selection logic
 
 ### Custom Content Templates
+
 1. Create templates via API or database
 2. Use template variables in prompts
 3. Customize tone, style, and length options
@@ -273,12 +308,14 @@ Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
 ## 📈 Performance & Scaling
 
 ### Optimization Strategies
+
 - **Async processing**: All AI operations are asynchronous
 - **Caching**: Embeddings and results cached
 - **Rate limiting**: Prevents abuse and controls costs
 - **Background processing**: Document processing runs in background
 
 ### Scaling Considerations
+
 - **Database**: Consider pgvector for production embeddings
 - **Storage**: Use CDN for document storage
 - **Caching**: Redis for frequently accessed data
@@ -287,12 +324,14 @@ Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
 ## 🔮 Future Enhancements
 
 ### Planned Features
+
 - **Multi-modal AI**: Image and video processing
 - **Custom AI models**: Fine-tuned models for specific use cases
 - **Advanced analytics**: Predictive analytics and forecasting
 - **API marketplace**: Third-party AI integrations
 
 ### Integration Opportunities
+
 - **CRM systems**: AI-powered lead analysis
 - **Email marketing**: AI-generated campaigns
 - **Customer support**: AI-powered chatbots
@@ -301,16 +340,19 @@ Access the usage dashboard at `/api/v1/ai-usage/dashboard` to see:
 ## 📞 Support & Resources
 
 ### Documentation
+
 - API documentation available at `/docs` (development)
 - OpenAPI schema at `/openapi.json`
 - Example implementations in tests
 
 ### Community
+
 - GitHub issues for bug reports
 - Feature requests welcome
 - Community discussions encouraged
 
 ### Enterprise Support
+
 - Custom AI model training
 - White-label solutions
 - Dedicated support channels

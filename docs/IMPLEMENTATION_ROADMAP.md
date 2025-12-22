@@ -169,7 +169,7 @@ SUPPORTED_LANGUAGES = [
 bun add react-i18next i18next i18next-browser-languagedetector
 
 # Backend dependencies
-poetry add babel python-babel
+uv add babel python-babel
 ```
 
 #### Implementation
@@ -209,7 +209,7 @@ poetry add babel python-babel
 #### Backend Security
 ```python
 # Add dependencies
-poetry add python-jose[cryptography] slowapi
+uv add python-jose[cryptography] slowapi
 ```
 
 1. **Rate Limiting** (Day 1-2)
@@ -226,7 +226,7 @@ poetry add python-jose[cryptography] slowapi
 #### Error Tracking
 ```bash
 # Add Sentry
-poetry add sentry-sdk[fastapi]
+uv add sentry-sdk[fastapi]
 bun add @sentry/react @sentry/tracing
 ```
 

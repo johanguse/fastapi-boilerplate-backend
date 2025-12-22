@@ -28,10 +28,11 @@ The seed script **automatically resets the database** before creating fresh data
 
 ```bash
 cd backend
-poetry run python scripts/run_seed.py
+uv run python scripts/run_seed.py
 ```
 
 This will:
+
 1. ✅ Drop all existing tables
 2. ✅ Recreate all tables from SQLAlchemy models
 3. ✅ Populate with fresh seed data
@@ -41,19 +42,21 @@ This will:
 ## 📦 What Gets Created
 
 ### Users (9 total)
-- **admin@example.com** - Admin (superuser)
-- **john@example.com** - Member (active, verified)
-- **jane@example.com** - Member (active, verified)
-- **sarah@example.com** - Member (active, verified)
-- **bob@example.com** - Member (invited, not verified)
-- **alice@example.com** - Member (invited, not verified)
-- **suspended@example.com** - Member (suspended)
-- **mike@example.com** - Member (active, verified)
-- **emma@example.com** - Admin (active, verified)
+
+- **<admin@example.com>** - Admin (superuser)
+- **<john@example.com>** - Member (active, verified)
+- **<jane@example.com>** - Member (active, verified)
+- **<sarah@example.com>** - Member (active, verified)
+- **<bob@example.com>** - Member (invited, not verified)
+- **<alice@example.com>** - Member (invited, not verified)
+- **<suspended@example.com>** - Member (suspended)
+- **<mike@example.com>** - Member (active, verified)
+- **<emma@example.com>** - Admin (active, verified)
 
 **Password for all users**: `admin123`
 
 ### Organizations (5)
+
 - Development Team
 - Marketing Team
 - Research Team
@@ -61,6 +64,7 @@ This will:
 - Customer Success
 
 ### Projects (7)
+
 - AI Chatbot Platform
 - Content Generation Tool
 - Document Analyzer
@@ -70,12 +74,14 @@ This will:
 - Email Campaign Manager
 
 ### Activity Logs (100+)
+
 - Diverse action types: auth, organization, project, security, system, payment
 - 8 different IP addresses
 - 8 different user agents
 - Timestamps spread over 90 days
 
 ### Subscriptions (5)
+
 - **Development Team**: Business Plan - $99.90/mo (active)
 - **Marketing Team**: Pro Plan - $29.90/mo (active)
 - **Research Team**: Starter Plan - $9.90/mo (active)
@@ -83,6 +89,7 @@ This will:
 - **Customer Success**: Free Plan
 
 ### Billing History (6 records)
+
 - Total Revenue: **$369.40**
 - Spread across 3 organizations
 - Realistic payment timestamps
@@ -90,18 +97,23 @@ This will:
 ## 🔧 Modular Structure Benefits
 
 ### Easy to Maintain
+
 Each data type is in its own file, making it easy to:
+
 - Find and update specific seed data
 - Add new data types
 - Modify existing data without affecting others
 
 ### Easy to Extend
+
 To add new seed data:
+
 1. Create a new file in `scripts/seed/` (e.g., `teams.py`)
 2. Define a creation function
 3. Import and call it in `run_seed.py`
 
 Example:
+
 ```python
 # scripts/seed/teams.py
 def create_teams(organizations):
@@ -121,41 +133,48 @@ await session.commit()
 ```
 
 ### Reusable Components
+
 - `constants.py`: Shared utilities like `random_ip()` and `random_user_agent()`
 - `reset.py`: Database reset logic (reusable across different seed scripts)
 
 ## 🎯 Development Workflow
 
 ### First Time Setup
+
 ```bash
 cd backend
 
 # Run seed (automatic reset)
-poetry run python scripts/run_seed.py
+uv run python scripts/run_seed.py
 ```
 
 ### Daily Development
+
 ```bash
 # Just run seed - it resets everything automatically
-poetry run python scripts/run_seed.py
+just seed  # or: uv run python scripts/run_seed.py
 ```
 
 ### After Model Changes
+
 ```bash
 # The seed script uses Base.metadata.create_all()
 # So it automatically picks up model changes
-poetry run python scripts/run_seed.py
+just seed  # or: uv run python scripts/run_seed.py
 ```
 
 ## ⚙️ How It Works
 
 ### Automatic Reset
+
 The `run_seed.py` script calls `reset_database()` which:
+
 1. Drops all tables: `Base.metadata.drop_all()`
 2. Drops enum types: `DROP TYPE ... CASCADE`
 3. Recreates tables: `Base.metadata.create_all()`
 
 ### Data Creation Flow
+
 ```
 1. Subscription Plans (foundation)
 2. Users (independent)
@@ -171,13 +190,17 @@ The `run_seed.py` script calls `reset_database()` which:
 ## 📝 Customization
 
 ### Change Default Password
+
 Edit `scripts/seed/constants.py`:
+
 ```python
 DEFAULT_PASSWORD = "your_password_here"
 ```
 
 ### Add More Users
+
 Edit `scripts/seed/users.py`:
+
 ```python
 def create_users():
     users = [
@@ -192,7 +215,9 @@ def create_users():
 ```
 
 ### Modify Activity Log Diversity
+
 Edit `scripts/seed/constants.py` to add more:
+
 - IP addresses
 - User agents
 - Any other reusable data
@@ -200,13 +225,17 @@ Edit `scripts/seed/constants.py` to add more:
 ## 🔒 Safety Features
 
 ### Development Only
+
 The seed script is designed for **development only**. In production:
+
 - Never run the seed script
 - Use proper migrations (Alembic)
 - Import real data through APIs or migration scripts
 
 ### Confirmation (Optional)
+
 If you want to add a confirmation prompt, modify `run_seed.py`:
+
 ```python
 async def run_seed():
     print("⚠️  WARNING: This will delete ALL data!")
@@ -220,23 +249,29 @@ async def run_seed():
 ## 🐛 Troubleshooting
 
 ### "Table already exists"
+
 The reset should handle this, but if you get this error:
+
 ```bash
-poetry run python scripts/drop_alembic_version.py
-poetry run python scripts/run_seed.py
+uv run python scripts/drop_alembic_version.py
+uv run python scripts/run_seed.py
 ```
 
 ### "Cannot connect to database"
+
 Check your `.env` file has the correct `DATABASE_URL`:
+
 ```env
 DATABASE_URL=postgresql://user:pass@host/database
 ```
 
 ### Import Errors
+
 Make sure you're running from the `backend` directory:
+
 ```bash
 cd backend
-poetry run python scripts/run_seed.py
+just seed  # or: uv run python scripts/run_seed.py
 ```
 
 ## 📚 Related Documentation
@@ -248,6 +283,7 @@ poetry run python scripts/run_seed.py
 ## ⚡ Performance Tips
 
 The seed script is optimized for speed:
+
 - ✅ Bulk creates (add all, then single commit)
 - ✅ Minimal refreshes (only when IDs needed)
 - ✅ Single database connection

@@ -23,7 +23,8 @@ This is a comprehensive SaaS boilerplate with AI-powered features including docu
 - PostgreSQL
 - Uvicorn
 - Pytest
-- Poetry
+- UV (package manager)
+- just (task runner)
 - Ruff
 - Docker
 - **AI Integration**: OpenAI, Anthropic, LangChain
@@ -53,13 +54,100 @@ This boilerplate includes production-ready performance optimizations:
 
 ## Local Development Setup
 
-### Using Poetry (without Docker)
+### Prerequisites
+
+#### Install UV (Package Manager)
+
+UV is a fast Python package manager. Install it following the [official guide](https://docs.astral.sh/uv/getting-started/installation/):
+
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# Or using pip
+pip install uv
+```
+
+#### Install just (Task Runner)
+
+`just` is a command runner for executing project tasks. Install it using one of these methods:
+
+```bash
+# Ubuntu/Debian
+sudo apt install just
+
+# macOS (Homebrew)
+brew install just
+
+# Windows (Scoop)
+scoop install just
+
+# Using cargo (Rust)
+cargo install just
+
+# Using prebuilt binary (Linux/macOS)
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
+```
+
+See the [just installation guide](https://github.com/casey/just#installation) for more options.
+
+### Using UV (without Docker)
 
 1. Clone the repository
 2. Copy `.env.example` to `.env` and update the values
-3. Run `poetry shell`
-4. Run `poetry install`
-5. Run `task run`
+3. Run `uv sync` to install dependencies
+4. Run `just dev` to start the development server
+
+### Available Commands
+
+Run `just --list` to see all available commands:
+
+| Command | Description |
+|---------|-------------|
+| `just dev` | Start development server with hot reload |
+| `just test` | Run tests with coverage |
+| `just lint` | Run linting checks |
+| `just format` | Format code with ruff |
+| `just migrate` | Run database migrations |
+| `just seed` | Seed database with sample data |
+| `just reset-and-seed` | Reset database and seed |
+
+**Without `just` installed**, use `uv run` directly:
+
+```bash
+# Start dev server
+uv run uvicorn src.main:app --reload --port 8000
+
+# Run tests
+uv run pytest -s -x --cov=src -vv
+
+# Run migrations
+uv run alembic upgrade head
+
+# Seed database
+uv run python scripts/run_seed.py
+```
+
+### Running with Multiple Workers (Production)
+
+For production or load testing, run with multiple workers:
+
+```bash
+# Using Uvicorn (workers and reload are mutually exclusive)
+uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# Using Gunicorn (recommended for production)
+# Auto-calculates workers based on CPU cores (CPU * 2 + 1)
+uv run gunicorn -c gunicorn.conf.py src.main:app
+
+# Or specify workers manually with Gunicorn
+uv run gunicorn src.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+> **Note**: Use `--reload` for development (single worker, auto-restart on code changes). Use `--workers` for production (multiple workers, no auto-reload).
 
 ### Using Docker
 
@@ -73,9 +161,9 @@ cp docker/.env.example ./.env.docker.dev
 cp docker/.env.example ./.env.docker.prod
 ```
 
-2. Review and update the environment files with your values
+1. Review and update the environment files with your values
 
-3. Run development environment:
+2. Run development environment:
 
 ```bash
 # Start the services
@@ -141,7 +229,7 @@ docker rmi fastapi-app-dev
 docker-compose -f docker/docker-compose.yml exec db psql -U postgres
 
 # Run migrations
-docker-compose -f docker/docker-compose.yml exec web poetry run alembic upgrade head
+docker-compose -f docker/docker-compose.yml exec web uv run alembic upgrade head
 ```
 
 #### Stop and Clean Up
@@ -191,17 +279,20 @@ docker compose -f docker/docker-compose.prod.yml logs -f
 Seed the database with sample data for development:
 
 ```bash
-# Using Poetry
-poetry run python scripts/seed.py
+# Using UV
+just seed
+
+# Or directly
+uv run python scripts/seed.py
 
 # Using Docker
-docker-compose -f docker/docker-compose.yml exec web poetry run python scripts/seed.py
+docker-compose -f docker/docker-compose.yml exec web uv run python scripts/seed.py
 ```
 
 **Or run fresh seed** (deletes all data first):
 
    ```bash
-   poetry run python scripts/seed_fresh.py
+   uv run python scripts/seed_fresh.py
    ```
 
 ### Seed Data Includes
@@ -244,19 +335,19 @@ All seed users share the same password: **`admin123`**
 
 ## Testing
 
-Run `task test`
+Run `just test`
 
 For running specific test files:
 
 ```bash
 # Run all auth tests
-task test-auth
+just test-auth
 
 # Run a specific test
-poetry run pytest tests/test_auth.py::test_login_success -v
+uv run pytest tests/test_auth.py::test_login_success -v
 
 # Run tests with watch mode (auto-rerun on file changes)
-task test-watch
+just test-watch
 ```
 
 ### Testing with SQLAlchemy ORM
@@ -313,13 +404,13 @@ When writing tests for FastAPI endpoints that use SQLAlchemy models, you might e
 Format code:
 
 ```bash
-task format
+just format
 ```
 
 Lint code:
 
 ```bash
-task lint
+just lint
 ```
 
 ## Database Management
@@ -360,7 +451,9 @@ alembic revision --autogenerate -m "initial"
 Upgrade database:
 
 ```bash
-poetry run alembic upgrade head
+just migrate
+# Or directly:
+uv run alembic upgrade head
 ```
 
 ## Environment Variables

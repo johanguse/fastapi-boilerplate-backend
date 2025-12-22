@@ -114,7 +114,7 @@ ALLOWED_ORIGINS=https://yourapp.com,https://www.yourapp.com
 **Fix Required:**
 ```bash
 # Install dependencies
-poetry add slowapi
+uv add slowapi
 ```
 
 **Implementation:**
@@ -483,7 +483,7 @@ async def login(request: Request, credentials: LoginCredentials, ...):
 **Fix Required:**
 ```bash
 # Install dependency
-poetry add bleach
+uv add bleach
 ```
 
 **Implementation:**
@@ -648,7 +648,7 @@ engine = create_async_engine(
 - [ ] Create incident response plan
 
 ### 📊 Ongoing:
-- [ ] Regular dependency updates (`poetry update`)
+- [ ] Regular dependency updates (`uv sync --upgrade`)
 - [ ] Security vulnerability scanning
 - [ ] Penetration testing (quarterly)
 - [ ] Security training for team
@@ -743,15 +743,15 @@ engine = create_async_engine(
 ### Testing
 ```bash
 # Security vulnerability scanning
-poetry add --group dev bandit safety
+uv add --group dev bandit safety
 
 # Run security checks
-poetry run bandit -r src/
-poetry run safety check
+uv run bandit -r src/
+uv run safety check
 
 # In CI/CD
-poetry run bandit -r src/ -f json -o bandit-report.json
-poetry run safety check --json > safety-report.json
+uv run bandit -r src/ -f json -o bandit-report.json
+uv run safety check --json > safety-report.json
 ```
 
 ---

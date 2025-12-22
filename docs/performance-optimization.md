@@ -18,6 +18,7 @@ Based on the FastAPI performance article "[Erros no FastAPI Que DESTROEM Sua Per
 ### 1. High-Performance Dependencies
 
 #### ORJSON Response Class
+
 ```python
 # src/main.py
 from fastapi.responses import ORJSONResponse
@@ -31,12 +32,14 @@ app = FastAPI(
 **Impact**: 20-50% faster JSON serialization, especially for large responses with nested data structures.
 
 #### uvloop and httptools
+
 ```bash
 # Install for Linux/macOS (Windows not supported)
-poetry add uvloop httptools
+uv add uvloop httptools
 ```
 
-**Impact**: 
+**Impact**:
+
 - **uvloop**: 2-4x better throughput under high concurrency
 - **httptools**: 40% faster HTTP parsing
 
@@ -71,6 +74,7 @@ class PerformanceMiddleware:
 ### 4. Dependency Caching
 
 #### Settings Caching
+
 ```python
 # src/common/config.py
 from functools import lru_cache
@@ -81,6 +85,7 @@ def get_settings() -> Settings:
 ```
 
 #### I18n Manager Caching
+
 ```python
 # src/common/i18n.py
 @lru_cache()
@@ -97,6 +102,7 @@ def get_fallback_language(cls, lang_code: str) -> str:
 ### 5. Streaming Responses
 
 #### Memory-Efficient Large Data Export
+
 ```python
 # src/common/streaming.py
 class JSONStreamer:
@@ -115,6 +121,7 @@ class JSONStreamer:
 ```
 
 **Endpoints**:
+
 - `GET /api/v1/organizations/export/json` - Stream organizations as JSON
 - `GET /api/v1/organizations/export/csv` - Stream organizations as CSV
 - `GET /api/v1/projects/export/json` - Stream projects as JSON
@@ -142,6 +149,7 @@ class DatabaseStreamer:
 ### 7. Performance Monitoring
 
 #### Comprehensive Metrics Collection
+
 ```python
 # src/common/monitoring.py
 @dataclass
@@ -158,11 +166,13 @@ class RequestMetrics:
 ```
 
 #### Monitoring Endpoints
+
 - `GET /api/v1/metrics` - Overall performance metrics
 - `GET /api/v1/metrics/endpoints` - Per-endpoint statistics
 - `GET /api/v1/metrics/recent` - Recent request details
 
 #### Function Timing Decorator
+
 ```python
 # src/common/monitoring.py
 @time_operation("create_organization")
@@ -205,6 +215,7 @@ def get_worker_count() -> int:
 ```
 
 **Guidelines**:
+
 - **I/O-heavy workloads** (most APIs): `CPU cores × 2 + 1`
 - **CPU-heavy workloads**: `CPU cores`
 - **Mixed workloads**: `CPU cores × 1.5`
