@@ -24,7 +24,7 @@ async def create_email_verification_token(
 ) -> EmailVerificationToken:
     """Create and send email verification token."""
     from src.invitations.models import generate_token
-    
+
     # Create token
     token = EmailVerificationToken(
         user_id=user.id,

@@ -209,16 +209,16 @@ Answer:"""
     ) -> str:
         """Generate content based on type and parameters."""
         prompts = {
-            "blog_post": f"""Write a {tone} blog post about "{topic}". 
+            "blog_post": f"""Write a {tone} blog post about "{topic}".
             Length: {length}. Include an engaging title, introduction, main points, and conclusion.""",
 
-            "email": f"""Write a {tone} email about "{topic}". 
+            "email": f"""Write a {tone} email about "{topic}".
             Length: {length}. Make it engaging and actionable.""",
 
-            "social_media": f"""Write a {tone} social media post about "{topic}". 
+            "social_media": f"""Write a {tone} social media post about "{topic}".
             Length: {length}. Make it engaging and include relevant hashtags.""",
 
-            "product_description": f"""Write a {tone} product description for "{topic}". 
+            "product_description": f"""Write a {tone} product description for "{topic}".
             Length: {length}. Highlight key features and benefits.""",
         }
 

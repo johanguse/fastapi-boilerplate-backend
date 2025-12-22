@@ -2,7 +2,14 @@
 Email-related routes for verification and password reset.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from loguru import logger
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
@@ -157,7 +164,7 @@ async def verify_email(
     """
     # Look up the token WITHOUT deleting it first
     from datetime import datetime, timezone
-    
+
     if not data.token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -166,9 +173,9 @@ async def verify_email(
                 'message': 'Verification token is required',
             },
         )
-    
+
     logger.info(f'Verifying email with token (hash: {token_service.hash_token(data.token)[:16]}...)')
-    
+
     token_hash = token_service.hash_token(data.token)
     token_result = await session.execute(
         select(EmailToken).where(
@@ -177,21 +184,21 @@ async def verify_email(
         )
     )
     email_token_record = token_result.scalars().first()
-    
+
     if email_token_record:
         logger.info(f'Token found for email: {email_token_record.user_email}')
     else:
-        logger.warning(f'Token not found in database - may have been used or invalid')
-    
+        logger.warning('Token not found in database - may have been used or invalid')
+
     if not email_token_record:
         # Token doesn't exist - it might have been used already or invalid
         # Since we can't determine which user this was for without the token,
         # we return a clear error message
         error_msg = translate_message(
-            'auth.invalid_or_expired_verification_token', 
+            'auth.invalid_or_expired_verification_token',
             request
         ) or 'Invalid or expired verification token. If you\'ve already verified your email, you can proceed to login.'
-        
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -199,17 +206,17 @@ async def verify_email(
                 'message': error_msg,
             },
         )
-    
+
     # Check if token is expired
     if email_token_record.expires_at <= datetime.now(timezone.utc):
         # Token expired, delete it
         await session.delete(email_token_record)
         await session.commit()
         error_msg = translate_message(
-            'auth.invalid_or_expired_verification_token', 
+            'auth.invalid_or_expired_verification_token',
             request
         ) or 'This verification link has expired. Please request a new one.'
-        
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -217,10 +224,10 @@ async def verify_email(
                 'message': error_msg,
             },
         )
-    
+
     # Token is valid - get the email
     user_email = email_token_record.user_email
-    
+
     # Find user
     user_result = await session.execute(
         select(User).where(User.email == user_email)

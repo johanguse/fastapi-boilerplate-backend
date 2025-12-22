@@ -42,7 +42,7 @@ def _process_method(method: dict[str, Any]) -> None:
 
 def _generate_clean_operation_id(path: str, http_method: str, operation: dict[str, Any]) -> str:
     """Generate clean operation ID for better SDK method names.
-    
+
     Converts paths like:
     - /api/v1/auth/sign-in/email -> authSignInEmail
     - /api/v1/users/{user_id} -> usersGetById (for GET), usersUpdateById (for PUT)
@@ -50,10 +50,10 @@ def _generate_clean_operation_id(path: str, http_method: str, operation: dict[st
     """
     # Remove API prefix
     clean_path = path.replace(settings.API_V1_STR, '').strip('/')
-    
+
     # Split path into segments
     segments = clean_path.split('/')
-    
+
     # Remove path parameters (e.g., {user_id})
     clean_segments = []
     has_path_param = False
@@ -70,10 +70,10 @@ def _generate_clean_operation_id(path: str, http_method: str, operation: dict[st
                 # Keep first segment lowercase
                 segment = parts[0] + ''.join(p.capitalize() for p in parts[1:])
             clean_segments.append(segment)
-    
+
     # Build base name
     base_name = ''.join(s.capitalize() if i > 0 else s for i, s in enumerate(clean_segments))
-    
+
     # Add action based on HTTP method and path parameters
     method_prefixes = {
         'get': 'get' if has_path_param else 'list',
@@ -82,17 +82,17 @@ def _generate_clean_operation_id(path: str, http_method: str, operation: dict[st
         'patch': 'update',
         'delete': 'delete',
     }
-    
+
     prefix = method_prefixes.get(http_method.lower(), http_method.lower())
-    
+
     # Special case: if it looks like an action endpoint (sign-in, sign-out, etc.)
     # just use the path as the operation name
-    action_patterns = ['signIn', 'signUp', 'signOut', 'forgotPassword', 'resetPassword', 
+    action_patterns = ['signIn', 'signUp', 'signOut', 'forgotPassword', 'resetPassword',
                        'verify', 'refresh', 'resend', 'callback']
     for pattern in action_patterns:
         if pattern.lower() in base_name.lower():
             return base_name[0].lower() + base_name[1:]
-    
+
     # For standard CRUD operations
     if has_path_param:
         return f'{base_name}{prefix.capitalize()}ById'

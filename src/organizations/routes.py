@@ -1,9 +1,10 @@
+import logging
+import uuid
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi_pagination import paginate
 from sqlalchemy.ext.asyncio import AsyncSession
-import logging
-import uuid
 
 from src.auth.models import User
 from src.common.config import settings

@@ -259,9 +259,9 @@ async def save_all_onboarding_data(
             org_name = organization_data.get('name') or current_user.company or f"{current_user.name}'s Organization"
             org_slug = organization_data.get('slug')
             org_description = organization_data.get('description')
-            
+
             org_create = OrganizationCreate(
-                name=org_name, 
+                name=org_name,
                 slug=org_slug,
                 description=org_description
             )

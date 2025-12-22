@@ -1,6 +1,7 @@
 """AI provider abstraction layer."""
 
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 
@@ -9,6 +10,8 @@ from anthropic import Anthropic
 from openai import AsyncOpenAI
 
 from src.common.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class AIProvider(ABC):

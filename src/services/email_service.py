@@ -295,15 +295,15 @@ class EmailService:
                         <h2 style="color: #333; margin-top: 0;">Your verification code</h2>
                         <p>Hi {display_name},</p>
                         <p>Use this code to complete your registration or login:</p>
-                        
+
                         <div style="text-align: center; margin: 30px 0;">
-                            <div style="background-color: #007bff; color: white; padding: 20px; 
-                                        border-radius: 10px; font-size: 32px; font-weight: bold; 
+                            <div style="background-color: #007bff; color: white; padding: 20px;
+                                        border-radius: 10px; font-size: 32px; font-weight: bold;
                                         letter-spacing: 5px; display: inline-block;">
                                 {otp_code}
                             </div>
                         </div>
-                        
+
                         <p><strong>This code expires in 15 minutes.</strong></p>
                         <p>If you didn't request this code, you can safely ignore this email.</p>
                     </div>

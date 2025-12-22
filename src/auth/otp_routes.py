@@ -119,7 +119,7 @@ async def send_otp(
             email_sent = await email_service.send_otp_email(
                 request.email, otp_code, user.name if user else None
             )
-            
+
             logger.info(f'Email service returned: {email_sent}')
 
             if not email_sent:

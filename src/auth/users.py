@@ -24,7 +24,7 @@ async def get_user_db(session: AsyncSession = Depends(get_async_session)):
 class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = settings.JWT_SECRET
     verification_token_secret = settings.JWT_SECRET
-    
+
     # Override to allow unverified users to login
     # Email verification is optional - users will see a banner to verify
     async def authenticate(self, credentials):
@@ -45,7 +45,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         )
         if not verified:
             return None
-        
+
         # Update password hash to a more robust one if needed
         if updated_password_hash is not None:
             user.hashed_password = updated_password_hash
@@ -54,14 +54,14 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         # Skip the is_verified check - allow unverified users to login
         # They will see the email verification banner in the UI
         return user
-    
+
     # Allow unverified users to login - verification is optional
     # They'll see a banner in the UI to verify their email
     async def on_after_login(
         self,
         user: User,
         request: Optional[Request] = None,
-        response = None,
+        response=None,
     ):
         """Override to skip email verification check on login."""
         if request:

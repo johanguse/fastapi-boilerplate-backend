@@ -20,7 +20,6 @@ from src.auth.email_routes import router as auth_email_router
 from src.auth.profile_routes import router as profile_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
-from src.invitations.routes import router as invitations_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
@@ -29,6 +28,7 @@ from src.common.monitoring import add_performance_monitoring
 from src.common.openapi import custom_openapi
 from src.common.rate_limiter import limiter, rate_limit_exceeded_handler
 from src.common.session import engine
+from src.invitations.routes import router as invitations_router
 from src.organizations.routes import router as org_router
 from src.payments.routes import router as payments_router
 from src.payments.webhooks import router as payments_webhook_router

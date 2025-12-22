@@ -192,10 +192,10 @@ async def get_quick_insights(
                 detail="User must belong to an organization"
             )
 
-        organization_id = current_user.organizations[0].id
+        current_user.organizations[0].id
 
         # Generate some quick insights about the organization
-        service = AIAnalyticsService(db)
+        AIAnalyticsService(db)
 
         # This would typically run some predefined queries
         # For now, return placeholder insights

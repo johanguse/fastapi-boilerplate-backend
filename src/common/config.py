@@ -181,7 +181,7 @@ class Settings(BaseSettings):
         'image/png',
         'image/jpeg',
     ]
-    
+
     ALLOWED_IMAGE_TYPES: list[str] = [
         'image/jpeg',
         'image/jpg',

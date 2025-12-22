@@ -99,7 +99,7 @@ class AIAnalyticsService:
             # Get database schema information
             schema_info = await self._get_database_schema()
 
-            prompt = f"""Convert the following natural language query to SQL. 
+            prompt = f"""Convert the following natural language query to SQL.
             Use only the tables and columns provided in the schema.
 
             Database Schema:

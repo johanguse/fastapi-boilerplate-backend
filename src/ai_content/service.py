@@ -57,7 +57,7 @@ class AIContentService:
             select(AIContentTemplate)
             .where(
                 AIContentTemplate.organization_id == organization_id,
-                AIContentTemplate.is_active == True
+                AIContentTemplate.is_active
             )
             .offset(skip)
             .limit(limit)
@@ -228,27 +228,27 @@ class AIContentService:
 
         # Use default prompts
         prompts = {
-            "blog_post": f"""Write a {tone} blog post about "{topic}". 
+            "blog_post": f"""Write a {tone} blog post about "{topic}".
             Length: {length}. Language: {language}.
             Include an engaging title, introduction, main points, and conclusion.
             {additional_instructions or ""}""",
 
-            "email": f"""Write a {tone} email about "{topic}". 
+            "email": f"""Write a {tone} email about "{topic}".
             Length: {length}. Language: {language}.
             Make it engaging and actionable.
             {additional_instructions or ""}""",
 
-            "social_media": f"""Write a {tone} social media post about "{topic}". 
+            "social_media": f"""Write a {tone} social media post about "{topic}".
             Length: {length}. Language: {language}.
             Make it engaging and include relevant hashtags.
             {additional_instructions or ""}""",
 
-            "product_description": f"""Write a {tone} product description for "{topic}". 
+            "product_description": f"""Write a {tone} product description for "{topic}".
             Length: {length}. Language: {language}.
             Highlight key features and benefits.
             {additional_instructions or ""}""",
 
-            "marketing_copy": f"""Write {tone} marketing copy about "{topic}". 
+            "marketing_copy": f"""Write {tone} marketing copy about "{topic}".
             Length: {length}. Language: {language}.
             Focus on benefits and call-to-action.
             {additional_instructions or ""}""",

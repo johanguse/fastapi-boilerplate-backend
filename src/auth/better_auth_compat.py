@@ -1361,7 +1361,7 @@ async def get_onboarding_status(
 ):
     """Get user onboarding status"""
     user = await _get_user_from_request(request, session)
-    
+
     return {
         'onboarding_completed': user.onboarding_completed,
         'onboarding_step': user.onboarding_step,
@@ -1391,9 +1391,9 @@ async def update_onboarding_profile(
     # Debug logging
     logger.info(f'Profile update request - Cookies: {request.cookies}')
     logger.info(f'Profile update request - Headers: {dict(request.headers)}')
-    
+
     user = await _get_user_from_request(request, session)
-    
+
     # Update user fields
     user.name = profile_data.name
     if hasattr(user, 'company'):
@@ -1408,12 +1408,12 @@ async def update_onboarding_profile(
         user.bio = profile_data.bio  # type: ignore
     if hasattr(user, 'website'):
         user.website = profile_data.website  # type: ignore
-    
+
     # Update onboarding progress
     user.onboarding_step = 1
-    
+
     await session.commit()
-    
+
     return {
         'success': True,
         'user': {
@@ -1432,12 +1432,12 @@ async def complete_onboarding(
 ):
     """Mark onboarding as complete"""
     user = await _get_user_from_request(request, session)
-    
+
     # Update user onboarding status
     user.onboarding_completed = True
     user.onboarding_step = 3  # Final step
     await session.commit()
-    
+
     return {
         'success': True,
         'user': {
@@ -1456,29 +1456,31 @@ async def create_onboarding_organization(
 ):
     """Create user's first organization during onboarding"""
     user = await _get_user_from_request(request, session)
-    
+
     try:
         # Parse request body
         payload = await request.json()
     except Exception:
         payload = {}
-    
+
     # Get organization details from request
     org_name = payload.get('name') or f"{user.name}'s Organization"
     org_slug = payload.get('slug')
-    
+
     # Create organization
     from src.organizations.schemas import OrganizationCreate
-    from src.organizations.service import create_organization as create_organization_service
-    
+    from src.organizations.service import (
+        create_organization as create_organization_service,
+    )
+
     try:
         org_create = OrganizationCreate(name=org_name, slug=org_slug)
         organization = await create_organization_service(session, org_create, user)
-        
+
         # Update onboarding step
         user.onboarding_step = 2
         await session.commit()
-        
+
         return {
             'success': True,
             'organization': {

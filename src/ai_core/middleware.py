@@ -1,7 +1,7 @@
 """AI usage limits middleware."""
 
 import logging
-from typing import Callable
+from typing import Callable, Optional
 
 from fastapi import HTTPException, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware

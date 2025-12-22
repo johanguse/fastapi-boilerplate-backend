@@ -13,13 +13,12 @@ from fastapi import (
     UploadFile,
 )
 from pydantic import BaseModel, Field
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.models import User
 from src.common.config import settings
-from src.common.session import get_async_session
 from src.common.security import get_current_active_user
+from src.common.session import get_async_session
 from src.utils.storage import delete_file_from_r2, upload_file_to_r2
 
 logger = logging.getLogger(__name__)
@@ -77,7 +76,7 @@ async def update_current_user_profile(
     try:
         # Update only provided fields
         update_data = profile_data.model_dump(exclude_unset=True)
-        
+
         for field, value in update_data.items():
             setattr(current_user, field, value)
 
