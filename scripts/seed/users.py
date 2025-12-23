@@ -37,6 +37,13 @@ def create_users():
             website='https://techcorp.com',
             onboarding_completed=True,
             onboarding_step=3,
+            # Billing fields
+            tax_id='US-123456789',
+            address_street='123 Tech Blvd',
+            address_city='New York',
+            address_state='NY',
+            address_postal_code='10001',
+            company_name='TechCorp Inc.',
         ),
         # Regular verified members
         User(
@@ -58,6 +65,13 @@ def create_users():
             website='https://johndoe.dev',
             onboarding_completed=True,
             onboarding_step=3,
+            # Billing fields
+            tax_id='US-987654321',
+            address_street='456 Developer Ln',
+            address_city='San Francisco',
+            address_state='CA',
+            address_postal_code='94105',
+            company_name='DevCorp Solutions',
         ),
         User(
             email='jane@example.com',

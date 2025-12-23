@@ -31,6 +31,14 @@ class UserRead(schemas.BaseUser[int]):
     bio: Optional[str] = None
     website: Optional[str] = None
 
+    # Billing fields
+    tax_id: Optional[str] = None
+    address_street: Optional[str] = None
+    address_city: Optional[str] = None
+    address_state: Optional[str] = None
+    address_postal_code: Optional[str] = None
+    company_name: Optional[str] = None
+
     # Onboarding tracking
     onboarding_completed: bool = False
     onboarding_step: int = 0
@@ -53,6 +61,12 @@ class UserUpdate(schemas.BaseUserUpdate):
     timezone: Optional[str] = None
     bio: Optional[str] = None
     website: Optional[str] = None
+    tax_id: Optional[str] = None
+    address_street: Optional[str] = None
+    address_city: Optional[str] = None
+    address_state: Optional[str] = None
+    address_postal_code: Optional[str] = None
+    company_name: Optional[str] = None
 
 
 class OnboardingProfileUpdate(BaseModel):
@@ -66,6 +80,12 @@ class OnboardingProfileUpdate(BaseModel):
     timezone: Optional[str] = None
     bio: Optional[str] = None
     website: Optional[str] = None
+    tax_id: Optional[str] = None
+    address_street: Optional[str] = None
+    address_city: Optional[str] = None
+    address_state: Optional[str] = None
+    address_postal_code: Optional[str] = None
+    company_name: Optional[str] = None
 
 
 class OnboardingStepUpdate(BaseModel):

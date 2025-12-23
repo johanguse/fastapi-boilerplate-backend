@@ -1,8 +1,10 @@
-# AI-Powered SaaS Boilerplate
+# AI-Powered SaaS Boilerplate (FastAPI)
 
 ## Description
 
 This is a comprehensive SaaS boilerplate with AI-powered features including document intelligence, content generation, and analytics. Built with FastAPI, React, and modern AI capabilities.
+
+> **Note**: This backend works with the companion [Frontend](../frontend) project. The frontend also supports an alternative [Bun + Hono backend](../backend_bun_hono) - switch between them using environment variables.
 
 ## 🚀 AI Features
 

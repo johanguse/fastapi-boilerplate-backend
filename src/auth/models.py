@@ -59,6 +59,24 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     bio: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     website: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
 
+    # Billing fields
+    tax_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    address_street: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    address_city: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
+    address_state: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
+    address_postal_code: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True
+    )
+    company_name: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+
     # Onboarding completion tracking
     onboarding_completed: Mapped[bool] = mapped_column(
         default=False, nullable=False
