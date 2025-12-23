@@ -148,7 +148,9 @@ def _set_cookie(
         domain=opts['domain'],
     )
     # Log cookie being set for debugging
-    logger.info(f'Setting cookie {key} with options: secure={opts["secure"]}, samesite={opts["samesite"]}, domain={opts["domain"]}')
+    logger.info(
+        f'Setting cookie {key} with options: secure={opts["secure"]}, samesite={opts["samesite"]}, domain={opts["domain"]}'
+    )
 
 
 def _delete_cookie(response: Response, key: str, path: str = '/') -> None:
@@ -209,19 +211,23 @@ async def forgot_password(
                 )
 
                 if not email_sent:
-                    logger.warning(f'Failed to send password reset email to {user.email}')
+                    logger.warning(
+                        f'Failed to send password reset email to {user.email}'
+                    )
 
                 logger.info(f'Password reset email sent to: {user.email}')
 
             except Exception as e:
                 # Log error but don't expose to user for security
-                logger.exception(f'Exception sending password reset email to {user.email}: {str(e)}')
+                logger.exception(
+                    f'Exception sending password reset email to {user.email}: {str(e)}'
+                )
 
         # Always return success for security (don't reveal if user exists)
         return {
             'success': True,
             'message': 'If an account with this email exists, a password reset link has been sent.',
-            'user_exists': user is not None
+            'user_exists': user is not None,
         }
 
     except Exception as e:
@@ -396,7 +402,9 @@ async def sign_in_email(
                 'role': getattr(user, 'role', 'member'),
                 'is_verified': user.is_verified,
                 'is_superuser': user.is_superuser,
-                'onboarding_completed': getattr(user, 'onboarding_completed', False),
+                'onboarding_completed': getattr(
+                    user, 'onboarding_completed', False
+                ),
                 'onboarding_step': getattr(user, 'onboarding_step', 0),
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
@@ -480,7 +488,9 @@ async def sign_up_email(
         except Exception as e:
             # Handle UserAlreadyExists and other creation errors
             if 'UserAlreadyExists' in str(type(e).__name__):
-                logger.warning(f'User already exists during creation: {request.email}')
+                logger.warning(
+                    f'User already exists during creation: {request.email}'
+                )
                 raise HTTPException(
                     status_code=400,
                     detail={
@@ -515,10 +525,14 @@ async def sign_up_email(
             if email_sent:
                 logger.info(f'Verification email sent to {user.email}')
             else:
-                logger.warning(f'Failed to send verification email to {user.email}')
+                logger.warning(
+                    f'Failed to send verification email to {user.email}'
+                )
         except Exception as e:
             # Don't fail registration if email sending fails
-            logger.exception(f'Exception sending verification email to {user.email}: {str(e)}')
+            logger.exception(
+                f'Exception sending verification email to {user.email}: {str(e)}'
+            )
 
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
@@ -611,7 +625,9 @@ async def get_session(
             'role': getattr(user, 'role', 'member'),
             'is_verified': user.is_verified,
             'is_superuser': user.is_superuser,
-            'onboarding_completed': getattr(user, 'onboarding_completed', False),
+            'onboarding_completed': getattr(
+                user, 'onboarding_completed', False
+            ),
             'onboarding_step': getattr(user, 'onboarding_step', 0),
             'createdAt': user.created_at.isoformat()
             if hasattr(user, 'created_at') and user.created_at
@@ -872,7 +888,8 @@ async def get_organization(
         select(Organization)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id, OrganizationMember.user_id == user.id  # type: ignore[arg-type]
+            Organization.id == org_id,
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
         )
     )
     organization = result.scalar_one_or_none()
@@ -1367,7 +1384,7 @@ async def get_onboarding_status(
         'onboarding_step': user.onboarding_step,
         'has_organization': False,  # TODO: Check if user has organization
         'profile_complete': bool(user.name),
-        'next_step': 'profile' if not user.name else 'organization'
+        'next_step': 'profile' if not user.name else 'organization',
     }
 
 
@@ -1420,8 +1437,8 @@ async def update_onboarding_profile(
             'id': str(user.id),
             'email': user.email,
             'name': user.name,
-            'onboarding_step': user.onboarding_step
-        }
+            'onboarding_step': user.onboarding_step,
+        },
     }
 
 
@@ -1444,8 +1461,8 @@ async def complete_onboarding(
             'id': str(user.id),
             'email': user.email,
             'name': user.name,
-            'onboarding_completed': True
-        }
+            'onboarding_completed': True,
+        },
     }
 
 
@@ -1475,7 +1492,9 @@ async def create_onboarding_organization(
 
     try:
         org_create = OrganizationCreate(name=org_name, slug=org_slug)
-        organization = await create_organization_service(session, org_create, user)
+        organization = await create_organization_service(
+            session, org_create, user
+        )
 
         # Update onboarding step
         user.onboarding_step = 2
@@ -1486,14 +1505,15 @@ async def create_onboarding_organization(
             'organization': {
                 'id': str(organization.id),
                 'name': organization.name,
-                'slug': organization.slug or (organization.name or '').lower().replace(' ', '-')[:48]
+                'slug': organization.slug
+                or (organization.name or '').lower().replace(' ', '-')[:48],
             },
             'user': {
                 'id': str(user.id),
                 'email': user.email,
                 'name': user.name,
-                'onboarding_step': user.onboarding_step
-            }
+                'onboarding_step': user.onboarding_step,
+            },
         }
     except HTTPException as e:
         # Handle organization creation errors (e.g., duplicate name/slug)
@@ -1503,15 +1523,17 @@ async def create_onboarding_organization(
                 detail={
                     'error': 'ORGANIZATION_EXISTS',
                     'message': 'An organization with this name or slug already exists. Please choose a different name.',
-                }
+                },
             )
         raise
     except Exception as e:
-        logger.exception(f'Error creating organization during onboarding: {str(e)}')
+        logger.exception(
+            f'Error creating organization during onboarding: {str(e)}'
+        )
         raise HTTPException(
             status_code=500,
             detail={
                 'error': 'ORGANIZATION_CREATE_FAILED',
                 'message': 'Failed to create organization. Please try again.',
-            }
+            },
         )

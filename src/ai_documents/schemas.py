@@ -8,22 +8,26 @@ from pydantic import BaseModel, Field
 
 class AIDocumentBase(BaseModel):
     """Base schema for AI documents."""
+
     name: str = Field(..., min_length=1, max_length=255)
     mime_type: str = Field(..., min_length=1, max_length=100)
 
 
 class AIDocumentCreate(AIDocumentBase):
     """Schema for creating AI documents."""
+
     pass
 
 
 class AIDocumentUpdate(BaseModel):
     """Schema for updating AI documents."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=255)
 
 
 class AIDocumentResponse(AIDocumentBase):
     """Schema for AI document responses."""
+
     id: int
     organization_id: int
     uploaded_by: Optional[int]
@@ -44,6 +48,7 @@ class AIDocumentResponse(AIDocumentBase):
 
 class AIDocumentChunkResponse(BaseModel):
     """Schema for document chunk responses."""
+
     id: int
     document_id: int
     content: str
@@ -56,11 +61,13 @@ class AIDocumentChunkResponse(BaseModel):
 
 class AIDocumentChatCreate(BaseModel):
     """Schema for creating document chats."""
+
     question: str = Field(..., min_length=1, max_length=2000)
 
 
 class AIDocumentChatResponse(BaseModel):
     """Schema for document chat responses."""
+
     id: int
     document_id: int
     user_id: int
@@ -75,6 +82,7 @@ class AIDocumentChatResponse(BaseModel):
 
 class DocumentUploadResponse(BaseModel):
     """Schema for document upload responses."""
+
     document_id: int
     status: str
     message: str
@@ -82,6 +90,7 @@ class DocumentUploadResponse(BaseModel):
 
 class DocumentProcessingStatus(BaseModel):
     """Schema for document processing status."""
+
     document_id: int
     status: str
     progress: Optional[int] = None

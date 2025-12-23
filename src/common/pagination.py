@@ -24,6 +24,7 @@ class Paginated(Page[T], Generic[T]):
     """
     Custom pagination class that uses settings for default page size
     """
+
     pass
 
 

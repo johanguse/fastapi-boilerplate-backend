@@ -22,7 +22,9 @@ router.include_router(otp_router, tags=['otp'])
 
 # Auth routes (login, register, reset password, verify)
 # Set requires_verification=False to allow unverified users to login
-auth_router = fastapi_users.get_auth_router(auth_backend, requires_verification=False)  # type: ignore
+auth_router = fastapi_users.get_auth_router(
+    auth_backend, requires_verification=False
+)  # type: ignore
 for route in auth_router.routes:
     route.tags = ['auth']  # type: ignore
 router.include_router(

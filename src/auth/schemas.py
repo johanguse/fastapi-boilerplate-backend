@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr
 
 class UserRead(schemas.BaseUser[int]):
     """User read schema with all profile fields."""
+
     id: int
     email: EmailStr
     name: Optional[str] = None
@@ -37,11 +38,13 @@ class UserRead(schemas.BaseUser[int]):
 
 class UserCreate(schemas.BaseUserCreate):
     """User creation schema."""
+
     name: Optional[str] = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):
     """User update schema."""
+
     name: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
@@ -54,6 +57,7 @@ class UserUpdate(schemas.BaseUserUpdate):
 
 class OnboardingProfileUpdate(BaseModel):
     """Schema for updating user profile during onboarding."""
+
     name: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
@@ -66,28 +70,35 @@ class OnboardingProfileUpdate(BaseModel):
 
 class OnboardingStepUpdate(BaseModel):
     """Schema for updating onboarding step."""
+
     step: int
     completed: bool = False
 
 
 class OnboardingComplete(BaseModel):
     """Schema for completing onboarding."""
+
     completed: bool = True
 
 
 class OnboardingDataComplete(BaseModel):
     """Schema for completing onboarding with all data at once."""
+
     profile: Optional[OnboardingProfileUpdate] = None
-    organization: Optional[dict] = None  # OrganizationCreate is in organizations module
+    organization: Optional[dict] = (
+        None  # OrganizationCreate is in organizations module
+    )
 
 
 class OTPSendRequest(BaseModel):
     """Schema for sending OTP code."""
+
     email: EmailStr
 
 
 class OTPVerifyRequest(BaseModel):
     """Schema for verifying OTP code."""
+
     email: EmailStr
     code: str
     name: Optional[str] = None
@@ -95,6 +106,7 @@ class OTPVerifyRequest(BaseModel):
 
 class OTPResponse(BaseModel):
     """Schema for OTP operation responses."""
+
     success: bool
     message: str
     user_exists: Optional[bool] = None

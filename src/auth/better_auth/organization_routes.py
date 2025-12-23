@@ -163,7 +163,9 @@ async def set_active_organization(
             },
         )
 
-    set_auth_cookie(response, key='ba_active_org', value=str(org_id_int), path='/')
+    set_auth_cookie(
+        response, key='ba_active_org', value=str(org_id_int), path='/'
+    )
     return {'success': True, 'activeOrganizationId': str(org_id_int)}
 
 
@@ -180,7 +182,8 @@ async def get_organization(
         select(Organization)
         .join(OrganizationMember)
         .where(
-            Organization.id == org_id, OrganizationMember.user_id == user.id  # type: ignore[arg-type]
+            Organization.id == org_id,
+            OrganizationMember.user_id == user.id,  # type: ignore[arg-type]
         )
     )
     organization = result.scalar_one_or_none()

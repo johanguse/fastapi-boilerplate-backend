@@ -48,11 +48,9 @@ async def get_onboarding_status(
         'onboarding_step': current_user.onboarding_step,
         'has_organization': has_organization,
         'profile_complete': bool(
-            current_user.name and
-            current_user.company and
-            current_user.country
+            current_user.name and current_user.company and current_user.country
         ),
-        'next_step': _get_next_onboarding_step(current_user, has_organization)
+        'next_step': _get_next_onboarding_step(current_user, has_organization),
     }
 
 
@@ -66,7 +64,9 @@ async def update_onboarding_profile(
     """Update user profile during onboarding."""
     try:
         # Update user fields
-        for field, value in profile_data.model_dump(exclude_unset=True).items():
+        for field, value in profile_data.model_dump(
+            exclude_unset=True
+        ).items():
             if hasattr(current_user, field):
                 setattr(current_user, field, value)
 
@@ -86,17 +86,18 @@ async def update_onboarding_profile(
                 'name': current_user.name,
                 'company': current_user.company,
                 'country': current_user.country,
-                'onboarding_step': current_user.onboarding_step
-            }
+                'onboarding_step': current_user.onboarding_step,
+            },
         }
 
     except Exception as e:
-        logger.exception(f'Error updating onboarding profile for user {current_user.id}: {str(e)}')
-        error_msg = translate_message('onboarding.profile_update_failed', request)
-        raise HTTPException(
-            status_code=500,
-            detail=error_msg
+        logger.exception(
+            f'Error updating onboarding profile for user {current_user.id}: {str(e)}'
         )
+        error_msg = translate_message(
+            'onboarding.profile_update_failed', request
+        )
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 @router.post('/onboarding/organization')
@@ -114,12 +115,18 @@ async def create_onboarding_organization(
             body = {}
 
         # Use company name or default to user's name
-        org_name = body.get('name') or current_user.company or f"{current_user.name}'s Organization"
+        org_name = (
+            body.get('name')
+            or current_user.company
+            or f"{current_user.name}'s Organization"
+        )
         org_slug = body.get('slug')
 
         # Create organization
         org_create = OrganizationCreate(name=org_name, slug=org_slug)
-        organization = await create_organization_service(session, org_create, current_user)
+        organization = await create_organization_service(
+            session, org_create, current_user
+        )
 
         # Update onboarding step
         current_user.onboarding_step = max(current_user.onboarding_step, 2)
@@ -127,7 +134,9 @@ async def create_onboarding_organization(
         await session.commit()
         await session.refresh(current_user)
 
-        logger.info(f'Created onboarding organization for user {current_user.id}: {organization.name}')
+        logger.info(
+            f'Created onboarding organization for user {current_user.id}: {organization.name}'
+        )
 
         return {
             'success': True,
@@ -135,18 +144,17 @@ async def create_onboarding_organization(
             'organization': {
                 'id': organization.id,
                 'name': organization.name,
-                'slug': organization.slug
+                'slug': organization.slug,
             },
-            'onboarding_step': current_user.onboarding_step
+            'onboarding_step': current_user.onboarding_step,
         }
 
     except Exception as e:
-        logger.exception(f'Error creating onboarding organization for user {current_user.id}: {str(e)}')
-        error_msg = translate_message('organization.failed_to_create', request)
-        raise HTTPException(
-            status_code=500,
-            detail=error_msg
+        logger.exception(
+            f'Error creating onboarding organization for user {current_user.id}: {str(e)}'
         )
+        error_msg = translate_message('organization.failed_to_create', request)
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 @router.patch('/onboarding/step')
@@ -165,22 +173,23 @@ async def update_onboarding_step(
         await session.commit()
         await session.refresh(current_user)
 
-        logger.info(f'Updated onboarding step for user {current_user.id} to step {step_data.step}')
+        logger.info(
+            f'Updated onboarding step for user {current_user.id} to step {step_data.step}'
+        )
 
         return {
             'success': True,
             'message': translate_message('success.updated', request),
             'onboarding_step': current_user.onboarding_step,
-            'onboarding_completed': current_user.onboarding_completed
+            'onboarding_completed': current_user.onboarding_completed,
         }
 
     except Exception as e:
-        logger.exception(f'Error updating onboarding step for user {current_user.id}: {str(e)}')
-        error_msg = translate_message('onboarding.step_update_failed', request)
-        raise HTTPException(
-            status_code=500,
-            detail=error_msg
+        logger.exception(
+            f'Error updating onboarding step for user {current_user.id}: {str(e)}'
         )
+        error_msg = translate_message('onboarding.step_update_failed', request)
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 @router.post('/onboarding/complete')
@@ -203,29 +212,37 @@ async def complete_onboarding(
         # Send welcome email after onboarding completion
         try:
             from src.services.email_service import email_service
+
             welcome_sent = await email_service.send_welcome_email(
                 current_user.email, current_user.name, is_onboarding=True
             )
             if welcome_sent:
-                logger.info(f'Welcome email sent to {current_user.email} after onboarding completion')
+                logger.info(
+                    f'Welcome email sent to {current_user.email} after onboarding completion'
+                )
             else:
-                logger.warning(f'Failed to send welcome email to {current_user.email} after onboarding completion')
+                logger.warning(
+                    f'Failed to send welcome email to {current_user.email} after onboarding completion'
+                )
         except Exception as e:
             # Don't fail onboarding completion if welcome email fails
-            logger.exception(f'Exception sending welcome email to {current_user.email} after onboarding completion: {str(e)}')
+            logger.exception(
+                f'Exception sending welcome email to {current_user.email} after onboarding completion: {str(e)}'
+            )
 
         return {
             'success': True,
             'message': 'Onboarding completed successfully',
             'onboarding_completed': current_user.onboarding_completed,
-            'onboarding_step': current_user.onboarding_step
+            'onboarding_step': current_user.onboarding_step,
         }
 
     except Exception as e:
-        logger.exception(f'Error completing onboarding for user {current_user.id}: {str(e)}')
+        logger.exception(
+            f'Error completing onboarding for user {current_user.id}: {str(e)}'
+        )
         raise HTTPException(
-            status_code=500,
-            detail='Failed to complete onboarding'
+            status_code=500, detail='Failed to complete onboarding'
         )
 
 
@@ -256,22 +273,26 @@ async def save_all_onboarding_data(
         organization = None
         organization_data_response = None
         if organization_data:
-            org_name = organization_data.get('name') or current_user.company or f"{current_user.name}'s Organization"
+            org_name = (
+                organization_data.get('name')
+                or current_user.company
+                or f"{current_user.name}'s Organization"
+            )
             org_slug = organization_data.get('slug')
             org_description = organization_data.get('description')
 
             org_create = OrganizationCreate(
-                name=org_name,
-                slug=org_slug,
-                description=org_description
+                name=org_name, slug=org_slug, description=org_description
             )
             try:
-                organization = await create_organization_service(session, org_create, current_user)
+                organization = await create_organization_service(
+                    session, org_create, current_user
+                )
                 # Capture organization data before commit to avoid lazy loading issues
                 organization_data_response = {
                     'id': organization.id,
                     'name': organization.name,
-                    'slug': organization.slug
+                    'slug': organization.slug,
                 }
             except HTTPException as e:
                 # Re-raise HTTPException (like 409 for duplicate) with proper status code
@@ -289,16 +310,23 @@ async def save_all_onboarding_data(
         # Send welcome email after onboarding completion
         try:
             from src.services.email_service import email_service
+
             welcome_sent = await email_service.send_welcome_email(
                 current_user.email, current_user.name, is_onboarding=True
             )
             if welcome_sent:
-                logger.info(f'Welcome email sent to {current_user.email} after onboarding completion')
+                logger.info(
+                    f'Welcome email sent to {current_user.email} after onboarding completion'
+                )
             else:
-                logger.warning(f'Failed to send welcome email to {current_user.email} after onboarding completion')
+                logger.warning(
+                    f'Failed to send welcome email to {current_user.email} after onboarding completion'
+                )
         except Exception as e:
             # Don't fail onboarding completion if welcome email fails
-            logger.exception(f'Exception sending welcome email to {current_user.email} after onboarding completion: {str(e)}')
+            logger.exception(
+                f'Exception sending welcome email to {current_user.email} after onboarding completion: {str(e)}'
+            )
 
         response_data = {
             'success': True,
@@ -309,8 +337,8 @@ async def save_all_onboarding_data(
                 'company': current_user.company,
                 'country': current_user.country,
                 'onboarding_completed': current_user.onboarding_completed,
-                'onboarding_step': current_user.onboarding_step
-            }
+                'onboarding_step': current_user.onboarding_step,
+            },
         }
 
         if organization_data_response:
@@ -320,16 +348,15 @@ async def save_all_onboarding_data(
 
     except HTTPException as e:
         # Re-raise HTTPException (like 409 for duplicate organization) as-is
-        logger.warning(f'HTTPException saving onboarding data for user {current_user.id}: {e.status_code} - {e.detail}')
+        logger.warning(
+            f'HTTPException saving onboarding data for user {current_user.id}: {e.status_code} - {e.detail}'
+        )
         raise e
     except Exception as e:
         # Avoid accessing ORM attributes during exception (can trigger async lazy loads)
         logger.exception(f'Error saving onboarding data: {str(e)}')
         error_msg = translate_message('onboarding.save_failed', request)
-        raise HTTPException(
-            status_code=500,
-            detail=error_msg
-        )
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 def _get_next_onboarding_step(user: User, has_organization: bool) -> str:

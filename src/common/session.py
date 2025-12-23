@@ -24,11 +24,11 @@ engine = create_async_engine(
     pool_pre_ping=True,
     pool_recycle=3600,
     connect_args={
-        "command_timeout": 60,
-        "server_settings": {
-            "application_name": "fastapi_saas_boilerplate",
-        }
-    }
+        'command_timeout': 60,
+        'server_settings': {
+            'application_name': 'fastapi_saas_boilerplate',
+        },
+    },
 )
 async_session_factory = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False

@@ -28,11 +28,15 @@ class AIContentTemplate(Base):
 
     # Template details
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    template_type: Mapped[str] = mapped_column(String(50), nullable=False)  # blog_post, email, social_media, etc.
+    template_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # blog_post, email, social_media, etc.
     prompt_template: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Template settings
-    settings: Mapped[dict] = mapped_column(JSON, default=dict)  # tone, length, style preferences
+    settings: Mapped[dict] = mapped_column(
+        JSON, default=dict
+    )  # tone, length, style preferences
 
     # Metadata
     is_active: Mapped[bool] = mapped_column(default=True)
@@ -49,7 +53,9 @@ class AIContentTemplate(Base):
     organization: Mapped['Organization'] = relationship('Organization')
     created_by_user: Mapped[Optional['User']] = relationship('User')
     generations: Mapped[list['AIContentGeneration']] = relationship(
-        'AIContentGeneration', back_populates='template', cascade='all, delete-orphan'
+        'AIContentGeneration',
+        back_populates='template',
+        cascade='all, delete-orphan',
     )
 
     def __repr__(self) -> str:
@@ -66,12 +72,16 @@ class AIContentGeneration(Base):
         Integer, ForeignKey('users.id', ondelete='CASCADE'), index=True
     )
     template_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey('ai_content_templates.id', ondelete='SET NULL'), nullable=True
+        Integer,
+        ForeignKey('ai_content_templates.id', ondelete='SET NULL'),
+        nullable=True,
     )
 
     # Generation details
     content_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    input_data: Mapped[dict] = mapped_column(JSON, default=dict)  # topic, tone, length, etc.
+    input_data: Mapped[dict] = mapped_column(
+        JSON, default=dict
+    )  # topic, tone, length, etc.
     output_content: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Usage tracking

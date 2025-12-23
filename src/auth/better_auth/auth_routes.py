@@ -51,7 +51,9 @@ async def sign_in_email(
             logger.info(f'User found: {user.email}, active: {user.is_active}')
         except Exception:
             logger.warning(f'User not found: {request.email}')
-            error_msg = translate_message('auth.invalid_credentials', http_request)
+            error_msg = translate_message(
+                'auth.invalid_credentials', http_request
+            )
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -70,7 +72,9 @@ async def sign_in_email(
             )
             if not valid_password or not valid_password[0]:
                 logger.warning(f'Invalid password for user: {request.email}')
-                error_msg = translate_message('auth.invalid_credentials', http_request)
+                error_msg = translate_message(
+                    'auth.invalid_credentials', http_request
+                )
                 raise HTTPException(
                     status_code=400,
                     detail={
@@ -82,7 +86,9 @@ async def sign_in_email(
             raise
         except Exception:
             logger.exception('Password verification error')
-            error_msg = translate_message('auth.invalid_credentials', http_request)
+            error_msg = translate_message(
+                'auth.invalid_credentials', http_request
+            )
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -93,7 +99,9 @@ async def sign_in_email(
 
         if not user.is_active:
             logger.warning(f'Inactive user attempted login: {request.email}')
-            error_msg = translate_message('auth.account_inactive', http_request)
+            error_msg = translate_message(
+                'auth.account_inactive', http_request
+            )
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -118,7 +126,9 @@ async def sign_in_email(
                 'role': getattr(user, 'role', 'member'),
                 'is_verified': user.is_verified,
                 'is_superuser': user.is_superuser,
-                'onboarding_completed': getattr(user, 'onboarding_completed', False),
+                'onboarding_completed': getattr(
+                    user, 'onboarding_completed', False
+                ),
                 'onboarding_step': getattr(user, 'onboarding_step', 0),
                 'createdAt': user.created_at.isoformat()
                 if hasattr(user, 'created_at') and user.created_at
@@ -170,7 +180,9 @@ async def sign_up_email(
         try:
             _ = await user_manager.get_by_email(request.email)
             logger.warning(f'User already exists: {request.email}')
-            error_msg = translate_message('auth.user_already_exists', http_request)
+            error_msg = translate_message(
+                'auth.user_already_exists', http_request
+            )
             raise HTTPException(
                 status_code=400,
                 detail={
@@ -196,8 +208,12 @@ async def sign_up_email(
             user = await user_manager.create(user_create)
         except Exception as e:
             if 'UserAlreadyExists' in str(type(e).__name__):
-                logger.warning(f'User already exists during creation: {request.email}')
-                error_msg = translate_message('auth.user_already_exists', http_request)
+                logger.warning(
+                    f'User already exists during creation: {request.email}'
+                )
+                error_msg = translate_message(
+                    'auth.user_already_exists', http_request
+                )
                 raise HTTPException(
                     status_code=400,
                     detail={
@@ -207,7 +223,9 @@ async def sign_up_email(
                 )
             else:
                 logger.error(f'Unexpected error creating user: {str(e)}')
-                error_msg = translate_message('error.sign_up_failed', http_request)
+                error_msg = translate_message(
+                    'error.sign_up_failed', http_request
+                )
                 raise HTTPException(
                     status_code=400,
                     detail={
@@ -233,9 +251,13 @@ async def sign_up_email(
             if email_sent:
                 logger.info(f'Verification email sent to {user.email}')
             else:
-                logger.warning(f'Failed to send verification email to {user.email}')
+                logger.warning(
+                    f'Failed to send verification email to {user.email}'
+                )
         except Exception as e:
-            logger.exception(f'Exception sending verification email to {user.email}: {str(e)}')
+            logger.exception(
+                f'Exception sending verification email to {user.email}: {str(e)}'
+            )
 
         # Create JWT
         token = create_better_auth_jwt(user)
@@ -312,7 +334,9 @@ async def get_session(
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
-        error_msg = translate_message('auth.user_not_found_or_inactive', request)
+        error_msg = translate_message(
+            'auth.user_not_found_or_inactive', request
+        )
         raise HTTPException(status_code=401, detail=error_msg)
 
     return {
@@ -324,7 +348,9 @@ async def get_session(
             'role': getattr(user, 'role', 'member'),
             'is_verified': user.is_verified,
             'is_superuser': user.is_superuser,
-            'onboarding_completed': getattr(user, 'onboarding_completed', False),
+            'onboarding_completed': getattr(
+                user, 'onboarding_completed', False
+            ),
             'onboarding_step': getattr(user, 'onboarding_step', 0),
             'createdAt': user.created_at.isoformat()
             if hasattr(user, 'created_at') and user.created_at
@@ -336,7 +362,8 @@ async def get_session(
         'session': {
             'token': token,
             'expiresAt': datetime.fromtimestamp(
-                payload['exp'], tz=timezone.utc  # type: ignore[index]
+                payload['exp'],
+                tz=timezone.utc,  # type: ignore[index]
             ).isoformat(),
             'activeOrganizationId': request.cookies.get('ba_active_org'),
         },
@@ -374,15 +401,19 @@ async def forgot_password(
                     user.email, token, user.name
                 )
                 if not email_sent:
-                    logger.warning(f'Failed to send password reset email to {user.email}')
+                    logger.warning(
+                        f'Failed to send password reset email to {user.email}'
+                    )
                 logger.info(f'Password reset email sent to: {user.email}')
             except Exception as e:
-                logger.exception(f'Exception sending password reset email to {user.email}: {str(e)}')
+                logger.exception(
+                    f'Exception sending password reset email to {user.email}: {str(e)}'
+                )
 
         return {
             'success': True,
             'message': 'If an account with this email exists, a password reset link has been sent.',
-            'user_exists': user is not None
+            'user_exists': user is not None,
         }
     except Exception as e:
         logger.exception(f'Unexpected error in forgot_password: {str(e)}')

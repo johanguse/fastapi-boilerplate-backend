@@ -3,7 +3,7 @@
 from .models import AIDocument, AIDocumentChat, AIDocumentChunk
 
 __all__ = [
-    "AIDocument",
-    "AIDocumentChunk",
-    "AIDocumentChat",
+    'AIDocument',
+    'AIDocumentChunk',
+    'AIDocumentChat',
 ]

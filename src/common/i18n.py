@@ -194,7 +194,11 @@ class I18nManager:
             return 'other'  # Fallback to 'other' if something goes wrong
 
     def translate_plural(
-        self, key: str, count: int, language: Optional[str] = None, **kwargs: Any
+        self,
+        key: str,
+        count: int,
+        language: Optional[str] = None,
+        **kwargs: Any,
     ) -> str:
         """
         Translate a pluralized message key.

@@ -69,7 +69,18 @@ extend-exclude = ['migrations']
 [tool.ruff.lint]
 preview = true
 select = ['I', 'F', 'E', 'W', 'PL', 'PT']
-ignore = ["E203", "E501", "PLC0415", "PLR0913", "PLR0917"]
+ignore = [
+  "E203",
+  "E501",
+  "PLC0415",
+  "PLR0913",
+  "PLR0917",
+  "PLR6301", # Method could be static - ignore for flexibility
+  "PLR2004", # Magic values - acceptable in many cases
+  "PLR0914", # Too many local variables
+  "PLR0911", # Too many return statements
+  "PLW2901", # Loop variable overwritten - common pattern
+]
 
 [tool.ruff.format]
 preview = true

@@ -68,8 +68,11 @@ async def create_organization(
     except Exception as e:
         # Log but don't fail organization creation if activity logging fails
         import logging
+
         logger = logging.getLogger(__name__)
-        logger.warning(f'Failed to log activity for organization creation: {str(e)}')
+        logger.warning(
+            f'Failed to log activity for organization creation: {str(e)}'
+        )
 
     return db_org
 
@@ -90,7 +93,9 @@ async def get_user_organizations(
     result = await db.execute(
         select(Organization)
         .options(
-            selectinload(Organization.members).selectinload(OrganizationMember.user)
+            selectinload(Organization.members).selectinload(
+                OrganizationMember.user
+            )
         )
         .join(OrganizationMember)
         .filter(OrganizationMember.user_id == user.id)

@@ -64,9 +64,13 @@ async def log_activity(
     # Return a lightweight object to avoid ORM SELECTs that may reference
     # columns not present in legacy schemas (e.g., organization_id).
     from types import SimpleNamespace
-    return cast(ActivityLog, SimpleNamespace(
-        id=new_id,
-        user_id=values.get('user_id'),
-        action=values.get('action'),
-        description=values.get('description'),
-    ))
+
+    return cast(
+        ActivityLog,
+        SimpleNamespace(
+            id=new_id,
+            user_id=values.get('user_id'),
+            action=values.get('action'),
+            description=values.get('description'),
+        ),
+    )

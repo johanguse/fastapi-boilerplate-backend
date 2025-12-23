@@ -38,7 +38,9 @@ async def get_current_user_from_cookie(
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
-        error_msg = translate_message('auth.user_not_found_or_inactive', request)
+        error_msg = translate_message(
+            'auth.user_not_found_or_inactive', request
+        )
         raise HTTPException(status_code=401, detail=error_msg)
 
     return user
@@ -249,7 +251,9 @@ async def delete_user(
     """
     # Prevent admin from deleting themselves
     if _admin.id == user_id:
-        error_msg = translate_message('auth.cannot_delete_own_account', request)
+        error_msg = translate_message(
+            'auth.cannot_delete_own_account', request
+        )
         raise HTTPException(status_code=400, detail=error_msg)
 
     result = await db.execute(select(User).where(User.id == user_id))
@@ -294,7 +298,9 @@ async def invite_user(
     temp_password = secrets.token_urlsafe(16)
 
     # Get user database and manager
-    user_db: SQLAlchemyUserDatabase[User, int] = SQLAlchemyUserDatabase(db, User)
+    user_db: SQLAlchemyUserDatabase[User, int] = SQLAlchemyUserDatabase(
+        db, User
+    )
     user_manager = UserManager(user_db)
 
     user_create = UserCreate(
@@ -548,9 +554,7 @@ async def list_activity_logs(
             organization_id=activity_log.organization_id,
             project_id=activity_log.project_id,
             user_name=activity_log.user.name if activity_log.user else None,
-            user_email=activity_log.user.email
-            if activity_log.user
-            else None,
+            user_email=activity_log.user.email if activity_log.user else None,
         )
         logs.append(log_entry)  # type: ignore
 

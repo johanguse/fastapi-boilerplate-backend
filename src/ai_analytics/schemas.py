@@ -8,11 +8,13 @@ from pydantic import BaseModel, Field
 
 class AIAnalyticsQueryCreate(BaseModel):
     """Schema for creating AI analytics queries."""
+
     natural_query: str = Field(..., min_length=1, max_length=1000)
 
 
 class AIAnalyticsQueryResponse(BaseModel):
     """Schema for AI analytics query responses."""
+
     id: int
     organization_id: int
     user_id: int
@@ -32,6 +34,7 @@ class AIAnalyticsQueryResponse(BaseModel):
 
 class AnalyticsInsightResponse(BaseModel):
     """Schema for analytics insights."""
+
     insight: str
     chart_type: str
     data: Dict[str, Any]
@@ -40,13 +43,19 @@ class AnalyticsInsightResponse(BaseModel):
 
 class AnalyticsQueryRequest(BaseModel):
     """Schema for analytics query requests."""
+
     query: str = Field(..., min_length=1, max_length=1000)
-    chart_type: Optional[str] = Field(None, max_length=50)  # bar, line, pie, table
-    time_range: Optional[str] = Field(None, max_length=50)  # last_7_days, last_30_days, etc.
+    chart_type: Optional[str] = Field(
+        None, max_length=50
+    )  # bar, line, pie, table
+    time_range: Optional[str] = Field(
+        None, max_length=50
+    )  # last_7_days, last_30_days, etc.
 
 
 class AnalyticsQueryResponse(BaseModel):
     """Schema for analytics query responses."""
+
     query_id: int
     results: Dict[str, Any]
     chart_config: Dict[str, Any]
@@ -57,6 +66,7 @@ class AnalyticsQueryResponse(BaseModel):
 
 class ChartConfig(BaseModel):
     """Schema for chart configuration."""
+
     type: str = Field(..., max_length=50)  # bar, line, pie, table
     title: str
     x_axis: Optional[str] = None

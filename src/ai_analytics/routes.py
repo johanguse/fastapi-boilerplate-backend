@@ -19,10 +19,10 @@ from .schemas import (
 from .service import AIAnalyticsService
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["AI Analytics"])
+router = APIRouter(tags=['AI Analytics'])
 
 
-@router.post("/query", response_model=AnalyticsQueryResponse)
+@router.post('/query', response_model=AnalyticsQueryResponse)
 async def process_analytics_query(
     request: AnalyticsQueryRequest,
     db: AsyncSession = Depends(get_async_session),
@@ -32,8 +32,7 @@ async def process_analytics_query(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -49,7 +48,7 @@ async def process_analytics_query(
         if query_record.status == 'failed':
             raise HTTPException(
                 status_code=400,
-                detail=query_record.error_message or "Query processing failed"
+                detail=query_record.error_message or 'Query processing failed',
             )
 
         # Generate insights from results
@@ -61,7 +60,9 @@ async def process_analytics_query(
                     insight=insight.get('insight', ''),
                     chart_type=query_record.chart_config.get('type', 'table'),
                     data=query_record.results,
-                    recommendations=[insight.get('recommendation', '')] if insight.get('recommendation') else []
+                    recommendations=[insight.get('recommendation', '')]
+                    if insight.get('recommendation')
+                    else [],
                 )
                 for insight in query_record.chart_config.get('insights', [])
             ]
@@ -78,11 +79,11 @@ async def process_analytics_query(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Analytics query failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Analytics query failed")
+        logger.error(f'Analytics query failed: {str(e)}')
+        raise HTTPException(status_code=500, detail='Analytics query failed')
 
 
-@router.get("/queries", response_model=Page[AIAnalyticsQueryResponse])
+@router.get('/queries', response_model=Page[AIAnalyticsQueryResponse])
 async def get_queries(
     params: Params = Depends(),
     db: AsyncSession = Depends(get_async_session),
@@ -92,8 +93,7 @@ async def get_queries(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -112,6 +112,7 @@ async def get_queries(
 
         # Create paginated response
         from fastapi_pagination import create_page
+
         return create_page(
             query_responses,
             total=len(query_responses),  # In production, get total count
@@ -119,11 +120,11 @@ async def get_queries(
         )
 
     except Exception as e:
-        logger.error(f"Get queries failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get queries")
+        logger.error(f'Get queries failed: {str(e)}')
+        raise HTTPException(status_code=500, detail='Failed to get queries')
 
 
-@router.get("/queries/{query_id}", response_model=AIAnalyticsQueryResponse)
+@router.get('/queries/{query_id}', response_model=AIAnalyticsQueryResponse)
 async def get_query(
     query_id: int,
     db: AsyncSession = Depends(get_async_session),
@@ -133,8 +134,7 @@ async def get_query(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -143,18 +143,18 @@ async def get_query(
         query = await service.get_query(query_id, organization_id)
 
         if not query:
-            raise HTTPException(status_code=404, detail="Query not found")
+            raise HTTPException(status_code=404, detail='Query not found')
 
         return AIAnalyticsQueryResponse.model_validate(query)
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Get query failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get query")
+        logger.error(f'Get query failed: {str(e)}')
+        raise HTTPException(status_code=500, detail='Failed to get query')
 
 
-@router.get("/stats")
+@router.get('/stats')
 async def get_analytics_stats(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
@@ -163,8 +163,7 @@ async def get_analytics_stats(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -175,11 +174,13 @@ async def get_analytics_stats(
         return stats
 
     except Exception as e:
-        logger.error(f"Get analytics stats failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get analytics stats")
+        logger.error(f'Get analytics stats failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to get analytics stats'
+        )
 
 
-@router.get("/insights")
+@router.get('/insights')
 async def get_quick_insights(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
@@ -188,8 +189,7 @@ async def get_quick_insights(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         current_user.organizations[0].id
@@ -201,27 +201,29 @@ async def get_quick_insights(
         # For now, return placeholder insights
         insights = [
             {
-                "title": "AI Usage Overview",
-                "description": "Track your AI feature usage across documents, content, and analytics",
-                "chart_type": "bar",
-                "data": {
-                    "labels": ["Documents", "Content", "Analytics"],
-                    "values": [15, 23, 8]
-                }
+                'title': 'AI Usage Overview',
+                'description': 'Track your AI feature usage across documents, content, and analytics',
+                'chart_type': 'bar',
+                'data': {
+                    'labels': ['Documents', 'Content', 'Analytics'],
+                    'values': [15, 23, 8],
+                },
             },
             {
-                "title": "Monthly Growth",
-                "description": "See how your organization's AI usage is growing over time",
-                "chart_type": "line",
-                "data": {
-                    "labels": ["Jan", "Feb", "Mar", "Apr"],
-                    "values": [10, 15, 22, 28]
-                }
-            }
+                'title': 'Monthly Growth',
+                'description': "See how your organization's AI usage is growing over time",
+                'chart_type': 'line',
+                'data': {
+                    'labels': ['Jan', 'Feb', 'Mar', 'Apr'],
+                    'values': [10, 15, 22, 28],
+                },
+            },
         ]
 
-        return {"insights": insights}
+        return {'insights': insights}
 
     except Exception as e:
-        logger.error(f"Get quick insights failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get quick insights")
+        logger.error(f'Get quick insights failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to get quick insights'
+        )

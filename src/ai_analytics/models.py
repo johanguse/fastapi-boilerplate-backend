@@ -35,7 +35,9 @@ class AIAnalyticsQuery(Base):
     chart_config: Mapped[dict] = mapped_column(JSON, default=dict)
 
     # Status and metadata
-    status: Mapped[str] = mapped_column(String(20), default='pending')  # pending, completed, failed
+    status: Mapped[str] = mapped_column(
+        String(20), default='pending'
+    )  # pending, completed, failed
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Usage tracking

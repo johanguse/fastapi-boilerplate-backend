@@ -49,15 +49,17 @@ class OpenAIProvider(AIProvider):
 
     def __init__(self):
         self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-        self.model_text = settings.AI_MODEL_TEXT or "gpt-4-turbo"
-        self.model_embeddings = settings.AI_MODEL_EMBEDDINGS or "text-embedding-3-small"
+        self.model_text = settings.AI_MODEL_TEXT or 'gpt-4-turbo'
+        self.model_embeddings = (
+            settings.AI_MODEL_EMBEDDINGS or 'text-embedding-3-small'
+        )
 
         # Initialize tokenizer
         try:
             self.tokenizer = tiktoken.encoding_for_model(self.model_text)
         except KeyError:
             # Fallback to cl100k_base for newer models
-            self.tokenizer = tiktoken.get_encoding("cl100k_base")
+            self.tokenizer = tiktoken.get_encoding('cl100k_base')
 
     async def generate_text(
         self,
@@ -70,14 +72,14 @@ class OpenAIProvider(AIProvider):
         try:
             response = await self.client.chat.completions.create(
                 model=self.model_text,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{'role': 'user', 'content': prompt}],
                 max_tokens=max_tokens or settings.AI_MAX_TOKENS,
                 temperature=temperature,
                 **kwargs,
             )
-            return response.choices[0].message.content or ""
+            return response.choices[0].message.content or ''
         except Exception as e:
-            raise Exception(f"OpenAI API error: {str(e)}")
+            raise Exception(f'OpenAI API error: {str(e)}')
 
     async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings using OpenAI."""
@@ -88,7 +90,7 @@ class OpenAIProvider(AIProvider):
             )
             return [embedding.embedding for embedding in response.data]
         except Exception as e:
-            raise Exception(f"OpenAI embeddings error: {str(e)}")
+            raise Exception(f'OpenAI embeddings error: {str(e)}')
 
     def count_tokens(self, text: str) -> int:
         """Count tokens using tiktoken."""
@@ -111,16 +113,18 @@ class OpenRouterProvider(AIProvider):
     def __init__(self):
         self.client = AsyncOpenAI(
             api_key=settings.OPENROUTER_API_KEY,
-            base_url="https://openrouter.ai/api/v1"
+            base_url='https://openrouter.ai/api/v1',
         )
-        self.model_text = settings.AI_MODEL_TEXT or "openai/gpt-4-turbo"
-        self.model_embeddings = settings.AI_MODEL_EMBEDDINGS or "openai/text-embedding-3-small"
+        self.model_text = settings.AI_MODEL_TEXT or 'openai/gpt-4-turbo'
+        self.model_embeddings = (
+            settings.AI_MODEL_EMBEDDINGS or 'openai/text-embedding-3-small'
+        )
 
         # Initialize tokenizer
         try:
-            self.tokenizer = tiktoken.encoding_for_model("gpt-4")
+            self.tokenizer = tiktoken.encoding_for_model('gpt-4')
         except KeyError:
-            self.tokenizer = tiktoken.get_encoding("cl100k_base")
+            self.tokenizer = tiktoken.get_encoding('cl100k_base')
 
     async def generate_text(
         self,
@@ -133,14 +137,14 @@ class OpenRouterProvider(AIProvider):
         try:
             response = await self.client.chat.completions.create(
                 model=self.model_text,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{'role': 'user', 'content': prompt}],
                 max_tokens=max_tokens or settings.AI_MAX_TOKENS,
                 temperature=temperature,
                 **kwargs,
             )
-            return response.choices[0].message.content or ""
+            return response.choices[0].message.content or ''
         except Exception as e:
-            raise Exception(f"OpenRouter API error: {str(e)}")
+            raise Exception(f'OpenRouter API error: {str(e)}')
 
     async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings using OpenRouter."""
@@ -151,7 +155,7 @@ class OpenRouterProvider(AIProvider):
             )
             return [embedding.embedding for embedding in response.data]
         except Exception as e:
-            raise Exception(f"OpenRouter embeddings error: {str(e)}")
+            raise Exception(f'OpenRouter embeddings error: {str(e)}')
 
     def count_tokens(self, text: str) -> int:
         """Count tokens using tiktoken."""
@@ -174,7 +178,9 @@ class AnthropicProvider(AIProvider):
 
     def __init__(self):
         self.client = Anthropic(api_key=settings.ANTHROPIC_API_KEY)
-        self.model_text = settings.AI_MODEL_TEXT or "claude-3-5-sonnet-20241022"
+        self.model_text = (
+            settings.AI_MODEL_TEXT or 'claude-3-5-sonnet-20241022'
+        )
 
     async def generate_text(
         self,
@@ -190,12 +196,12 @@ class AnthropicProvider(AIProvider):
                 model=self.model_text,
                 max_tokens=max_tokens or settings.AI_MAX_TOKENS,
                 temperature=temperature,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{'role': 'user', 'content': prompt}],
                 **kwargs,
             )
             return response.content[0].text
         except Exception as e:
-            raise Exception(f"Anthropic API error: {str(e)}")
+            raise Exception(f'Anthropic API error: {str(e)}')
 
     async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Anthropic doesn't provide embeddings API."""
@@ -210,7 +216,7 @@ class AnthropicProvider(AIProvider):
             return self.client.count_tokens(text)
         except Exception:
             # Fallback to tiktoken
-            tokenizer = tiktoken.get_encoding("cl100k_base")
+            tokenizer = tiktoken.get_encoding('cl100k_base')
             return len(tokenizer.encode(text))
 
     def estimate_cost(self, input_tokens: int, output_tokens: int) -> float:
@@ -228,22 +234,23 @@ class MockAIProvider(AIProvider):
     """Mock AI provider for development when no API keys are configured."""
 
     def __init__(self):
-        self.name = "Mock Provider"
+        self.name = 'Mock Provider'
 
     async def generate_text(
         self,
         prompt: str,
         max_tokens: Optional[int] = None,
         temperature: float = 0.7,
-        **kwargs
+        **kwargs,
     ) -> str:
         """Generate mock text for development."""
-        return f"Mock AI Response: {prompt[:100]}..."
+        return f'Mock AI Response: {prompt[:100]}...'
 
     async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate mock embeddings for development."""
         # Return random embeddings of dimension 1536 (OpenAI's embedding dimension)
         import random
+
         return [[random.random() for _ in range(1536)] for _ in texts]
 
     def count_tokens(self, text: str) -> int:
@@ -258,28 +265,34 @@ class MockAIProvider(AIProvider):
 def get_ai_provider() -> AIProvider:
     """Get the configured AI provider."""
     try:
-        provider_name = getattr(settings, 'AI_PROVIDER', None) or "openai"
+        provider_name = getattr(settings, 'AI_PROVIDER', None) or 'openai'
 
-        if provider_name.lower() == "openrouter":
+        if provider_name.lower() == 'openrouter':
             api_key = getattr(settings, 'OPENROUTER_API_KEY', None)
             if not api_key:
-                logger.warning("OPENROUTER_API_KEY not set, using mock provider")
+                logger.warning(
+                    'OPENROUTER_API_KEY not set, using mock provider'
+                )
                 return MockAIProvider()
             return OpenRouterProvider()
 
-        if provider_name.lower() == "anthropic":
+        if provider_name.lower() == 'anthropic':
             api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
             if not api_key:
-                logger.warning("ANTHROPIC_API_KEY not set, using mock provider")
+                logger.warning(
+                    'ANTHROPIC_API_KEY not set, using mock provider'
+                )
                 return MockAIProvider()
             return AnthropicProvider()
 
         # Default to OpenAI
         api_key = getattr(settings, 'OPENAI_API_KEY', None)
         if not api_key:
-            logger.warning("OPENAI_API_KEY not set, using mock provider")
+            logger.warning('OPENAI_API_KEY not set, using mock provider')
             return MockAIProvider()
         return OpenAIProvider()
     except Exception as e:
-        logger.error(f"Failed to initialize AI provider: {str(e)}, using mock provider")
+        logger.error(
+            f'Failed to initialize AI provider: {str(e)}, using mock provider'
+        )
         return MockAIProvider()

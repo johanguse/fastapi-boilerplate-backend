@@ -21,6 +21,7 @@ T = TypeVar('T')
 
 class PaginatedResponse(Page[T], Generic[T]):
     """Generic paginated response"""
+
     pass
 
 

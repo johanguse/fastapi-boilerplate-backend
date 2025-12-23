@@ -91,7 +91,9 @@ class PerformanceMonitor:
         """Get recent request metrics."""
         return list(self.request_history)[-limit:]
 
-    def get_slowest_endpoints(self, limit: int = 10) -> list[tuple[str, Dict[str, Any]]]:
+    def get_slowest_endpoints(
+        self, limit: int = 10
+    ) -> list[tuple[str, Dict[str, Any]]]:
         """Get slowest endpoints by average response time."""
         stats = self.get_endpoint_stats()
         sorted_endpoints = sorted(
@@ -99,7 +101,9 @@ class PerformanceMonitor:
         )
         return sorted_endpoints[:limit]
 
-    def get_error_endpoints(self, limit: int = 10) -> list[tuple[str, Dict[str, Any]]]:
+    def get_error_endpoints(
+        self, limit: int = 10
+    ) -> list[tuple[str, Dict[str, Any]]]:
         """Get endpoints with highest error rates."""
         stats = self.get_endpoint_stats()
         sorted_endpoints = sorted(
@@ -274,11 +278,14 @@ def time_operation(operation_name: str):  # type: ignore
 
     def decorator(func: Any):  # type: ignore
         if asyncio.iscoroutinefunction(func):  # type: ignore
+
             async def async_wrapper(*args: Any, **kwargs: Any):  # type: ignore
                 async with AsyncRequestTimer(operation_name):
                     return await func(*args, **kwargs)  # type: ignore
+
             return async_wrapper
         else:
+
             def sync_wrapper(*args: Any, **kwargs: Any):  # type: ignore
                 start_time = time.time()
                 try:
@@ -290,5 +297,7 @@ def time_operation(operation_name: str):  # type: ignore
                         logger.info(
                             f"Operation '{operation_name}' took {duration:.2f}ms"
                         )
+
             return sync_wrapper
+
     return decorator

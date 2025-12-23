@@ -40,7 +40,9 @@ def _process_method(method: dict[str, Any]) -> None:
             _process_response(response)
 
 
-def _generate_clean_operation_id(path: str, http_method: str, operation: dict[str, Any]) -> str:
+def _generate_clean_operation_id(
+    path: str, http_method: str, operation: dict[str, Any]
+) -> str:
     """Generate clean operation ID for better SDK method names.
 
     Converts paths like:
@@ -72,7 +74,9 @@ def _generate_clean_operation_id(path: str, http_method: str, operation: dict[st
             clean_segments.append(segment)
 
     # Build base name
-    base_name = ''.join(s.capitalize() if i > 0 else s for i, s in enumerate(clean_segments))
+    base_name = ''.join(
+        s.capitalize() if i > 0 else s for i, s in enumerate(clean_segments)
+    )
 
     # Add action based on HTTP method and path parameters
     method_prefixes = {
@@ -87,8 +91,17 @@ def _generate_clean_operation_id(path: str, http_method: str, operation: dict[st
 
     # Special case: if it looks like an action endpoint (sign-in, sign-out, etc.)
     # just use the path as the operation name
-    action_patterns = ['signIn', 'signUp', 'signOut', 'forgotPassword', 'resetPassword',
-                       'verify', 'refresh', 'resend', 'callback']
+    action_patterns = [
+        'signIn',
+        'signUp',
+        'signOut',
+        'forgotPassword',
+        'resetPassword',
+        'verify',
+        'refresh',
+        'resend',
+        'callback',
+    ]
     for pattern in action_patterns:
         if pattern.lower() in base_name.lower():
             return base_name[0].lower() + base_name[1:]

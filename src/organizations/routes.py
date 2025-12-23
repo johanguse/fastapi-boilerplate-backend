@@ -165,6 +165,7 @@ async def upload_organization_logo(
     try:
         # Get organization and verify user has access
         from sqlalchemy import select
+
         result = await db.execute(
             select(Organization).where(Organization.id == organization_id)
         )
@@ -178,6 +179,7 @@ async def upload_organization_logo(
 
         # Verify user is a member (you may want to check for admin/owner role)
         from src.organizations.models import OrganizationMember
+
         member_result = await db.execute(
             select(OrganizationMember).where(
                 OrganizationMember.organization_id == organization_id,
@@ -209,8 +211,12 @@ async def upload_organization_logo(
             )
 
         # Generate unique filename
-        file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
-        unique_filename = f'logos/{organization_id}/{uuid.uuid4()}.{file_extension}'
+        file_extension = (
+            file.filename.split('.')[-1] if file.filename else 'jpg'
+        )
+        unique_filename = (
+            f'logos/{organization_id}/{uuid.uuid4()}.{file_extension}'
+        )
 
         # Upload to R2
         file_url = await upload_file_to_r2(
@@ -265,6 +271,7 @@ async def delete_organization_logo(
     try:
         # Get organization and verify access
         from sqlalchemy import select
+
         result = await db.execute(
             select(Organization).where(Organization.id == organization_id)
         )
@@ -278,6 +285,7 @@ async def delete_organization_logo(
 
         # Verify user is a member
         from src.organizations.models import OrganizationMember
+
         member_result = await db.execute(
             select(OrganizationMember).where(
                 OrganizationMember.organization_id == organization_id,

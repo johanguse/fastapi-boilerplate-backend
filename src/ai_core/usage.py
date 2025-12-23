@@ -1,13 +1,20 @@
 """AI usage tracking and billing integration."""
 
+from __future__ import annotations
+
 from datetime import UTC, datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
+
+if TYPE_CHECKING:
+    from src.organization.models import Organization
+
+    from src.auth.models import User
 
 
 class AIUsageLog(Base):
@@ -24,8 +31,12 @@ class AIUsageLog(Base):
     )
 
     # Usage details
-    feature: Mapped[str] = mapped_column(String(50), index=True)  # documents, content, analytics
-    operation: Mapped[str] = mapped_column(String(50), index=True)  # generate_text, embeddings, etc.
+    feature: Mapped[str] = mapped_column(
+        String(50), index=True
+    )  # documents, content, analytics
+    operation: Mapped[str] = mapped_column(
+        String(50), index=True
+    )  # generate_text, embeddings, etc.
     tokens_used: Mapped[int] = mapped_column(Integer, default=0)
     cost: Mapped[float] = mapped_column(Float, default=0.0)
 

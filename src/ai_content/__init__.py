@@ -3,6 +3,6 @@
 from .models import AIContentGeneration, AIContentTemplate
 
 __all__ = [
-    "AIContentTemplate",
-    "AIContentGeneration",
+    'AIContentTemplate',
+    'AIContentGeneration',
 ]

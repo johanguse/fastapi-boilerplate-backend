@@ -44,7 +44,9 @@ class Settings(BaseSettings):
         'http://127.0.0.1:5173',
     ]
 
-    DATABASE_URL: Union[str, PostgresDsn] = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost/dbname')
+    DATABASE_URL: Union[str, PostgresDsn] = os.getenv(
+        'DATABASE_URL', 'postgresql://user:password@localhost/dbname'
+    )
 
     # Better Auth (optional) JWT acceptance alongside FastAPI Users
     BETTER_AUTH_ENABLED: bool = bool(os.getenv('BETTER_AUTH_ENABLED', ''))
@@ -193,9 +195,13 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY', '')
     ANTHROPIC_API_KEY: str = os.getenv('ANTHROPIC_API_KEY', '')
     OPENROUTER_API_KEY: str = os.getenv('OPENROUTER_API_KEY', '')
-    AI_PROVIDER: str = os.getenv('AI_PROVIDER', 'openai')  # openai, anthropic, or openrouter
+    AI_PROVIDER: str = os.getenv(
+        'AI_PROVIDER', 'openai'
+    )  # openai, anthropic, or openrouter
     AI_MODEL_TEXT: str = os.getenv('AI_MODEL_TEXT', 'gpt-4-turbo')
-    AI_MODEL_EMBEDDINGS: str = os.getenv('AI_MODEL_EMBEDDINGS', 'text-embedding-3-small')
+    AI_MODEL_EMBEDDINGS: str = os.getenv(
+        'AI_MODEL_EMBEDDINGS', 'text-embedding-3-small'
+    )
     AI_MAX_TOKENS: int = int(os.getenv('AI_MAX_TOKENS', '4096'))
 
 

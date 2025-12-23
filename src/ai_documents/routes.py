@@ -21,10 +21,10 @@ from .schemas import (
 from .service import AIDocumentService
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["AI Documents"])
+router = APIRouter(tags=['AI Documents'])
 
 
-@router.post("/upload", response_model=DocumentUploadResponse)
+@router.post('/upload', response_model=DocumentUploadResponse)
 async def upload_document(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_async_session),
@@ -43,7 +43,7 @@ async def upload_document(
         if file.content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
-                detail=f"File type {file.content_type} not supported"
+                detail=f'File type {file.content_type} not supported',
             )
 
         # Read file content
@@ -52,8 +52,7 @@ async def upload_document(
         # Get user's organization (assuming user belongs to one organization)
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -71,15 +70,15 @@ async def upload_document(
         return DocumentUploadResponse(
             document_id=document.id,
             status=document.status,
-            message="Document uploaded successfully. Processing will begin shortly.",
+            message='Document uploaded successfully. Processing will begin shortly.',
         )
 
     except Exception as e:
-        logger.error(f"Document upload failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Document upload failed")
+        logger.error(f'Document upload failed: {str(e)}')
+        raise HTTPException(status_code=500, detail='Document upload failed')
 
 
-@router.get("/", response_model=Page[AIDocumentResponse])
+@router.get('/', response_model=Page[AIDocumentResponse])
 async def get_documents(
     params: Params = Depends(),
     db: AsyncSession = Depends(get_async_session),
@@ -89,8 +88,7 @@ async def get_documents(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -109,6 +107,7 @@ async def get_documents(
 
         # Create paginated response
         from fastapi_pagination import create_page
+
         return create_page(
             document_responses,
             total=len(document_responses),  # In production, get total count
@@ -116,11 +115,11 @@ async def get_documents(
         )
 
     except Exception as e:
-        logger.error(f"Get documents failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get documents")
+        logger.error(f'Get documents failed: {str(e)}')
+        raise HTTPException(status_code=500, detail='Failed to get documents')
 
 
-@router.get("/{document_id}", response_model=AIDocumentResponse)
+@router.get('/{document_id}', response_model=AIDocumentResponse)
 async def get_document(
     document_id: int,
     db: AsyncSession = Depends(get_async_session),
@@ -130,8 +129,7 @@ async def get_document(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -140,18 +138,18 @@ async def get_document(
         document = await service.get_document(document_id, organization_id)
 
         if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail='Document not found')
 
         return AIDocumentResponse.model_validate(document)
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Get document failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get document")
+        logger.error(f'Get document failed: {str(e)}')
+        raise HTTPException(status_code=500, detail='Failed to get document')
 
 
-@router.get("/{document_id}/status", response_model=DocumentProcessingStatus)
+@router.get('/{document_id}/status', response_model=DocumentProcessingStatus)
 async def get_document_status(
     document_id: int,
     db: AsyncSession = Depends(get_async_session),
@@ -161,8 +159,7 @@ async def get_document_status(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -171,22 +168,24 @@ async def get_document_status(
         document = await service.get_document(document_id, organization_id)
 
         if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail='Document not found')
 
         return DocumentProcessingStatus(
             document_id=document.id,
             status=document.status,
-            message=f"Document is {document.status}",
+            message=f'Document is {document.status}',
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Get document status failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get document status")
+        logger.error(f'Get document status failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to get document status'
+        )
 
 
-@router.post("/{document_id}/chat", response_model=AIDocumentChatResponse)
+@router.post('/{document_id}/chat', response_model=AIDocumentChatResponse)
 async def chat_with_document(
     document_id: int,
     chat_data: AIDocumentChatCreate,
@@ -197,8 +196,7 @@ async def chat_with_document(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -216,11 +214,13 @@ async def chat_with_document(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Document chat failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Document chat failed")
+        logger.error(f'Document chat failed: {str(e)}')
+        raise HTTPException(status_code=500, detail='Document chat failed')
 
 
-@router.get("/{document_id}/chats", response_model=List[AIDocumentChatResponse])
+@router.get(
+    '/{document_id}/chats', response_model=List[AIDocumentChatResponse]
+)
 async def get_document_chats(
     document_id: int,
     db: AsyncSession = Depends(get_async_session),
@@ -230,8 +230,7 @@ async def get_document_chats(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -245,11 +244,13 @@ async def get_document_chats(
         return [AIDocumentChatResponse.model_validate(chat) for chat in chats]
 
     except Exception as e:
-        logger.error(f"Get document chats failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get document chats")
+        logger.error(f'Get document chats failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to get document chats'
+        )
 
 
-@router.delete("/{document_id}")
+@router.delete('/{document_id}')
 async def delete_document(
     document_id: int,
     db: AsyncSession = Depends(get_async_session),
@@ -259,8 +260,7 @@ async def delete_document(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -269,12 +269,14 @@ async def delete_document(
         deleted = await service.delete_document(document_id, organization_id)
 
         if not deleted:
-            raise HTTPException(status_code=404, detail="Document not found")
+            raise HTTPException(status_code=404, detail='Document not found')
 
-        return {"message": "Document deleted successfully"}
+        return {'message': 'Document deleted successfully'}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Delete document failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to delete document")
+        logger.error(f'Delete document failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to delete document'
+        )

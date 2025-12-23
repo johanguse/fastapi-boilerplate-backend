@@ -20,7 +20,9 @@ async def send_email(
     Send an email using Resend
     """
     if not settings.RESEND_API_KEY:
-        logger.error(f'Cannot send email to {to_email} - RESEND_API_KEY not configured')
+        logger.error(
+            f'Cannot send email to {to_email} - RESEND_API_KEY not configured'
+        )
         return False
 
     try:
@@ -37,7 +39,9 @@ async def send_email(
         )
         return True
     except Exception as e:
-        logger.exception(f'Failed to send email to {to_email}: {str(e)}. Response: {response if "response" in locals() else "No response"}')
+        logger.exception(
+            f'Failed to send email to {to_email}: {str(e)}. Response: {response if "response" in locals() else "No response"}'
+        )
         return False
 
 

@@ -1,6 +1,7 @@
 """
 User profile management routes including image upload.
 """
+
 import logging
 import uuid
 from typing import Optional
@@ -119,8 +120,12 @@ async def upload_user_profile_image(
             )
 
         # Generate unique filename
-        file_extension = file.filename.split('.')[-1] if file.filename else 'jpg'
-        unique_filename = f'avatars/{current_user.id}/{uuid.uuid4()}.{file_extension}'
+        file_extension = (
+            file.filename.split('.')[-1] if file.filename else 'jpg'
+        )
+        unique_filename = (
+            f'avatars/{current_user.id}/{uuid.uuid4()}.{file_extension}'
+        )
 
         # Upload to R2
         file_url = await upload_file_to_r2(

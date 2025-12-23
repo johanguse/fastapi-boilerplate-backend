@@ -12,11 +12,13 @@ logger = logging.getLogger(__name__)
 class AIUsageLimitMiddleware(BaseHTTPMiddleware):
     """Middleware to check AI usage limits."""
 
-    def __init__(self, app, ai_routes_prefix: str = "/api/v1/ai-"):
+    def __init__(self, app, ai_routes_prefix: str = '/api/v1/ai-'):
         super().__init__(app)
         self.ai_routes_prefix = ai_routes_prefix
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable
+    ) -> Response:
         """Check AI usage limits for AI routes."""
         # Skip if not an AI route
         if not request.url.path.startswith(self.ai_routes_prefix):
@@ -27,7 +29,10 @@ class AIUsageLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Skip if no organization context
-        if not hasattr(request.state, 'organization_id') or not request.state.organization_id:
+        if (
+            not hasattr(request.state, 'organization_id')
+            or not request.state.organization_id
+        ):
             return await call_next(request)
 
         # Extract feature from path
@@ -48,17 +53,17 @@ class AIUsageLimitMiddleware(BaseHTTPMiddleware):
             if not can_use:
                 raise HTTPException(
                     status_code=402,  # Payment Required
-                    detail=error or "AI usage limit exceeded"
+                    detail=error or 'AI usage limit exceeded',
                 )
 
         return await call_next(request)
 
     def _extract_feature_from_path(self, path: str) -> Optional[str]:
         """Extract AI feature from request path."""
-        if "/ai-documents/" in path:
-            return "documents"
-        elif "/ai-content/" in path:
-            return "content"
-        elif "/ai-analytics/" in path:
-            return "analytics"
+        if '/ai-documents/' in path:
+            return 'documents'
+        elif '/ai-content/' in path:
+            return 'content'
+        elif '/ai-analytics/' in path:
+            return 'analytics'
         return None

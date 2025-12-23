@@ -40,8 +40,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
             self.password_helper.hash(credentials.password)
             return None
 
-        verified, updated_password_hash = self.password_helper.verify_and_update(
-            credentials.password, user.hashed_password
+        verified, updated_password_hash = (
+            self.password_helper.verify_and_update(
+                credentials.password, user.hashed_password
+            )
         )
         if not verified:
             return None

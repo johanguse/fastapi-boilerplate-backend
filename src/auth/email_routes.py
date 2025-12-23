@@ -85,28 +85,32 @@ async def forgot_password(
 
             if not email_sent:
                 # Log error but don't expose to user
-                logger.warning(f'Failed to send password reset email to {user.email} - email_sent returned False')
+                logger.warning(
+                    f'Failed to send password reset email to {user.email} - email_sent returned False'
+                )
 
             return {
                 'success': True,
                 'message': 'Password reset link sent to your email address.',
-                'user_exists': True
+                'user_exists': True,
             }
 
         except Exception as e:
             # Log error but don't expose to user
-            logger.exception(f'Exception in forgot_password for {request.email}: {str(e)}')
+            logger.exception(
+                f'Exception in forgot_password for {request.email}: {str(e)}'
+            )
             return {
                 'success': False,
                 'message': 'Unable to send password reset email. Please try again later.',
-                'user_exists': True
+                'user_exists': True,
             }
     else:
         # User doesn't exist
         return {
             'success': False,
             'message': 'No account found with this email address. Would you like to create an account?',
-            'user_exists': False
+            'user_exists': False,
         }
 
 
@@ -126,7 +130,9 @@ async def reset_password(
     )
 
     if not email:
-        error_msg = translate_message('auth.invalid_or_expired_reset_token', http_request)
+        error_msg = translate_message(
+            'auth.invalid_or_expired_reset_token', http_request
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_msg,
@@ -174,7 +180,9 @@ async def verify_email(
             },
         )
 
-    logger.info(f'Verifying email with token (hash: {token_service.hash_token(data.token)[:16]}...)')
+    logger.info(
+        f'Verifying email with token (hash: {token_service.hash_token(data.token)[:16]}...)'
+    )
 
     token_hash = token_service.hash_token(data.token)
     token_result = await session.execute(
@@ -188,16 +196,20 @@ async def verify_email(
     if email_token_record:
         logger.info(f'Token found for email: {email_token_record.user_email}')
     else:
-        logger.warning('Token not found in database - may have been used or invalid')
+        logger.warning(
+            'Token not found in database - may have been used or invalid'
+        )
 
     if not email_token_record:
         # Token doesn't exist - it might have been used already or invalid
         # Since we can't determine which user this was for without the token,
         # we return a clear error message
-        error_msg = translate_message(
-            'auth.invalid_or_expired_verification_token',
-            request
-        ) or 'Invalid or expired verification token. If you\'ve already verified your email, you can proceed to login.'
+        error_msg = (
+            translate_message(
+                'auth.invalid_or_expired_verification_token', request
+            )
+            or "Invalid or expired verification token. If you've already verified your email, you can proceed to login."
+        )
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -212,10 +224,12 @@ async def verify_email(
         # Token expired, delete it
         await session.delete(email_token_record)
         await session.commit()
-        error_msg = translate_message(
-            'auth.invalid_or_expired_verification_token',
-            request
-        ) or 'This verification link has expired. Please request a new one.'
+        error_msg = (
+            translate_message(
+                'auth.invalid_or_expired_verification_token', request
+            )
+            or 'This verification link has expired. Please request a new one.'
+        )
 
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -253,7 +267,7 @@ async def verify_email(
         return {
             'success': True,
             'message': 'Email already verified',
-            'already_verified': True
+            'already_verified': True,
         }
 
     # Mark email as verified and delete the token
@@ -289,7 +303,7 @@ async def resend_verification(
         return {
             'success': False,
             'message': 'No account found with this email address. Please sign up first.',
-            'user_exists': False
+            'user_exists': False,
         }
     elif user.is_verified:
         # User already verified
@@ -297,7 +311,7 @@ async def resend_verification(
             'success': False,
             'message': 'This email address is already verified.',
             'user_exists': True,
-            'already_verified': True
+            'already_verified': True,
         }
     else:
         # User exists but not verified - send verification email
@@ -314,19 +328,23 @@ async def resend_verification(
 
             if not email_sent:
                 # Log error but don't expose to user
-                logger.warning(f'Failed to send verification email to {user.email} - email_sent returned False')
+                logger.warning(
+                    f'Failed to send verification email to {user.email} - email_sent returned False'
+                )
 
             return {
                 'success': True,
                 'message': 'Verification email sent to your email address.',
-                'user_exists': True
+                'user_exists': True,
             }
 
         except Exception as e:
             # Log error but don't expose to user
-            logger.exception(f'Exception in resend_verification for {data.email}: {str(e)}')
+            logger.exception(
+                f'Exception in resend_verification for {data.email}: {str(e)}'
+            )
             return {
                 'success': False,
                 'message': 'Unable to send verification email. Please try again later.',
-                'user_exists': True
+                'user_exists': True,
             }

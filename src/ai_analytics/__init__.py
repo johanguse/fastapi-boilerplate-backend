@@ -3,5 +3,5 @@
 from .models import AIAnalyticsQuery
 
 __all__ = [
-    "AIAnalyticsQuery",
+    'AIAnalyticsQuery',
 ]

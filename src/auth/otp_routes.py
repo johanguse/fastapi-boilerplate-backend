@@ -29,6 +29,7 @@ router = APIRouter()
 def create_better_auth_jwt(user: User) -> str:
     """Create a JWT token in Better Auth format but compatible with FastAPI Users"""
     import jwt
+
     payload = {
         'sub': str(user.id),  # Subject (user ID)
         'email': user.email,
@@ -50,6 +51,7 @@ def create_better_auth_jwt(user: User) -> str:
 def _cookie_options() -> Dict[str, Any]:
     """Derive cookie security options from FRONTEND_URL."""
     from urllib.parse import urlparse
+
     frontend = settings.FRONTEND_URL or ''
     secure = frontend.startswith('https')
     samesite = 'none' if secure else 'lax'
@@ -96,7 +98,7 @@ async def send_otp(
         user_exists = user is not None
 
         # Generate 6-digit OTP code
-        otp_code = f"{secrets.randbelow(1000000):06d}"
+        otp_code = f'{secrets.randbelow(1000000):06d}'
 
         # Store OTP token in database
         try:
@@ -126,22 +128,30 @@ async def send_otp(
                 logger.warning(f'Failed to send OTP email to {request.email}')
                 # Don't fail - email might be configured incorrectly in development
                 # But inform user to check spam or try again
-                logger.warning('Continuing despite email failure - check email configuration')
+                logger.warning(
+                    'Continuing despite email failure - check email configuration'
+                )
 
-            logger.info(f'OTP code for {request.email}: {otp_code}')  # Development only - remove in production
+            logger.info(
+                f'OTP code for {request.email}: {otp_code}'
+            )  # Development only - remove in production
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.exception(f'Exception sending OTP email to {request.email}: {str(e)}')
+            logger.exception(
+                f'Exception sending OTP email to {request.email}: {str(e)}'
+            )
             # Don't fail the request - email service might not be configured
             # Log the OTP for development
-            logger.warning(f'OTP code for {request.email} (email failed): {otp_code}')
+            logger.warning(
+                f'OTP code for {request.email} (email failed): {otp_code}'
+            )
 
         return OTPResponse(
             success=True,
             message='Verification code sent to your email address',
-            user_exists=user_exists
+            user_exists=user_exists,
         )
 
     except HTTPException:
@@ -207,7 +217,9 @@ async def verify_otp(
 
             user_create = UserCreate(
                 email=request.email,
-                password=secrets.token_urlsafe(32),  # Random password for OTP users
+                password=secrets.token_urlsafe(
+                    32
+                ),  # Random password for OTP users
                 name=request.name,
                 is_active=True,
                 is_superuser=False,
@@ -246,7 +258,9 @@ async def verify_otp(
             'user': {
                 'id': str(user.id),
                 'email': user.email,
-                'name': getattr(user, 'name', request.name or user.email.split('@')[0]),
+                'name': getattr(
+                    user, 'name', request.name or user.email.split('@')[0]
+                ),
                 'emailVerified': user.is_verified,
                 'role': getattr(user, 'role', 'member'),
                 'is_verified': user.is_verified,

@@ -60,10 +60,14 @@ class AIDocument(Base):
     organization: Mapped['Organization'] = relationship('Organization')
     uploaded_by_user: Mapped[Optional['User']] = relationship('User')
     chunks: Mapped[list['AIDocumentChunk']] = relationship(
-        'AIDocumentChunk', back_populates='document', cascade='all, delete-orphan'
+        'AIDocumentChunk',
+        back_populates='document',
+        cascade='all, delete-orphan',
     )
     chats: Mapped[list['AIDocumentChat']] = relationship(
-        'AIDocumentChat', back_populates='document', cascade='all, delete-orphan'
+        'AIDocumentChat',
+        back_populates='document',
+        cascade='all, delete-orphan',
     )
 
     def __repr__(self) -> str:
@@ -93,7 +97,9 @@ class AIDocumentChunk(Base):
     )
 
     # Relationships
-    document: Mapped['AIDocument'] = relationship('AIDocument', back_populates='chunks')
+    document: Mapped['AIDocument'] = relationship(
+        'AIDocument', back_populates='chunks'
+    )
 
     def __repr__(self) -> str:
         return f'<AIDocumentChunk doc={self.document_id} index={self.chunk_index}>'
@@ -125,7 +131,9 @@ class AIDocumentChat(Base):
     )
 
     # Relationships
-    document: Mapped['AIDocument'] = relationship('AIDocument', back_populates='chats')
+    document: Mapped['AIDocument'] = relationship(
+        'AIDocument', back_populates='chats'
+    )
     user: Mapped['User'] = relationship('User')
 
     def __repr__(self) -> str:

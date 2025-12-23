@@ -17,7 +17,9 @@ class EmailService:
         """Initialize Resend with API key from environment."""
         api_key = settings.RESEND_API_KEY
         if not api_key:
-            logger.error('RESEND_API_KEY not found in environment variables - email functionality will not work')
+            logger.error(
+                'RESEND_API_KEY not found in environment variables - email functionality will not work'
+            )
             self.api_key = None
         else:
             # Set the API key for the resend module
@@ -47,7 +49,9 @@ class EmailService:
             bool: True if email sent successfully, False otherwise
         """
         if not self.api_key:
-            logger.error(f'Resend API key not found - check RESEND_API_KEY. Cannot send verification email to {email}')
+            logger.error(
+                f'Resend API key not found - check RESEND_API_KEY. Cannot send verification email to {email}'
+            )
             return False
 
         verification_link = f'{self.frontend_url}/verify-email?token={token}'
@@ -114,7 +118,9 @@ class EmailService:
             bool: True if email sent successfully, False otherwise
         """
         if not self.api_key:
-            logger.error(f'Resend API key not found - check RESEND_API_KEY. Cannot send password reset email to {email}')
+            logger.error(
+                f'Resend API key not found - check RESEND_API_KEY. Cannot send password reset email to {email}'
+            )
             return False
 
         reset_link = f'{self.frontend_url}/reset-password?token={token}'
@@ -168,7 +174,10 @@ class EmailService:
             return False
 
     async def send_welcome_email(
-        self, email: str, name: Optional[str] = None, is_onboarding: bool = False
+        self,
+        email: str,
+        name: Optional[str] = None,
+        is_onboarding: bool = False,
     ) -> bool:
         """
         Send welcome email after successful verification or onboarding completion.
@@ -182,7 +191,9 @@ class EmailService:
             bool: True if email sent successfully, False otherwise
         """
         if not self.api_key:
-            logger.error(f'Resend API key not found - check RESEND_API_KEY. Cannot send welcome email to {email}')
+            logger.error(
+                f'Resend API key not found - check RESEND_API_KEY. Cannot send welcome email to {email}'
+            )
             return False
 
         display_name = name if name else email.split('@', maxsplit=1)[0]
@@ -202,7 +213,7 @@ class EmailService:
         else:
             subject = f'Welcome to {self.app_name}! 🎉'
             heading = f'Welcome to {self.app_name}! 🎉'
-            main_message = 'Your account has been successfully verified! You\'re now ready to get started.'
+            main_message = "Your account has been successfully verified! You're now ready to get started."
             next_steps = [
                 'Complete your profile',
                 'Create your first organization',
@@ -269,7 +280,9 @@ class EmailService:
             bool: True if email sent successfully, False otherwise
         """
         if not self.api_key:
-            logger.warning('Cannot send OTP email: RESEND_API_KEY not configured')
+            logger.warning(
+                'Cannot send OTP email: RESEND_API_KEY not configured'
+            )
             return False
 
         try:
@@ -326,9 +339,7 @@ class EmailService:
             }
 
             response = resend.Emails.send(params)
-            logger.info(
-                f'OTP email sent to {email}, ID: {response.get("id")}'
-            )
+            logger.info(f'OTP email sent to {email}, ID: {response.get("id")}')
             return True
 
         except Exception as e:
@@ -340,7 +351,9 @@ class EmailService:
     def _validate_configuration(self) -> None:
         """Validate Resend configuration and log warnings/errors."""
         if not self.api_key:
-            logger.error('Email service disabled: RESEND_API_KEY not configured')
+            logger.error(
+                'Email service disabled: RESEND_API_KEY not configured'
+            )
             return
 
         if not self.from_email or self.from_email == 'onboarding@resend.dev':
@@ -350,7 +363,9 @@ class EmailService:
         else:
             logger.info(f'FROM_EMAIL configured: {self.from_email}')
 
-        logger.info(f'Email service initialized with APP_NAME: {self.app_name}, FRONTEND_URL: {self.frontend_url}')
+        logger.info(
+            f'Email service initialized with APP_NAME: {self.app_name}, FRONTEND_URL: {self.frontend_url}'
+        )
 
 
 # Global instance

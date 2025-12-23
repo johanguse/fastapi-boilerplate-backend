@@ -43,11 +43,13 @@ class AIAnalyticsService:
             await self.db.refresh(query_record)
 
             # Convert natural language to SQL
-            sql_query = await self._convert_to_sql(natural_query, organization_id, user_id)
+            sql_query = await self._convert_to_sql(
+                natural_query, organization_id, user_id
+            )
 
             if not sql_query:
                 query_record.status = 'failed'
-                query_record.error_message = "Could not convert query to SQL"
+                query_record.error_message = 'Could not convert query to SQL'
                 await self.db.commit()
                 return query_record
 
@@ -71,7 +73,9 @@ class AIAnalyticsService:
             query_record.status = 'completed'
 
             # Estimate tokens and cost (rough)
-            tokens_used = self.ai_service.provider.count_tokens(natural_query + str(results))
+            tokens_used = self.ai_service.provider.count_tokens(
+                natural_query + str(results)
+            )
             cost = self.ai_service.provider.estimate_cost(tokens_used, 0)
 
             query_record.tokens_used = tokens_used
@@ -83,7 +87,7 @@ class AIAnalyticsService:
             return query_record
 
         except Exception as e:
-            logger.error(f"Analytics query processing failed: {str(e)}")
+            logger.error(f'Analytics query processing failed: {str(e)}')
             # Update status to failed
             if 'query_record' in locals():
                 query_record.status = 'failed'
@@ -121,7 +125,7 @@ class AIAnalyticsService:
                 temperature=0.1,  # Low temperature for more consistent SQL
                 organization_id=organization_id,
                 user_id=user_id,
-                feature="sql_generation",
+                feature='sql_generation',
             )
 
             # Clean up the response
@@ -139,7 +143,7 @@ class AIAnalyticsService:
             return sql_query
 
         except Exception as e:
-            logger.error(f"SQL conversion failed: {str(e)}")
+            logger.error(f'SQL conversion failed: {str(e)}')
             return None
 
     async def _get_database_schema(self) -> str:
@@ -160,9 +164,18 @@ class AIAnalyticsService:
         """Execute SQL query safely."""
         try:
             # Basic safety checks
-            dangerous_keywords = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE']
-            if any(keyword in sql_query.upper() for keyword in dangerous_keywords):
-                raise ValueError("Query contains dangerous operations")
+            dangerous_keywords = [
+                'DROP',
+                'DELETE',
+                'UPDATE',
+                'INSERT',
+                'ALTER',
+                'CREATE',
+            ]
+            if any(
+                keyword in sql_query.upper() for keyword in dangerous_keywords
+            ):
+                raise ValueError('Query contains dangerous operations')
 
             # Execute query
             result = await self.db.execute(text(sql_query))
@@ -182,14 +195,14 @@ class AIAnalyticsService:
                 data.append(row_dict)
 
             return {
-                "data": data,
-                "columns": list(columns),
-                "row_count": len(data),
+                'data': data,
+                'columns': list(columns),
+                'row_count': len(data),
             }
 
         except Exception as e:
-            logger.error(f"SQL execution failed: {str(e)}")
-            raise ValueError(f"Query execution failed: {str(e)}")
+            logger.error(f'SQL execution failed: {str(e)}')
+            raise ValueError(f'Query execution failed: {str(e)}')
 
     async def _generate_chart_config(
         self,
@@ -201,12 +214,14 @@ class AIAnalyticsService:
     ) -> Dict[str, Any]:
         """Generate chart configuration using AI."""
         try:
-            if not results.get("data"):
-                return {"type": "table", "data": [], "title": "No Data"}
+            if not results.get('data'):
+                return {'type': 'table', 'data': [], 'title': 'No Data'}
 
             # Determine chart type if not provided
             if not chart_type:
-                chart_type = await self._suggest_chart_type(results, natural_query, organization_id, user_id)
+                chart_type = await self._suggest_chart_type(
+                    results, natural_query, organization_id, user_id
+                )
 
             # Generate chart configuration
             prompt = f"""Based on the query results, create a chart configuration.
@@ -230,7 +245,7 @@ class AIAnalyticsService:
                 temperature=0.3,
                 organization_id=organization_id,
                 user_id=user_id,
-                feature="chart_config_generation",
+                feature='chart_config_generation',
             )
 
             # Parse JSON response
@@ -242,11 +257,17 @@ class AIAnalyticsService:
                 return self._create_fallback_chart_config(results, chart_type)
 
         except Exception as e:
-            logger.error(f"Chart config generation failed: {str(e)}")
-            return self._create_fallback_chart_config(results, chart_type or "table")
+            logger.error(f'Chart config generation failed: {str(e)}')
+            return self._create_fallback_chart_config(
+                results, chart_type or 'table'
+            )
 
     async def _suggest_chart_type(
-        self, results: Dict[str, Any], natural_query: str, organization_id: int, user_id: int
+        self,
+        results: Dict[str, Any],
+        natural_query: str,
+        organization_id: int,
+        user_id: int,
     ) -> str:
         """Suggest appropriate chart type."""
         try:
@@ -265,7 +286,7 @@ class AIAnalyticsService:
                 temperature=0.1,
                 organization_id=organization_id,
                 user_id=user_id,
-                feature="chart_type_suggestion",
+                feature='chart_type_suggestion',
             )
 
             chart_type = chart_type.strip().lower()
@@ -277,39 +298,41 @@ class AIAnalyticsService:
                 return 'table'  # Default fallback
 
         except Exception as e:
-            logger.error(f"Chart type suggestion failed: {str(e)}")
+            logger.error(f'Chart type suggestion failed: {str(e)}')
             return 'table'
 
-    def _create_fallback_chart_config(self, results: Dict[str, Any], chart_type: str) -> Dict[str, Any]:
+    def _create_fallback_chart_config(
+        self, results: Dict[str, Any], chart_type: str
+    ) -> Dict[str, Any]:
         """Create fallback chart configuration."""
-        data = results.get("data", [])
-        columns = results.get("columns", [])
+        data = results.get('data', [])
+        columns = results.get('columns', [])
 
         if not data or not columns:
-            return {"type": "table", "data": [], "title": "No Data"}
+            return {'type': 'table', 'data': [], 'title': 'No Data'}
 
         # Simple fallback logic
-        if chart_type == "table":
+        if chart_type == 'table':
             return {
-                "type": "table",
-                "data": data,
-                "title": "Query Results",
-                "columns": columns,
+                'type': 'table',
+                'data': data,
+                'title': 'Query Results',
+                'columns': columns,
             }
-        elif chart_type == "bar" and len(columns) >= 2:
+        elif chart_type == 'bar' and len(columns) >= 2:
             return {
-                "type": "bar",
-                "data": data,
-                "title": f"{columns[0]} vs {columns[1]}",
-                "x_axis": columns[0],
-                "y_axis": columns[1],
+                'type': 'bar',
+                'data': data,
+                'title': f'{columns[0]} vs {columns[1]}',
+                'x_axis': columns[0],
+                'y_axis': columns[1],
             }
         else:
             return {
-                "type": "table",
-                "data": data,
-                "title": "Query Results",
-                "columns": columns,
+                'type': 'table',
+                'data': data,
+                'title': 'Query Results',
+                'columns': columns,
             }
 
     async def _generate_insights(
@@ -321,7 +344,7 @@ class AIAnalyticsService:
     ) -> List[Dict[str, Any]]:
         """Generate insights from query results."""
         try:
-            if not results.get("data"):
+            if not results.get('data'):
                 return []
 
             prompt = f"""Analyze the following query results and provide insights.
@@ -341,7 +364,7 @@ class AIAnalyticsService:
                 temperature=0.4,
                 organization_id=organization_id,
                 user_id=user_id,
-                feature="insights_generation",
+                feature='insights_generation',
             )
 
             try:
@@ -351,7 +374,7 @@ class AIAnalyticsService:
                 return []
 
         except Exception as e:
-            logger.error(f"Insights generation failed: {str(e)}")
+            logger.error(f'Insights generation failed: {str(e)}')
             return []
 
     async def get_queries(
@@ -374,12 +397,14 @@ class AIAnalyticsService:
         result = await self.db.execute(
             select(AIAnalyticsQuery).where(
                 AIAnalyticsQuery.id == query_id,
-                AIAnalyticsQuery.organization_id == organization_id
+                AIAnalyticsQuery.organization_id == organization_id,
             )
         )
         return result.scalar_one_or_none()
 
-    async def get_organization_stats(self, organization_id: int) -> Dict[str, Any]:
+    async def get_organization_stats(
+        self, organization_id: int
+    ) -> Dict[str, Any]:
         """Get analytics usage stats for organization."""
         from sqlalchemy import func
 
@@ -393,7 +418,7 @@ class AIAnalyticsService:
         stats = result.first()
 
         return {
-            "total_queries": stats.total_queries or 0,
-            "total_tokens": stats.total_tokens or 0,
-            "total_cost": float(stats.total_cost or 0),
+            'total_queries': stats.total_queries or 0,
+            'total_tokens': stats.total_tokens or 0,
+            'total_cost': float(stats.total_cost or 0),
         }

@@ -12,10 +12,10 @@ from src.common.security import get_current_active_user
 from src.common.session import get_async_session
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["AI Usage"])
+router = APIRouter(tags=['AI Usage'])
 
 
-@router.get("/dashboard")
+@router.get('/dashboard')
 async def get_ai_usage_dashboard(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
@@ -25,19 +25,25 @@ async def get_ai_usage_dashboard(
         if not current_user.organizations:
             # Return empty data if user has no organization
             return {
-                "usage_summary": {
-                    "has_subscription": False,
-                    "ai_features_enabled": [],
-                    "monthly_credits": 0,
-                    "credits_used": 0,
-                    "credits_remaining": 0,
+                'usage_summary': {
+                    'has_subscription': False,
+                    'ai_features_enabled': [],
+                    'monthly_credits': 0,
+                    'credits_used': 0,
+                    'credits_remaining': 0,
                 },
-                "features_status": {
-                    "documents": {"enabled": False, "error": "No organization"},
-                    "content": {"enabled": False, "error": "No organization"},
-                    "analytics": {"enabled": False, "error": "No organization"},
+                'features_status': {
+                    'documents': {
+                        'enabled': False,
+                        'error': 'No organization',
+                    },
+                    'content': {'enabled': False, 'error': 'No organization'},
+                    'analytics': {
+                        'enabled': False,
+                        'error': 'No organization',
+                    },
                 },
-                "organization_id": None,
+                'organization_id': None,
             }
 
         organization_id = current_user.organizations[0].id
@@ -51,17 +57,19 @@ async def get_ai_usage_dashboard(
         features_status = await service.get_ai_features_status(organization_id)
 
         return {
-            "usage_summary": usage_summary,
-            "features_status": features_status,
-            "organization_id": organization_id,
+            'usage_summary': usage_summary,
+            'features_status': features_status,
+            'organization_id': organization_id,
         }
 
     except Exception as e:
-        logger.error(f"AI usage dashboard failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get AI usage dashboard")
+        logger.error(f'AI usage dashboard failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to get AI usage dashboard'
+        )
 
 
-@router.get("/limits")
+@router.get('/limits')
 async def get_usage_limits(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
@@ -70,8 +78,7 @@ async def get_usage_limits(
     try:
         if not current_user.organizations:
             raise HTTPException(
-                status_code=400,
-                detail="User must belong to an organization"
+                status_code=400, detail='User must belong to an organization'
             )
 
         organization_id = current_user.organizations[0].id
@@ -82,11 +89,13 @@ async def get_usage_limits(
         return usage_summary
 
     except Exception as e:
-        logger.error(f"Get usage limits failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get usage limits")
+        logger.error(f'Get usage limits failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to get usage limits'
+        )
 
 
-@router.get("/recent-activity")
+@router.get('/recent-activity')
 async def get_recent_ai_activity(
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
@@ -95,8 +104,8 @@ async def get_recent_ai_activity(
     try:
         if not current_user.organizations:
             return {
-                "activities": [],
-                "message": "User must belong to an organization"
+                'activities': [],
+                'message': 'User must belong to an organization',
             }
 
         organization_id = current_user.organizations[0].id
@@ -115,7 +124,7 @@ async def get_recent_ai_activity(
             select(AIUsageLog)
             .where(
                 AIUsageLog.organization_id == organization_id,
-                AIUsageLog.created_at >= since_date
+                AIUsageLog.created_at >= since_date,
             )
             .order_by(desc(AIUsageLog.created_at))
             .limit(10)
@@ -127,20 +136,22 @@ async def get_recent_ai_activity(
         formatted_activities = []
         for activity in activities:
             formatted_activities.append({
-                "id": activity.id,
-                "feature": activity.feature,
-                "operation": activity.operation,
-                "tokens_used": activity.total_tokens,
-                "cost": activity.cost_usd,
-                "created_at": activity.created_at.isoformat(),
-                "metadata": activity.metadata or {}
+                'id': activity.id,
+                'feature': activity.feature,
+                'operation': activity.operation,
+                'tokens_used': activity.total_tokens,
+                'cost': activity.cost_usd,
+                'created_at': activity.created_at.isoformat(),
+                'metadata': activity.metadata or {},
             })
 
         return {
-            "activities": formatted_activities,
-            "organization_id": organization_id,
+            'activities': formatted_activities,
+            'organization_id': organization_id,
         }
 
     except Exception as e:
-        logger.error(f"Get recent AI activity failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get recent AI activity")
+        logger.error(f'Get recent AI activity failed: {str(e)}')
+        raise HTTPException(
+            status_code=500, detail='Failed to get recent AI activity'
+        )
