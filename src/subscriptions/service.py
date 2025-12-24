@@ -420,3 +420,70 @@ async def get_billing_history(
         .order_by(BillingHistory.invoice_date.desc())
     )
     return list(result.scalars().all())
+
+
+async def update_customer_billing_info(
+    customer_id: str,
+    name: Optional[str] = None,
+    email: Optional[str] = None,
+    tax_id: Optional[str] = None,
+    address_line1: Optional[str] = None,
+    address_city: Optional[str] = None,
+    address_state: Optional[str] = None,
+    address_postal_code: Optional[str] = None,
+    address_country: Optional[str] = None,
+    company_name: Optional[str] = None,
+    user_id: Optional[int] = None,
+) -> Optional[dict]:
+    """
+    Update Stripe customer with billing information.
+    Used for Brazilian NFSE tax compliance and invoice generation.
+    """
+    if not settings.STRIPE_SECRET_KEY:
+        return None
+
+    try:
+        update_data = {}
+
+        if name or company_name:
+            update_data['name'] = company_name or name
+
+        if email:
+            update_data['email'] = email
+
+        # Build address object
+        address = {}
+        if address_line1:
+            address['line1'] = address_line1
+        if address_city:
+            address['city'] = address_city
+        if address_state:
+            address['state'] = address_state
+        if address_postal_code:
+            address['postal_code'] = address_postal_code
+        if address_country:
+            address['country'] = address_country
+
+        if address:
+            update_data['address'] = address
+
+        # Store tax ID and billing info in metadata for NFSE/invoice generation
+        metadata = {
+            'tax_id': tax_id or '',
+            'company_name': company_name or '',
+            'updated_at': datetime.now(UTC).isoformat(),
+        }
+        if user_id:
+            metadata['user_id'] = str(user_id)
+
+        update_data['metadata'] = metadata
+
+        customer = stripe.Customer.modify(customer_id, **update_data)
+        return customer
+
+    except stripe.error.StripeError as e:
+        # Log error but don't fail the profile update
+        import logging
+
+        logging.warning(f'Failed to sync billing info to Stripe: {str(e)}')
+        return None
