@@ -560,48 +560,139 @@ Content-Type: application/json
 
 ## Deployment
 
-### Fly.io Deployment
+This project uses [Fly.io](https://fly.io) for deployment with separate staging and production environments.
 
-1. Install the Fly.io CLI:
+### App Configuration
 
+| Environment | App Name | Config File |
+|-------------|----------|-------------|
+| Staging | `fastapi-boilerplate-backend-staging` | `fly.staging.toml` |
+| Production | `fastapi-boilerplate-backend-prod` | `fly.production.toml` |
+
+### Prerequisites
+
+1. **Install Fly.io CLI**:
 ```bash
 curl -L https://fly.io/install.sh | sh
 ```
 
-1. Login to Fly.io:
-
+2. **Login to Fly.io**:
 ```bash
-fly auth login
+flyctl auth login
 ```
 
-1. Create a new app:
+3. **Set up GitHub Secret** (for CI/CD):
+   - Get your token: `flyctl auth token`
+   - Add `FLY_API_TOKEN` to your GitHub repository secrets
+
+### Quick Deploy
+
+#### Interactive Deployment
 
 ```bash
-fly apps create your-app-name
+./scripts/deploy/deploy.sh
 ```
 
-1. Set up secrets:
+This shows an interactive menu with options for:
+- Deploy to Staging
+- Deploy to Production
+- Setup Custom Domain
+- Show deployment status
+
+#### Direct Deployment
 
 ```bash
-flyctl secrets set DATABASE_URL="postgresql://user:pass@host:5432/db"
-flyctl secrets set SECRET_KEY="your-secret-key"
-flyctl secrets set JWT_SECRET="your-jwt-secret"
-flyctl secrets set RESEND_API_KEY="your-resend-api-key"
-flyctl secrets set RESEND_FROM_EMAIL="your-email@domain.com"
+# Deploy to staging
+./scripts/deploy/deploy-staging.sh
+
+# Deploy to production (requires confirmation)
+./scripts/deploy/deploy-production.sh
 ```
 
-1. Deploy:
+### Environment Variables
+
+Create environment files in the backend root (gitignored):
+
+**`.env.staging`** - Staging secrets
+**`.env.production`** - Production secrets
+
+Example format:
+```env
+DATABASE_URL=postgresql://user:pass@host:5432/db
+SECRET_KEY=your-secret-key
+JWT_SECRET=your-jwt-secret
+RESEND_API_KEY=re_xxxxx
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+FRONTEND_URL=https://staging.yourdomain.com
+```
+
+The deployment scripts automatically load these files and set all secrets at once using `flyctl secrets set`.
+
+### Manual Secrets Setup
+
+If you prefer setting secrets manually:
 
 ```bash
-fly deploy
+# Set individual secrets
+flyctl secrets set DATABASE_URL="postgresql://user:pass@host:5432/db" --app fastapi-boilerplate-backend-staging
+
+# Set multiple secrets at once
+flyctl secrets set \
+  DATABASE_URL="postgresql://..." \
+  SECRET_KEY="..." \
+  JWT_SECRET="..." \
+  --app fastapi-boilerplate-backend-staging
 ```
+
+### Custom Domain Setup
+
+```bash
+./scripts/deploy/setup-custom-domain.sh staging
+# or
+./scripts/deploy/setup-custom-domain.sh production
+```
+
+Then add DNS records to your domain:
+
+**CNAME (recommended for subdomains)**:
+```
+Type: CNAME
+Name: api-staging
+Target: fastapi-boilerplate-backend-staging.fly.dev
+```
+
+### Post-Deployment
+
+After deploying, run migrations:
+
+```bash
+# SSH into the app and run migrations
+flyctl ssh console -a fastapi-boilerplate-backend-staging -C 'uv run alembic upgrade head'
+```
+
+### Monitoring
+
+```bash
+# Check app status
+flyctl status --app fastapi-boilerplate-backend-staging
+
+# View logs
+flyctl logs --app fastapi-boilerplate-backend-staging
+
+# SSH into the app
+flyctl ssh console --app fastapi-boilerplate-backend-staging
+```
+
+### CI/CD
+
+The GitHub Actions workflow (`.github/workflows/fly-deploy.yml`) automatically deploys to staging when pushing to the `main` branch. Make sure `FLY_API_TOKEN` is set in your repository secrets.
 
 ### Environment Variables (Production)
 
 - Production secrets are stored in Fly.io using `flyctl secrets set`
 - CI/CD secrets are stored in GitHub Actions Secrets
-- Development variables are in `.env.docker.dev`
-- Production variables template in `.env.docker.prod`
+- Development variables are in `.env` (local)
+- Staging/Production variables in `.env.staging` / `.env.production`
 
 ## API Documentation
 
