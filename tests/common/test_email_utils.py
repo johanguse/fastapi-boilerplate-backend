@@ -25,9 +25,12 @@ async def test_send_email_success(monkeypatch):
         Emails = FakeEmails()
         api_key = 'dummy'
 
+    # Mock settings.RESEND_API_KEY so the function doesn't return early
+    monkeypatch.setattr('src.utils.email.settings.RESEND_API_KEY', 'test-api-key')
     monkeypatch.setattr(email_utils, 'resend', FakeResend())
     ok = await email_utils.send_email('user@example.com', 'Hello', '<p>hi</p>')
     assert ok is True
+
 
 
 @pytest.mark.real_email  # Opt-out of auto email mocking - this test controls its own mock
@@ -42,6 +45,8 @@ async def test_send_email_failure(monkeypatch):
         Emails = FakeEmails()
         api_key = 'dummy'
 
+    # Mock settings.RESEND_API_KEY so the function doesn't return early
+    monkeypatch.setattr('src.utils.email.settings.RESEND_API_KEY', 'test-api-key')
     monkeypatch.setattr(email_utils, 'resend', FakeResend())
     ok = await email_utils.send_email('user@example.com', 'Hello', '<p>hi</p>')
     assert ok is False
