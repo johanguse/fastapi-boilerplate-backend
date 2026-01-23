@@ -87,9 +87,9 @@ async def rate_limit_exceeded_handler(
 
         client_ip = get_real_ip(request)
 
-        AuditLogger.log_security_alert(
+        AuditLogger.log_security_alert(  # type: ignore
             action='rate_limit_exceeded',
-            status=EventStatus.WARNING,
+            status=EventStatus.WARNING,  # type: ignore
             ip_address=client_ip,
             metadata={
                 'path': str(request.url.path),

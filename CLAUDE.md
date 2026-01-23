@@ -4,33 +4,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-### Core Commands (using taskipy)
-- `task run` or `task dev` - Start development server on port 8001
-- `task lint` - Run linting with ruff (check only)
-- `task format` - Format and fix code with ruff
-- `task test` - Run all tests with coverage
-- `task test-auth` - Run authentication tests only
-- `task test-watch` - Run tests in watch mode
-- `task migrations` - Create new Alembic migration (requires message: `task migrations "description"`)
-- `task migrate` - Apply pending migrations
+### Core Commands (using just)
 
-### Poetry Commands
-- `poetry shell` - Activate virtual environment
-- `poetry install` - Install dependencies
-- `poetry run uvicorn src.main:app --reload --port 8001` - Direct server start
+- `just run` or `just dev` - Start development server on port 8000
+- `just lint` - Run linting with ruff (check only)
+- `just format` - Format and fix code with ruff
+- `just test` - Run all tests with coverage
+- `just test-auth` - Run authentication tests only
+- `just test-watch` - Run tests in watch mode
+- `just migrations "description"` - Create new Alembic migration
+- `just migrate` - Apply pending migrations
+- `just seed` - Seed the database
+- `just reset-db` - Reset the database
+- `just reset-and-seed` - Reset database and seed
+
+### UV Commands
+
+- `uv sync` - Install dependencies
+- `uv sync --group dev` - Install with dev dependencies
+- `uv run <command>` - Run command in virtual environment
+- `uv add <package>` - Add a new dependency
+- `uv add --dev <package>` - Add a dev dependency
+- `uv lock --upgrade` - Update dependencies
 
 ### Testing Specific Files
+
 ```bash
 # Run specific test file
-poetry run pytest tests/test_auth.py -v
+uv run pytest tests/test_auth.py -v
 
 # Run specific test function
-poetry run pytest tests/test_auth.py::test_login_success -v
+uv run pytest tests/test_auth.py::test_login_success -v
 ```
 
 ### Database Management
-- `alembic revision --autogenerate -m "description"` - Create new migration
-- `alembic upgrade head` - Apply migrations
+
+- `uv run alembic revision --autogenerate -m "description"` - Create new migration
+- `uv run alembic upgrade head` - Apply migrations
 - Migrations are stored in `alembic/versions/`
 
 ## Architecture Overview
@@ -38,6 +48,7 @@ poetry run pytest tests/test_auth.py::test_login_success -v
 This is a FastAPI-based SaaS boilerplate using Domain-Driven Design (DDD) principles with the following structure:
 
 ### Core Architecture
+
 - **FastAPI** with async/await patterns
 - **SQLAlchemy 2.0** with async engine (PostgreSQL via asyncpg)
 - **Alembic** for database migrations
@@ -46,7 +57,9 @@ This is a FastAPI-based SaaS boilerplate using Domain-Driven Design (DDD) princi
 - **Domain-based module organization** (auth, organizations, projects, activity_log, payments, uploads)
 
 ### Module Structure
+
 Each domain module follows this pattern:
+
 ```
 src/{domain}/
 ├── __init__.py
@@ -57,6 +70,7 @@ src/{domain}/
 ```
 
 ### Key Components
+
 - **src/main.py** - Application entry point with router registration
 - **src/common/** - Shared utilities, database config, middleware, security
 - **src/common/database.py** - SQLAlchemy Base and model imports
@@ -64,18 +78,21 @@ src/{domain}/
 - **src/common/session.py** - Database session management
 
 ### Database Architecture
+
 - All models inherit from `src.common.database.Base`
 - Models are imported in `database.py` to ensure registration
 - Async database operations throughout
 - Uses dependency injection for database sessions
 
 ### Authentication
+
 - **FastAPI Users** integration with OAuth support
 - JWT token-based authentication
 - User management with organizations and projects relationship
 - Role-based access control via organization membership
 
 ### Testing Architecture
+
 - **pytest** with async support (pytest-asyncio)
 - **testcontainers** for PostgreSQL integration tests
 - **factory-boy** for test data generation
@@ -85,6 +102,7 @@ src/{domain}/
 ## Environment Configuration
 
 Required environment variables (see README.md for full list):
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `SECRET_KEY` - Application secret
 - `JWT_SECRET` - JWT signing key

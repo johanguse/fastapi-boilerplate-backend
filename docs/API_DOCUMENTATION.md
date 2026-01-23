@@ -1,6 +1,7 @@
 # 📚 Complete API Documentation
 
 ## Base URL
+
 ```
 http://localhost:8000/api/v1
 ```
@@ -10,20 +11,24 @@ http://localhost:8000/api/v1
 ## 🔐 Authentication
 
 All authenticated endpoints require a Bearer token in the Authorization header:
+
 ```
 Authorization: Bearer {access_token}
 ```
 
 ### Get Token
+
 **POST** `/auth/login`
 
 **Body (form-urlencoded):**
+
 ```
 username=admin@example.com
 password=admin123
 ```
 
 **Response:**
+
 ```json
 {
   "access_token": "eyJhbG...",
@@ -34,6 +39,7 @@ password=admin123
 ---
 
 ## 📋 Table of Contents
+
 1. [Authentication](#authentication-endpoints)
 2. [Users](#user-endpoints)
 3. [Organizations](#organization-endpoints)
@@ -50,9 +56,11 @@ password=admin123
 ## 🔑 Authentication Endpoints
 
 ### Register User
+
 **POST** `/auth/register`
 
 **Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -62,15 +70,18 @@ password=admin123
 ```
 
 ### Login
+
 **POST** `/auth/login`
 
 **Body (form-urlencoded):**
+
 ```
 username=user@example.com
 password=password123
 ```
 
 ### Get Current User
+
 **GET** `/users/me`
 
 **Headers:** `Authorization: Bearer {token}`
@@ -80,9 +91,11 @@ password=password123
 ## 👤 User Endpoints
 
 ### Get User Profile
+
 **GET** `/users/me`
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -100,9 +113,11 @@ password=password123
 ## 🏢 Organization Endpoints
 
 ### List Organizations
+
 **GET** `/organizations`
 
 **Response:**
+
 ```json
 [
   {
@@ -115,9 +130,11 @@ password=password123
 ```
 
 ### Create Organization
+
 **POST** `/organizations`
 
 **Body:**
+
 ```json
 {
   "name": "My Organization",
@@ -126,12 +143,15 @@ password=password123
 ```
 
 ### Get Organization
+
 **GET** `/organizations/{id}`
 
 ### Update Organization
+
 **PUT** `/organizations/{id}`
 
 **Body:**
+
 ```json
 {
   "name": "Updated Name",
@@ -140,6 +160,7 @@ password=password123
 ```
 
 ### Delete Organization
+
 **DELETE** `/organizations/{id}`
 
 ---
@@ -147,9 +168,11 @@ password=password123
 ## 👥 Organization Member Endpoints
 
 ### List Organization Members
+
 **GET** `/organizations/{id}/members`
 
 **Response:**
+
 ```json
 [
   {
@@ -168,12 +191,15 @@ password=password123
 ```
 
 ### Remove Organization Member
+
 **DELETE** `/organizations/{org_id}/members/{member_id}`
 
 ### Update Member Role
+
 **PATCH** `/organizations/{org_id}/members/{member_id}`
 
 **Body:**
+
 ```json
 {
   "role": "admin"
@@ -187,9 +213,11 @@ password=password123
 ## 📧 Team Invitation Endpoints
 
 ### Invite Team Member
+
 **POST** `/invitations/organizations/{id}/invitations`
 
 **Body:**
+
 ```json
 {
   "email": "newmember@example.com",
@@ -199,6 +227,7 @@ password=password123
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -213,9 +242,11 @@ password=password123
 ```
 
 ### List Pending Invitations
+
 **GET** `/invitations/organizations/{id}/invitations`
 
 **Response:**
+
 ```json
 [
   {
@@ -232,9 +263,11 @@ password=password123
 ```
 
 ### Accept Invitation
+
 **POST** `/invitations/invitations/{token}/accept`
 
 **Response:**
+
 ```json
 {
   "message": "Invitation accepted",
@@ -243,9 +276,11 @@ password=password123
 ```
 
 ### Decline Invitation
+
 **POST** `/invitations/invitations/{token}/decline`
 
 ### Cancel Invitation (Admin Only)
+
 **DELETE** `/invitations/organizations/{org_id}/invitations/{invitation_id}`
 
 ---
@@ -253,9 +288,11 @@ password=password123
 ## ✉️ Email Verification Endpoints
 
 ### Resend Verification Email
+
 **POST** `/invitations/verify-email/resend`
 
 **Response:**
+
 ```json
 {
   "message": "Verification email sent"
@@ -263,9 +300,11 @@ password=password123
 ```
 
 ### Verify Email with Token
+
 **POST** `/invitations/verify-email/{token}`
 
 **Response:**
+
 ```json
 {
   "message": "Email verified successfully",
@@ -278,9 +317,11 @@ password=password123
 ## 💳 Subscription Endpoints
 
 ### List Subscription Plans
+
 **GET** `/subscriptions/plans`
 
 **Response:**
+
 ```json
 [
   {
@@ -304,9 +345,11 @@ password=password123
 ```
 
 ### Create Checkout Session
+
 **POST** `/subscriptions/organizations/{id}/checkout`
 
 **Body:**
+
 ```json
 {
   "plan_id": 2,
@@ -317,6 +360,7 @@ password=password123
 ```
 
 **Response:**
+
 ```json
 {
   "checkout_url": "https://checkout.stripe.com/..."
@@ -324,9 +368,11 @@ password=password123
 ```
 
 ### Get Organization Subscription
+
 **GET** `/subscriptions/organizations/{id}/subscription`
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -345,9 +391,11 @@ password=password123
 ```
 
 ### Get Usage Metrics
+
 **GET** `/subscriptions/organizations/{id}/usage`
 
 **Response:**
+
 ```json
 {
   "current_projects_count": 2,
@@ -363,9 +411,11 @@ password=password123
 ```
 
 ### Create Customer Portal Session
+
 **POST** `/subscriptions/organizations/{id}/portal`
 
 **Response:**
+
 ```json
 {
   "portal_url": "https://billing.stripe.com/..."
@@ -373,9 +423,11 @@ password=password123
 ```
 
 ### Cancel Subscription
+
 **POST** `/subscriptions/organizations/{id}/cancel`
 
 **Response:**
+
 ```json
 {
   "message": "Subscription will be cancelled at period end",
@@ -388,9 +440,11 @@ password=password123
 ## 📊 Billing Endpoints
 
 ### Get Billing History
+
 **GET** `/subscriptions/organizations/{id}/billing-history`
 
 **Response:**
+
 ```json
 [
   {
@@ -412,12 +466,15 @@ password=password123
 ## 📁 Project Endpoints
 
 ### List Projects
+
 **GET** `/projects`
 
 **Query Parameters:**
+
 - `organization_id` (optional): Filter by organization
 
 **Response:**
+
 ```json
 [
   {
@@ -431,9 +488,11 @@ password=password123
 ```
 
 ### Create Project
+
 **POST** `/projects`
 
 **Body:**
+
 ```json
 {
   "name": "New Project",
@@ -443,12 +502,15 @@ password=password123
 ```
 
 ### Get Project
+
 **GET** `/projects/{id}`
 
 ### Update Project
+
 **PUT** `/projects/{id}`
 
 ### Delete Project
+
 **DELETE** `/projects/{id}`
 
 ---
@@ -456,15 +518,18 @@ password=password123
 ## 🔔 Webhook Endpoints
 
 ### Stripe Subscription Webhooks
+
 **POST** `/webhooks/stripe`
 
 **Headers:**
+
 ```
 Stripe-Signature: {signature}
 Content-Type: application/json
 ```
 
 **Handled Events:**
+
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
@@ -477,6 +542,7 @@ Content-Type: application/json
 ## 🗄️ Seeded Test Data
 
 ### Users (All use password: `admin123`)
+
 ```
 admin@example.com    - Admin User     - Owner of Dev Team
 john@example.com     - John Doe       - Admin in Dev, Owner of Marketing
@@ -485,6 +551,7 @@ bob@example.com      - Bob Wilson     - Member in Marketing
 ```
 
 ### Organizations
+
 ```
 1. Development Team  - 3 members (admin, john, jane)
 2. Marketing Team    - 2 members (john, bob)
@@ -492,6 +559,7 @@ bob@example.com      - Bob Wilson     - Member in Marketing
 ```
 
 ### Subscription Plans
+
 ```
 1. Free         - $0/month    - 1 project, 1 user, 1GB
 2. Starter      - $9.90/month - 3 projects, 5 users, 5GB
@@ -500,6 +568,7 @@ bob@example.com      - Bob Wilson     - Member in Marketing
 ```
 
 ### Projects
+
 ```
 1. AI Chatbot Platform       - Development Team
 2. Content Generation Tool   - Marketing Team
@@ -512,6 +581,7 @@ bob@example.com      - Bob Wilson     - Member in Marketing
 ## 🚀 Quick Start Examples
 
 ### 1. Login and Get Organizations
+
 ```bash
 # Login
 curl -X POST http://localhost:8000/api/v1/auth/login \
@@ -526,6 +596,7 @@ curl http://localhost:8000/api/v1/organizations \
 ```
 
 ### 2. Invite Team Member
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/invitations/organizations/1/invitations \
   -H "Authorization: Bearer {access_token}" \
@@ -538,6 +609,7 @@ curl -X POST http://localhost:8000/api/v1/invitations/organizations/1/invitation
 ```
 
 ### 3. Subscribe to Plan
+
 ```bash
 # Get available plans
 curl http://localhost:8000/api/v1/subscriptions/plans
@@ -559,17 +631,20 @@ curl -X POST http://localhost:8000/api/v1/subscriptions/organizations/1/checkout
 ## 🔒 Security Notes
 
 ### Authentication
+
 - All protected endpoints require valid JWT token
 - Tokens expire after configured time (default: 30 minutes)
 - Use refresh tokens for long-lived sessions
 
 ### Authorization
+
 - Organization owners can: manage members, change settings, delete org
 - Organization admins can: manage members, invite users
 - Organization members can: view organization, access projects
 - Organization viewers can: view organization only
 
 ### Invitations
+
 - Invitations expire after 7 days
 - Only admins and owners can invite members
 - Invitation tokens are single-use
@@ -602,6 +677,7 @@ curl -X POST http://localhost:8000/api/v1/subscriptions/organizations/1/checkout
 4. Test all endpoints!
 
 **Collection includes:**
+
 - ✅ All 30+ endpoints
 - ✅ Auto-authentication
 - ✅ Environment variables
@@ -613,8 +689,9 @@ curl -X POST http://localhost:8000/api/v1/subscriptions/organizations/1/checkout
 ## 📞 Support
 
 For issues or questions:
-- Check logs: `poetry run uvicorn src.main:app --reload`
-- Test database: `poetry run python scripts/seed.py`
+
+- Check logs: `just dev` or `uv run uvicorn src.main:app --reload`
+- Test database: `just seed` or `uv run python scripts/run_seed.py`
 - View API docs: `http://localhost:8000/docs`
 - View Redoc: `http://localhost:8000/redoc`
 

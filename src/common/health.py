@@ -1,8 +1,14 @@
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from src.common.config import settings
-from src.common.monitoring import PerformanceMonitor, get_performance_monitor
+from src.common.monitoring import (
+    PerformanceMonitor,
+    RequestMetrics,
+    get_performance_monitor,
+)
 
 
 class HealthResponse(BaseModel):
@@ -15,8 +21,8 @@ class PerformanceMetrics(BaseModel):
     total_requests: int
     avg_response_time_ms: float
     error_rate: float
-    slowest_endpoints: list
-    error_endpoints: list
+    slowest_endpoints: list[Any]
+    error_endpoints: list[Any]
 
 
 router = APIRouter(tags=['Health'])
@@ -46,7 +52,7 @@ async def get_performance_metrics(
 
 
 @router.get('/metrics/endpoints')
-async def get_endpoint_metrics(
+async def get_endpoint_metrics(  # type: ignore
     monitor: PerformanceMonitor = Depends(get_performance_monitor),
 ):
     """
@@ -55,13 +61,13 @@ async def get_endpoint_metrics(
     """
     return {
         'endpoint_stats': monitor.get_endpoint_stats(),
-        'slowest_endpoints': monitor.get_slowest_endpoints(10),
-        'error_endpoints': monitor.get_error_endpoints(10),
+        'slowest_endpoints': monitor.get_slowest_endpoints(10),  # type: ignore
+        'error_endpoints': monitor.get_error_endpoints(10),  # type: ignore
     }
 
 
 @router.get('/metrics/recent')
-async def get_recent_requests(
+async def get_recent_requests(  # type: ignore
     limit: int = 50,
     monitor: PerformanceMonitor = Depends(get_performance_monitor),
 ):
@@ -69,7 +75,7 @@ async def get_recent_requests(
     Get recent request metrics for debugging.
     Shows last N requests with timing and memory information.
     """
-    recent = monitor.get_recent_requests(limit)
+    recent: list[RequestMetrics] = monitor.get_recent_requests(limit)
     return {
         'recent_requests': [
             {

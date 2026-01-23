@@ -3,18 +3,21 @@
 ## ✅ What's Implemented
 
 ### 1. Structured Audit Logger
+
 - **File**: `src/common/audit_logger.py`
 - **Logs to**: `logs/audit.log` (separate from application logs)
 - **Format**: JSON for easy parsing by external tools
 - **Separate from**: Application logs (`logs/app.log`)
 
 ### 2. Hidden API Docs in Production
+
 - **File**: `src/main.py`
-- **Behavior**: 
+- **Behavior**:
   - Development: `/docs`, `/redoc`, `/openapi.json` available
   - Production: All docs endpoints return 404
 
 ### 3. Structured Application Logging
+
 - **File**: `src/main.py`
 - **Development**: Human-readable format
 - **Production**: JSON format for log aggregation tools
@@ -179,7 +182,8 @@ async def delete_organization(
 
 ## 📋 Events to Log
 
-### Authentication Events (Use these functions):
+### Authentication Events (Use these functions)
+
 - ✅ `log_login_success(user_id, email, request)`
 - ✅ `log_login_failure(email, request, reason)`
 - ✅ `log_logout(user_id, email, request)`
@@ -187,15 +191,18 @@ async def delete_organization(
 - ✅ `log_password_reset_complete(user_id, email, request)`
 - ✅ `log_email_verification(user_id, email, request)`
 
-### Authorization Events:
+### Authorization Events
+
 - ✅ `log_permission_denied(user_id, org_id, resource, resource_id, request, required_permission)`
 
-### Data Modification Events:
+### Data Modification Events
+
 - ✅ `log_role_change(user_id, org_id, target_user_id, old_role, new_role, request)`
 - ✅ `log_organization_member_added(user_id, org_id, new_member_id, role, request)`
 - ✅ `log_organization_member_removed(user_id, org_id, removed_member_id, request)`
 
-### Custom Events (Use AuditLogger directly):
+### Custom Events (Use AuditLogger directly)
+
 ```python
 from src.common.audit_logger import AuditLogger, EventStatus
 
@@ -225,7 +232,8 @@ AuditLogger.log_data_modification(
 
 ## 📊 Log Output Examples
 
-### Successful Login:
+### Successful Login
+
 ```json
 {
   "timestamp": "2025-09-30T12:34:56.789Z",
@@ -244,7 +252,8 @@ AuditLogger.log_data_modification(
 }
 ```
 
-### Failed Login:
+### Failed Login
+
 ```json
 {
   "timestamp": "2025-09-30T12:35:01.234Z",
@@ -264,7 +273,8 @@ AuditLogger.log_data_modification(
 }
 ```
 
-### Role Change:
+### Role Change
+
 ```json
 {
   "timestamp": "2025-09-30T12:36:15.456Z",
@@ -290,7 +300,8 @@ AuditLogger.log_data_modification(
 
 ## 🔍 Analyzing Audit Logs
 
-### View Recent Logs:
+### View Recent Logs
+
 ```bash
 # View last 20 audit events
 tail -n 20 logs/audit.log | jq .
@@ -318,11 +329,13 @@ cat logs/audit.log | jq -r 'select(.action=="login" and .status=="failure") | .m
 ### Option 1: Sentry (Recommended for Getting Started)
 
 **Setup:**
+
 ```bash
-poetry add sentry-sdk[fastapi]
+uv add sentry-sdk[fastapi]
 ```
 
 **Configuration:**
+
 ```python
 # File: src/main.py
 
@@ -339,6 +352,7 @@ if IS_PRODUCTION:
 ```
 
 **Benefits:**
+
 - Error tracking with stack traces
 - Performance monitoring
 - User context tracking
@@ -351,17 +365,20 @@ if IS_PRODUCTION:
 ### Option 2: ELK Stack (For Advanced Users)
 
 **Components:**
+
 - **Elasticsearch**: Search and analytics
 - **Logstash**: Log collection and parsing
 - **Kibana**: Visualization
 
 **Setup:**
+
 ```bash
 # Install Filebeat for log shipping
 # Configure to send logs to Logstash/Elasticsearch
 ```
 
 **Benefits:**
+
 - Full-text search
 - Powerful visualizations
 - Alerting
@@ -374,9 +391,10 @@ if IS_PRODUCTION:
 ### Option 3: AWS CloudWatch (If on AWS)
 
 **Setup:**
+
 ```python
 # Install watchtower
-poetry add watchtower
+uv add watchtower
 
 # Configure CloudWatch handler
 import watchtower
@@ -390,6 +408,7 @@ audit_logger.addHandler(cloudwatch_handler)
 ```
 
 **Benefits:**
+
 - Integrated with AWS services
 - Good search capabilities
 - Alarms and metrics
@@ -401,6 +420,7 @@ audit_logger.addHandler(cloudwatch_handler)
 ### Option 4: Grafana Loki (Cost-Effective)
 
 **Setup:**
+
 ```yaml
 # docker-compose.yml
 services:
@@ -422,6 +442,7 @@ services:
 ```
 
 **Benefits:**
+
 - Free and open source
 - Great for logs + metrics
 - Beautiful dashboards
@@ -433,7 +454,8 @@ services:
 
 ## 📋 Implementation Checklist
 
-### ✅ Completed:
+### ✅ Completed
+
 - [x] Created audit logger module
 - [x] Added structured logging
 - [x] Hidden API docs in production
@@ -441,7 +463,8 @@ services:
 - [x] System startup/shutdown logging
 - [x] Documentation
 
-### 🎯 Next Steps (This Week):
+### 🎯 Next Steps (This Week)
+
 - [ ] Add audit logging to auth endpoints
 - [ ] Add audit logging to organization endpoints
 - [ ] Test audit logs locally
@@ -449,7 +472,8 @@ services:
 - [ ] Choose external logging tool
 - [ ] Set up log rotation
 
-### 📅 Future (Next Month):
+### 📅 Future (Next Month)
+
 - [ ] Integrate Sentry for error tracking
 - [ ] Set up log retention policy (30-90 days)
 - [ ] Create audit log dashboard
@@ -460,7 +484,8 @@ services:
 
 ## 🔒 Security Best Practices
 
-### What to Log:
+### What to Log
+
 ✅ Authentication attempts (success and failure)
 ✅ Authorization failures
 ✅ Sensitive data access
@@ -468,14 +493,16 @@ services:
 ✅ Account changes (email, password)
 ✅ Administrative actions
 
-### What NOT to Log:
+### What NOT to Log
+
 ❌ Passwords (plain or hashed)
 ❌ Sensitive personal data (SSN, credit cards)
 ❌ Session tokens
 ❌ API keys
 ❌ Full request/response bodies (may contain sensitive data)
 
-### Log Retention:
+### Log Retention
+
 - **Audit logs**: Keep for 90 days minimum (compliance)
 - **Application logs**: Keep for 30 days
 - **Archive**: Consider archiving to S3/cold storage after 90 days
@@ -484,11 +511,12 @@ services:
 
 ## 🎯 Quick Start
 
-### 1. Test Locally:
+### 1. Test Locally
+
 ```bash
 # Start the app
 cd backend
-poetry run uvicorn src.main:app --reload
+just dev  # or: uv run uvicorn src.main:app --reload
 
 # Make some requests to generate logs
 # Check logs directory
@@ -496,13 +524,16 @@ ls -la logs/
 cat logs/audit.log | jq .
 ```
 
-### 2. Add to Existing Endpoints:
+### 2. Add to Existing Endpoints
+
 Pick 2-3 critical endpoints (login, role change, etc.) and add audit logging following the examples above.
 
-### 3. Review Logs:
+### 3. Review Logs
+
 Check that logs are being generated correctly with proper structure.
 
-### 4. Plan External Tool:
+### 4. Plan External Tool
+
 Decide on Sentry or another tool for production.
 
 ---
@@ -518,5 +549,3 @@ Decide on Sentry or another tool for production.
 ---
 
 **Your audit logging system is ready! Start adding it to critical endpoints.** 📊🔒
-
-

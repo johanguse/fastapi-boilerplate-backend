@@ -4,6 +4,9 @@ primary_region = "iad"
 [build]
   dockerfile = "docker/Dockerfile.prod"
 
+[deploy]
+strategy = "rolling"
+
 [env]
   PORT = "8000"
   PYTHONUNBUFFERED = "1"

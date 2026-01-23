@@ -22,8 +22,7 @@ T = TypeVar('T')
 class PaginatedResponse(Page[T], Generic[T]):
     """Generic paginated response"""
 
-    class Config:
-        from_attributes = True
+    pass
 
 
 class TimestampMixin(BaseModel):

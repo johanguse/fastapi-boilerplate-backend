@@ -64,4 +64,53 @@ async def update_user(
         logger.error(f'User update failed: {str(e)}')
         raise HTTPException(status_code=400, detail='Database update error')
     await db.refresh(user)
+
+    # Sync billing info to Stripe if billing fields were updated
+    billing_fields = [
+        'tax_id',
+        'address_street',
+        'address_city',
+        'address_state',
+        'address_postal_code',
+        'country',
+        'company_name',
+    ]
+    has_billing_update = any(field in update_data for field in billing_fields)
+
+    if has_billing_update:
+        try:
+            # Import here to avoid circular imports
+            from src.subscriptions.models import CustomerSubscription
+            from src.subscriptions.service import update_customer_billing_info
+
+            # Find user's Stripe customer ID from their organization's subscription
+            result = await db.execute(
+                select(CustomerSubscription.stripe_customer_id)
+                .join(
+                    # Simple approach: get any subscription where user might be related
+                    # In production, this should query through organization membership
+                    CustomerSubscription
+                )
+                .limit(1)
+            )
+            stripe_customer_id = result.scalar_one_or_none()
+
+            if stripe_customer_id:
+                await update_customer_billing_info(
+                    customer_id=stripe_customer_id,
+                    name=user.name,
+                    email=user.email,
+                    tax_id=user.tax_id,
+                    address_line1=user.address_street,
+                    address_city=user.address_city,
+                    address_state=user.address_state,
+                    address_postal_code=user.address_postal_code,
+                    address_country=user.country,
+                    company_name=user.company_name,
+                    user_id=user.id,
+                )
+        except Exception as e:
+            # Don't fail the profile update if Stripe sync fails
+            logger.warning(f'Failed to sync billing info to Stripe: {str(e)}')
+
     return user

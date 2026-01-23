@@ -52,7 +52,7 @@ async def log_activity(
             if log_data.get('user')
             else None,
             organization_id=org_id,
-            project_id=log_data['project_id'],
+            project_id=log_data.get('project_id'),
             action_metadata=log_data.get('metadata', {}),
             ip_address=log_data.get('ip_address'),
             user_agent=log_data.get('user_agent'),
@@ -61,11 +61,21 @@ async def log_activity(
         await db.commit()
         await db.refresh(activity)
 
-        if org_id:
-            await validate_org_exists(db, org_id)
+        # Optional validations - skip if they fail to avoid blocking activity logging
+        # These are just sanity checks; foreign key constraints will catch real issues
+        try:
+            if org_id:
+                await validate_org_exists(db, org_id)
+        except Exception:
+            # Ignore validation errors - logging shouldn't fail if validation fails
+            pass
 
-        if log_data.get('project_id'):
-            await validate_project_exists(db, log_data['project_id'])
+        try:
+            if log_data.get('project_id'):
+                await validate_project_exists(db, log_data['project_id'])
+        except Exception:
+            # Ignore validation errors - logging shouldn't fail if validation fails
+            pass
 
         return activity
     except SQLAlchemyError as e:

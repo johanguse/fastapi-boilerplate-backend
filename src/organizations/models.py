@@ -27,6 +27,7 @@ class Organization(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     slug: Mapped[Optional[str]] = mapped_column(String(120), unique=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     logo_url: Mapped[Optional[str]] = mapped_column(Text)
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(
         Text, unique=True

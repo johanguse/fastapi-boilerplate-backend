@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict
 
 import pytest
@@ -26,7 +27,10 @@ async def test_login_success(client: AsyncClient, test_user: Dict[str, Any]):
         is_verified=True,
         is_superuser=False,
         role='member',
+        status='active',
         max_teams=5,
+        created_at=datetime.now(),
+        updated_at=None,
     )
 
     # Define the override function
@@ -122,7 +126,10 @@ async def test_get_current_user(
         is_verified=True,
         is_superuser=False,
         role='member',
+        status='active',
         max_teams=5,
+        created_at=datetime.now(),
+        updated_at=None,
     )
 
     # Define the override function

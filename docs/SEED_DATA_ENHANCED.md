@@ -72,7 +72,7 @@ If you already have data in your database, the script will:
 
 ```bash
 cd backend
-poetry run python scripts/seed.py
+uv run python scripts/seed.py
 ```
 
 ### Option 2: Fresh Start (Destructive)
@@ -82,14 +82,14 @@ To get all the new enhanced data, you need a fresh database:
 cd backend
 
 # Method 1: Using Alembic
-poetry run alembic downgrade base
-poetry run alembic upgrade head
-poetry run python scripts/seed.py
+uv run alembic downgrade base
+uv run alembic upgrade head
+uv run python scripts/seed.py
 
 # Method 2: Manual cleanup (if migrations fail)
 # Connect to your database and drop all tables, then:
-poetry run alembic upgrade head
-poetry run python scripts/seed.py
+uv run alembic upgrade head
+uv run python scripts/seed.py
 ```
 
 ## 📋 Default Credentials

@@ -41,6 +41,29 @@ async def create_test_user_raw(
             )
         )
         has_max_teams = col_check.scalar() is not None
+        # Detect onboarding columns
+        has_onboarding_completed = (
+            await async_session.execute(
+                text(
+                    """
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'onboarding_completed'
+                    """
+                )
+            )
+        ).scalar() is not None
+        has_onboarding_step = (
+            await async_session.execute(
+                text(
+                    """
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'onboarding_step'
+                    """
+                )
+            )
+        ).scalar() is not None
 
         if has_max_teams:
             result = await async_session.execute(
@@ -56,6 +79,8 @@ async def create_test_user_raw(
                         status,
                         is_superuser,
                         max_teams,
+                        onboarding_completed,
+                        onboarding_step,
                         created_at,
                         updated_at
                     )
@@ -69,6 +94,8 @@ async def create_test_user_raw(
                         :status,
                         :is_superuser,
                         :max_teams,
+                        :onboarding_completed,
+                        :onboarding_step,
                         NOW(),
                         NOW()
                     )
@@ -85,6 +112,8 @@ async def create_test_user_raw(
                     'status': 'active',
                     'is_superuser': False,
                     'max_teams': 5,
+                    'onboarding_completed': False if has_onboarding_completed else None,
+                    'onboarding_step': 0 if has_onboarding_step else None,
                 },
             )
         else:
@@ -100,6 +129,8 @@ async def create_test_user_raw(
                         role,
                         status,
                         is_superuser,
+                        onboarding_completed,
+                        onboarding_step,
                         created_at,
                         updated_at
                     )
@@ -112,6 +143,8 @@ async def create_test_user_raw(
                         :role,
                         :status,
                         :is_superuser,
+                        :onboarding_completed,
+                        :onboarding_step,
                         NOW(),
                         NOW()
                     )
@@ -127,6 +160,8 @@ async def create_test_user_raw(
                     'role': 'member',
                     'status': 'active',
                     'is_superuser': False,
+                    'onboarding_completed': False if has_onboarding_completed else None,
+                    'onboarding_step': 0 if has_onboarding_step else None,
                 },
             )
         user_id = result.scalar_one()
@@ -290,6 +325,8 @@ def create_mock_user(
 
 def get_mock_auth_deps(app, mock_user: Dict[str, Any] = None):
     """Set up mock authentication for testing."""
+    from datetime import datetime
+
     if mock_user is None:
         mock_user = create_mock_user()
 
@@ -312,6 +349,8 @@ def get_mock_auth_deps(app, mock_user: Dict[str, Any] = None):
         role=mock_user.get('role', 'member'),
         status=mock_user.get('status', 'active'),
         max_teams=mock_user.get('max_teams', 5),
+        created_at=mock_user.get('created_at', datetime.now()),
+        updated_at=mock_user.get('updated_at', None),
     )
 
     # Define the override function
