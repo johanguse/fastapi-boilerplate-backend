@@ -134,7 +134,7 @@ migrate:
 
 # Seed the database
 seed:
-    uv run python scripts/seed.py
+    uv run python scripts/seed/seed.py
 
 # Reset the database
 reset-db:

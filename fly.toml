@@ -1,4 +1,4 @@
-app = "fastapi-boilerplate-api"
+app = "fastapi-boilerplate-backend-staging"
 primary_region = "iad"
 
 [build]
