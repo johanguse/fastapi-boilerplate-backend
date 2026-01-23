@@ -325,6 +325,8 @@ def create_mock_user(
 
 def get_mock_auth_deps(app, mock_user: Dict[str, Any] = None):
     """Set up mock authentication for testing."""
+    from datetime import datetime
+
     if mock_user is None:
         mock_user = create_mock_user()
 
@@ -347,6 +349,8 @@ def get_mock_auth_deps(app, mock_user: Dict[str, Any] = None):
         role=mock_user.get('role', 'member'),
         status=mock_user.get('status', 'active'),
         max_teams=mock_user.get('max_teams', 5),
+        created_at=mock_user.get('created_at', datetime.now()),
+        updated_at=mock_user.get('updated_at', None),
     )
 
     # Define the override function

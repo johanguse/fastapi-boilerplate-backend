@@ -352,6 +352,23 @@ uv run pytest tests/test_auth.py::test_login_success -v
 just test-watch
 ```
 
+### Email Testing
+
+By default, all email sending is **mocked** during tests to prevent spam and speed up test execution. To test with real email sending (e.g., to verify email templates), use the `--with-email` flag:
+
+```bash
+# Run tests without sending real emails (default)
+uv run pytest
+
+# Run tests and send real emails
+uv run pytest --with-email
+
+# Test specific email functionality with real sending
+uv run pytest tests/test_email_service.py --with-email -v
+```
+
+**Note**: When using `--with-email`, emails will be sent to the addresses specified in your tests. Make sure your `RESEND_API_KEY` is configured and you have a verified domain, or use your own email for testing.
+
 ### Testing with SQLAlchemy ORM
 
 When writing tests for FastAPI endpoints that use SQLAlchemy models, you might encounter issues like `UnmappedClassError: Class 'typing.Any' is not mapped`. This is common when trying to instantiate SQLAlchemy models directly in tests.

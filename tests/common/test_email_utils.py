@@ -3,10 +3,16 @@ import pytest
 from src.utils import email as email_utils
 
 
+@pytest.mark.real_email  # Opt-out of auto email mocking - this test controls its own mock
 @pytest.mark.asyncio
 async def test_send_email_success(monkeypatch):
     class FakeResponse:
         id = 'msg_123'
+
+        def get(self, key):
+            if key == 'id':
+                return self.id
+            return None
 
     class FakeEmails:
         @staticmethod
@@ -16,7 +22,7 @@ async def test_send_email_success(monkeypatch):
             return FakeResponse()
 
     class FakeResend:
-        emails = FakeEmails()
+        Emails = FakeEmails()
         api_key = 'dummy'
 
     monkeypatch.setattr(email_utils, 'resend', FakeResend())
@@ -24,6 +30,7 @@ async def test_send_email_success(monkeypatch):
     assert ok is True
 
 
+@pytest.mark.real_email  # Opt-out of auto email mocking - this test controls its own mock
 @pytest.mark.asyncio
 async def test_send_email_failure(monkeypatch):
     class FakeEmails:
@@ -32,7 +39,7 @@ async def test_send_email_failure(monkeypatch):
             raise RuntimeError('boom')
 
     class FakeResend:
-        emails = FakeEmails()
+        Emails = FakeEmails()
         api_key = 'dummy'
 
     monkeypatch.setattr(email_utils, 'resend', FakeResend())
@@ -40,6 +47,7 @@ async def test_send_email_failure(monkeypatch):
     assert ok is False
 
 
+@pytest.mark.real_email  # Opt-out of auto email mocking - this test controls its own mock
 @pytest.mark.asyncio
 async def test_send_invitation_email_calls_send_email(monkeypatch):
     called = {}
@@ -61,6 +69,7 @@ async def test_send_invitation_email_calls_send_email(monkeypatch):
     assert 'Alpha' in called['subject']
 
 
+@pytest.mark.real_email  # Opt-out of auto email mocking - this test controls its own mock
 @pytest.mark.asyncio
 async def test_send_welcome_email_calls_send_email(monkeypatch):
     called = {}

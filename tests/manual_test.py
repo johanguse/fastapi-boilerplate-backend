@@ -4,6 +4,7 @@ Run this directly with: python -m tests.manual_test
 """
 
 import asyncio
+from datetime import datetime
 
 from httpx import ASGITransport, AsyncClient
 
@@ -29,7 +30,10 @@ async def test_me_endpoint():
         is_verified=True,
         is_superuser=False,
         role='member',
+        status='active',
         max_teams=5,
+        created_at=datetime.now(),
+        updated_at=None,
     )
 
     # Define the override function

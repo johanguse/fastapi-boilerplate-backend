@@ -25,7 +25,9 @@ async def test_log_activity_persists(db_session):
                 created_at,
                 is_superuser,
                 is_verified,
-                max_teams
+                max_teams,
+                onboarding_completed,
+                onboarding_step
             )
             VALUES (
                 'act@test.com',
@@ -36,7 +38,9 @@ async def test_log_activity_persists(db_session):
                 now(),
                 false,
                 false,
-                3
+                3,
+                false,
+                0
             )
             RETURNING id
             """

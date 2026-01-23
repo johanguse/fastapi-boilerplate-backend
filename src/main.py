@@ -17,6 +17,7 @@ from src.ai_core.routes import router as ai_usage_router
 from src.ai_documents.routes import router as ai_documents_router
 from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
+from src.auth.onboarding_routes import router as onboarding_router
 from src.auth.profile_routes import router as profile_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
@@ -157,6 +158,11 @@ app.include_router(
 app.include_router(
     profile_router,
     prefix=settings.API_V1_STR,
+)
+app.include_router(
+    onboarding_router,
+    prefix=settings.API_V1_STR,
+    tags=['onboarding'],
 )
 app.include_router(
     invitations_router,

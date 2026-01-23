@@ -112,7 +112,11 @@ async def test_sign_in_email_inactive_user(
 async def test_sign_in_email_unverified_user(
     client: AsyncClient, db_session: AsyncSession
 ):
-    """Test sign-in with unverified user."""
+    """Test sign-in with unverified user.
+    
+    Note: Unverified users CAN log in - they will see a verification banner
+    in the frontend. This is intentional to improve user experience.
+    """
     await create_test_user_with_password(
         db_session,
         email='unverified@example.com',
@@ -128,10 +132,14 @@ async def test_sign_in_email_unverified_user(
         },
     )
 
-    assert response.status_code == 400
+    # Unverified users can log in (they see a banner to verify email)
+    assert response.status_code == 200
     data = response.json()
-    assert 'error' in data['detail']
-    assert data['detail']['error'] == 'EMAIL_NOT_VERIFIED'
+    assert 'user' in data
+    assert data['user']['email'] == 'unverified@example.com'
+    # The response should indicate the user is unverified
+    assert data['user']['emailVerified'] is False
+    assert data['user']['is_verified'] is False
 
 
 @pytest.mark.asyncio

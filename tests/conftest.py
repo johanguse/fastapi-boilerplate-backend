@@ -1,5 +1,7 @@
 from typing import Any, AsyncGenerator, Dict
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -24,6 +26,83 @@ collect_ignore = [
     'tests/payments/test_service.py',
     'tests/test_services_projects.py',
 ]
+
+
+def pytest_addoption(parser):
+    """Add custom command-line options for pytest."""
+    parser.addoption(
+        '--with-email',
+        action='store_true',
+        default=False,
+        help='Enable actual email sending during tests (default: emails are mocked)',
+    )
+
+
+@pytest.fixture(scope='session')
+def with_email(request):
+    """Return whether real emails should be sent during tests."""
+    return request.config.getoption('--with-email')
+
+
+@pytest.fixture(autouse=True)
+def mock_email_services(request, monkeypatch):
+    """Mock all email services by default unless --with-email flag is provided.
+    
+    Tests can opt-out of this auto-mocking by using the @pytest.mark.real_email marker.
+    """
+    # Check if --with-email flag is set
+    if request.config.getoption('--with-email'):
+        # Don't mock - allow real emails
+        yield
+        return
+
+    # Check if test has marker to skip auto-mocking (for tests that control their own mocks)
+    if request.node.get_closest_marker('real_email'):
+        yield
+        return
+
+    # Mock email services to prevent actual emails from being sent
+    from src.services import email_service
+    from src.utils import email as email_utils
+
+    # Mock EmailService instance methods (email_service is a singleton instance)
+    monkeypatch.setattr(
+        email_service.email_service, 'send_verification_email', AsyncMock(return_value=True)
+    )
+    monkeypatch.setattr(
+        email_service.email_service, 'send_forgot_password_email', AsyncMock(return_value=True)
+    )
+    monkeypatch.setattr(
+        email_service.email_service, 'send_welcome_email', AsyncMock(return_value=True)
+    )
+    monkeypatch.setattr(
+        email_service.email_service, 'send_otp_email', AsyncMock(return_value=True)
+    )
+
+    # Mock email_utils functions
+    monkeypatch.setattr(
+        email_utils, 'send_email', AsyncMock(return_value=True)
+    )
+    monkeypatch.setattr(
+        email_utils, 'send_invitation_email', AsyncMock(return_value=True)
+    )
+    monkeypatch.setattr(
+        email_utils, 'send_welcome_email', AsyncMock(return_value=True)
+    )
+
+    # Mock the resend client itself for any direct usage
+    class MockResendEmails:
+        @staticmethod
+        def send(params):
+            return {'id': 'mock_email_id'}
+
+    class MockResend:
+        Emails = MockResendEmails()
+        api_key = 'mock_api_key'
+
+    monkeypatch.setattr(email_utils, 'resend', MockResend())
+
+    yield
 
 
 def _make_engine():
@@ -60,6 +139,36 @@ async def clean_test_data():
         )
         async with async_session_factory() as session:
             try:
+                # Clean up organizations created during tests
+                # Delete organization members first (FK constraint)
+                await session.execute(
+                    text(
+                        """
+                        DELETE FROM organization_members 
+                        WHERE organization_id IN (
+                            SELECT id FROM organizations 
+                            WHERE name LIKE '%Organization%'
+                            OR name LIKE 'My Org%'
+                            OR name LIKE 'Test Org%'
+                            OR name LIKE 'AutoTest%'
+                            OR name LIKE 'Complete%'
+                        )
+                        """
+                    )
+                )
+                # Delete test organizations
+                await session.execute(
+                    text(
+                        """
+                        DELETE FROM organizations 
+                        WHERE name LIKE '%Organization%'
+                        OR name LIKE 'My Org%'
+                        OR name LIKE 'Test Org%'
+                        OR name LIKE 'AutoTest%'
+                        OR name LIKE 'Complete%'
+                        """
+                    )
+                )
                 # Delete all test users created during tests (those with @example.com)
                 await session.execute(
                     text(

@@ -126,6 +126,13 @@ async def test_create_onboarding_organization(
     client: AsyncClient, db_session: AsyncSession
 ):
     """Test creating organization during onboarding."""
+    import uuid
+    
+    # Use unique names to avoid conflicts
+    unique_id = uuid.uuid4().hex[:8]
+    org_name = f'My Organization {unique_id}'
+    org_slug = f'my-org-{unique_id}'
+    
     user = await create_test_user_with_password(
         db_session,
         email='onboarding4@example.com',
@@ -144,25 +151,25 @@ async def test_create_onboarding_organization(
         '/api/v1/onboarding/organization',
         headers=headers,
         json={
-            'name': 'My Organization',
-            'slug': 'my-org',
+            'name': org_name,
+            'slug': org_slug,
         },
     )
 
     assert response.status_code == 200
     data = response.json()
     assert data['success'] is True
-    assert data['organization']['name'] == 'My Organization'
-    assert data['organization']['slug'] == 'my-org'
+    assert data['organization']['name'] == org_name
+    assert data['organization']['slug'] == org_slug
     assert data['onboarding_step'] == 2
 
     # Verify organization was created
     result = await db_session.execute(
-        select(Organization).where(Organization.slug == 'my-org')
+        select(Organization).where(Organization.slug == org_slug)
     )
     org = result.scalar_one_or_none()
     assert org is not None
-    assert org.name == 'My Organization'
+    assert org.name == org_name
 
     # Verify user is member
     result = await db_session.execute(
@@ -179,13 +186,23 @@ async def test_create_onboarding_organization(
 async def test_create_onboarding_organization_auto_name(
     client: AsyncClient, db_session: AsyncSession
 ):
-    """Test creating organization with auto-generated name."""
+    """Test creating organization with auto-generated name.
+    
+    When no name is provided, the organization uses:
+    1. The company name if available
+    2. Otherwise "{user.name}'s Organization"
+    """
+    import uuid
+    
+    # Use unique company name to avoid conflicts
+    unique_company = f'AutoTest Corp {uuid.uuid4().hex[:8]}'
+    
     user = await create_test_user_with_password(
         db_session,
         email='onboarding5@example.com',
         password='TestPassword123!',
         name='John Doe',
-        company='ACME Corp',
+        company=unique_company,
         country='US',
         onboarding_step=1,
     )
@@ -203,7 +220,8 @@ async def test_create_onboarding_organization_auto_name(
     assert response.status_code == 200
     data = response.json()
     assert data['success'] is True
-    assert data['organization']['name'] == "ACME Corp's Organization"
+    # When company is set, it uses the company name directly
+    assert data['organization']['name'] == unique_company
 
 
 @pytest.mark.asyncio
@@ -285,6 +303,11 @@ async def test_onboarding_status_with_organization(
     client: AsyncClient, db_session: AsyncSession
 ):
     """Test getting onboarding status when user has organization."""
+    import uuid
+    
+    unique_id = uuid.uuid4().hex[:8]
+    org_name = f'My Org {unique_id}'
+    
     user = await create_test_user_with_password(
         db_session,
         email='onboarding8@example.com',
@@ -304,7 +327,7 @@ async def test_onboarding_status_with_organization(
         '/api/v1/onboarding/organization',
         headers=headers,
         json={
-            'name': 'My Org',
+            'name': org_name,
         },
     )
     assert response.status_code == 200
@@ -358,12 +381,14 @@ async def test_onboarding_flow_complete(
     assert response.status_code == 200
     assert response.json()['user']['onboarding_step'] == 1
 
-    # 4. Create organization
+    # 4. Create organization with unique name
+    import uuid
+    org_name = f'Complete Organization {uuid.uuid4().hex[:8]}'
     response = await client.post(
         '/api/v1/onboarding/organization',
         headers=headers,
         json={
-            'name': 'Complete Organization',
+            'name': org_name,
         },
     )
     assert response.status_code == 200

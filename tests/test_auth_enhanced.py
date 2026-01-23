@@ -202,21 +202,54 @@ async def test_user_role_assignment(
 async def test_multiple_users_same_email_fails(
     db_session: AsyncSession
 ):
-    """Test that creating duplicate users fails."""
-    # Create first user
-    await create_test_user_with_password(
-        db_session,
-        email='duplicate@example.com',
-        password='Password123!',
+    """Test that database unique constraint prevents duplicate emails."""
+    from datetime import datetime, timezone
+    from sqlalchemy.exc import IntegrityError
+    from passlib.context import CryptContext
+    
+    pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+    
+    # Create first user directly (not using helper which deletes existing)
+    user1 = User(
+        email='duplicate_test@example.com',
+        hashed_password=pwd_context.hash('Password123!'),
+        name='First User',
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        role='member',
+        max_teams=5,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+        onboarding_completed=False,
+        onboarding_step=0,
     )
+    db_session.add(user1)
+    await db_session.commit()
 
-    # Try to create second user with same email
-    with pytest.raises(Exception):  # Should fail with integrity error
-        await create_test_user_with_password(
-            db_session,
-            email='duplicate@example.com',
-            password='Password456!',
-        )
+    # Try to create second user with same email directly
+    user2 = User(
+        email='duplicate_test@example.com',  # Same email!
+        hashed_password=pwd_context.hash('Password456!'),
+        name='Second User',
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        role='member',
+        max_teams=5,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+        onboarding_completed=False,
+        onboarding_step=0,
+    )
+    db_session.add(user2)
+    
+    # Should fail with integrity error
+    with pytest.raises(IntegrityError):
+        await db_session.commit()
+    
+    # Rollback to clean up
+    await db_session.rollback()
 
 
 @pytest.mark.asyncio

@@ -5,6 +5,21 @@
 default:
     @just --list
 
+# ============================================================================
+# Development
+# ============================================================================
+
+# Start development server
+run:
+    uv run uvicorn src.main:app --reload --port 8000
+
+# Alias for run
+dev: run
+
+# ============================================================================
+# Code Quality
+# ============================================================================
+
 # Linting
 lint:
     uv run ruff check src && uv run ruff check src --diff
@@ -21,28 +36,93 @@ format-check:
 type-check:
     @echo "No type checking configured"
 
-# Start development server
-run:
-    uv run uvicorn src.main:app --reload --port 8000
+# ============================================================================
+# Testing - Basic
+# ============================================================================
 
-# Alias for run
-dev: run
-
-# Run all tests with coverage
+# Run all tests with coverage (stops on first failure)
 test: lint
     uv run pytest -s -x --cov=src --cov-config=pyproject.toml -vv
+
+# Run all tests without stopping on failure
+test-all:
+    uv run pytest -s --cov=src --cov-config=pyproject.toml -vv
+
+# Run tests quickly without coverage
+test-fast:
+    uv run pytest -x -q
+
+# ============================================================================
+# Testing - Failed/Specific
+# ============================================================================
+
+# Run only failed tests from last run
+test-failed:
+    uv run pytest --lf -v
+
+# Run failed tests first, then remaining
+test-failed-first:
+    uv run pytest --ff -v
+
+# Run tests matching a keyword (usage: just test-match "keyword")
+test-match keyword:
+    uv run pytest -k "{{keyword}}" -v
+
+# ============================================================================
+# Testing - By Module
+# ============================================================================
+
+# Run authentication tests
+test-auth:
+    uv run pytest tests/test_auth.py tests/test_auth_better_auth.py tests/test_auth_enhanced.py tests/auth/ -v
+
+# Run organization tests
+test-org:
+    uv run pytest tests/test_organization.py tests/organizations/ -v
+
+# Run project tests
+test-project:
+    uv run pytest tests/test_project.py tests/projects/ -v
+
+# Run onboarding tests
+test-onboarding:
+    uv run pytest tests/test_onboarding.py -v
+
+# Run payment tests
+test-payments:
+    uv run pytest tests/payments/ -v
+
+# Run security tests
+test-security:
+    uv run pytest tests/test_security.py tests/test_security_edgecases.py tests/security/ -v
+
+# Run common/utils tests
+test-common:
+    uv run pytest tests/common/ -v
+
+# ============================================================================
+# Testing - Special Modes
+# ============================================================================
+
+# Run tests with real email sending (for testing email templates)
+test-with-email:
+    uv run pytest --with-email -v
+
+# Run tests in watch mode (auto-rerun on file changes)
+test-watch:
+    uv run pytest -xvs --watch
 
 # Run tests with HTML and XML coverage reports
 test-cov:
     uv run pytest --cov=src --cov-config=pyproject.toml --cov-report=html --cov-report=xml
 
-# Run authentication tests only
-test-auth:
-    uv run pytest tests/test_auth.py -v
+# Show coverage report in terminal
+test-cov-report:
+    uv run pytest --cov=src --cov-config=pyproject.toml --cov-report=term-missing
 
-# Run tests in watch mode
-test-watch:
-    uv run pytest -xvs --watch
+# ============================================================================
+# Database
+# ============================================================================
 
 # Create new Alembic migration (usage: just migrations "description")
 migrations message:
@@ -63,6 +143,10 @@ reset-db:
 # Reset database and seed
 reset-and-seed: reset-db seed
 
+# ============================================================================
+# Dependencies
+# ============================================================================
+
 # Install dependencies
 install:
     uv sync
@@ -78,6 +162,10 @@ update:
 # Show outdated packages
 outdated:
     uv pip list --outdated
+
+# ============================================================================
+# Cleanup
+# ============================================================================
 
 # Clean cache and build artifacts
 clean:
