@@ -22,6 +22,7 @@ from src.auth.profile_routes import router as profile_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
 from src.common.config import settings
+from src.fiscal.routes import router as fiscal_router
 from src.common.database import Base
 from src.common.health import router as health_router
 from src.common.middleware import add_i18n_middleware, add_logging_middleware
@@ -232,6 +233,11 @@ app.include_router(
     ai_analytics_router,
     prefix=f'{settings.API_V1_STR}/ai-analytics',
     tags=['AI Analytics'],
+)
+app.include_router(
+    fiscal_router,
+    prefix=f'{settings.API_V1_STR}/fiscal',
+    tags=['Fiscal'],
 )
 
 # Custom OpenAPI schema

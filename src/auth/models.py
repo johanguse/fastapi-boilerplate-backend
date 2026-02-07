@@ -14,6 +14,7 @@ if TYPE_CHECKING:
         OrganizationInvitation,
         OrganizationMember,
     )
+    from src.fiscal.models import NFSe, UserTaxInfo
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
@@ -113,6 +114,17 @@ class User(SQLAlchemyBaseUserTable[int], Base):
             foreign_keys='[OrganizationInvitation.invitee_id]',
             cascade='all, delete-orphan',
         )
+    )
+    tax_info: Mapped[Optional['UserTaxInfo']] = relationship(
+        'UserTaxInfo',
+        back_populates='user',
+        uselist=False,
+        cascade='all, delete-orphan',
+    )
+    nfse_records: Mapped[list['NFSe']] = relationship(
+        'NFSe',
+        back_populates='user',
+        cascade='all, delete-orphan',
     )
 
     def __repr__(self) -> str:

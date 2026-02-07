@@ -204,6 +204,13 @@ class Settings(BaseSettings):
     )
     AI_MAX_TOKENS: int = int(os.getenv('AI_MAX_TOKENS', '4096'))
 
+    # NFS-e Configuration (Fiscal Nacional API)
+    FISCAL_NACIONAL_API_KEY: str = os.getenv('FISCAL_NACIONAL_API_KEY', '')
+    FISCAL_NACIONAL_ENVIRONMENT: str = os.getenv(
+        'FISCAL_NACIONAL_ENVIRONMENT', 'staging'
+    )  # staging or production
+    NFSE_ADMIN_EMAIL: str = os.getenv('NFSE_ADMIN_EMAIL', '')
+
 
 settings = Settings()
 
