@@ -602,12 +602,40 @@ This shows an interactive menu with options for:
 #### Direct Deployment
 
 ```bash
-# Deploy to staging
+# Deploy to staging (without updating secrets)
 ./scripts/deploy/deploy-staging.sh
+
+# Deploy to staging and update environment variables
+./scripts/deploy/deploy-staging.sh --set-vars
 
 # Deploy to production (requires confirmation)
 ./scripts/deploy/deploy-production.sh
+
+# Deploy to production and update environment variables
+./scripts/deploy/deploy-production.sh --set-vars
+
+# Universal deployment script
+./scripts/deploy/deploy-env.sh staging          # Deploy without updating secrets
+./scripts/deploy/deploy-env.sh production --set-vars  # Deploy and update secrets
 ```
+
+#### Understanding `--set-vars` Flag
+
+By default, deployment scripts **skip** updating environment variables to speed up deployments and avoid accidentally overwriting secrets. Use the `--set-vars` flag when you need to:
+
+- **Initial deployment**: First time deploying to set up all secrets
+- **Update secrets**: Changed API keys, database URLs, or other environment variables
+- **Add new variables**: Added new environment variables to your `.env.*` files
+
+**Without `--set-vars`** (default):
+- ✅ Faster deployments (skips secrets update)
+- ✅ Safe - won't overwrite existing secrets
+- ✅ Use for code-only deployments
+
+**With `--set-vars`**:
+- 📋 Loads all variables from `.env.staging` or `.env.production`
+- 🔄 Updates all secrets on Fly.io
+- ⚠️  Takes longer due to secret updates
 
 ### Environment Variables
 
@@ -626,7 +654,17 @@ RESEND_FROM_EMAIL=noreply@yourdomain.com
 FRONTEND_URL=https://staging.yourdomain.com
 ```
 
-The deployment scripts automatically load these files and set all secrets at once using `flyctl secrets set`.
+The deployment scripts can automatically load these files when using the `--set-vars` flag:
+
+```bash
+# Update staging secrets and deploy
+./scripts/deploy/deploy-staging.sh --set-vars
+
+# Deploy without updating secrets (faster)
+./scripts/deploy/deploy-staging.sh
+```
+
+**Note**: On first deployment, use `--set-vars` to set up all secrets. For subsequent code-only deployments, omit the flag for faster deploys.
 
 ### Manual Secrets Setup
 

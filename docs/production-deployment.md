@@ -33,6 +33,53 @@ chmod +x scripts/start-production.sh
 ./scripts/start-production.sh
 ```
 
+## 🚀 Deployment to Fly.io
+
+### Deployment Commands
+
+```bash
+# Deploy to staging (code only - faster)
+./scripts/deploy/deploy-staging.sh
+
+# Deploy to staging and update environment variables
+./scripts/deploy/deploy-staging.sh --set-vars
+
+# Deploy to production (code only - faster)
+./scripts/deploy/deploy-production.sh
+
+# Deploy to production and update environment variables
+./scripts/deploy/deploy-production.sh --set-vars
+```
+
+### Understanding `--set-vars` Flag
+
+The `--set-vars` flag controls whether environment variables are updated during deployment:
+
+**Without `--set-vars` (default)**:
+- ✅ Faster deployments
+- ✅ Skips environment variable updates
+- ✅ Ideal for code-only changes
+- ✅ Won't accidentally overwrite secrets
+- ⏱️ Typical deployment: 2-3 minutes
+
+**With `--set-vars`**:
+- 📋 Loads variables from `.env.staging` or `.env.production`
+- 🔄 Updates all secrets on Fly.io
+- ⚠️  Required for first deployment
+- ⚠️  Use when secrets have changed
+- ⏱️ Typical deployment: 5-8 minutes
+
+**When to use `--set-vars`**:
+1. **First deployment** - Initial setup requires all secrets
+2. **Updated secrets** - Changed API keys, database credentials, etc.
+3. **New variables** - Added new environment variables to your app
+4. **Troubleshooting** - Environment variable issues
+
+**When to skip `--set-vars`**:
+1. **Code changes only** - Just updated application code
+2. **Regular deployments** - Daily/weekly code updates
+3. **Quick hotfixes** - Bug fixes that don't need config changes
+
 ## ⚡ Performance Optimizations
 
 ### Installed Optimizations
