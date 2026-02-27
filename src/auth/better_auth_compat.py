@@ -414,7 +414,6 @@ async def sign_in_email(
                 else None,
             },
             session={
-                'token': token,
                 'expiresAt': (
                     datetime.now(timezone.utc)
                     + timedelta(seconds=settings.JWT_LIFETIME_SECONDS)
@@ -558,7 +557,6 @@ async def sign_up_email(
                 else None,
             },
             session={
-                'token': token,
                 'expiresAt': (
                     datetime.now(timezone.utc)
                     + timedelta(seconds=settings.JWT_LIFETIME_SECONDS)
@@ -585,9 +583,10 @@ async def sign_out(response: Response):
     """Better Auth compatible sign out"""
     # For JWT-based auth, we just return success
     # Token invalidation would happen on the frontend
-    # Clear cookie
+    # Clear all ba_* cookies (ba_session, ba_active_org, ba_active_team)
     _delete_cookie(response, key='ba_session', path='/')
     _delete_cookie(response, key='ba_active_org', path='/')
+    _delete_cookie(response, key='ba_active_team', path='/')
     return {'success': True}
 
 
@@ -637,7 +636,6 @@ async def get_session(
             else None,
         },
         'session': {
-            'token': token,
             'expiresAt': datetime.fromtimestamp(
                 payload['exp'], tz=timezone.utc
             ).isoformat(),
@@ -871,6 +869,25 @@ async def reject_invitation_endpoint(request: Request):
 @router.post('/auth/organization/cancel-invitation')
 async def cancel_invitation_endpoint(request: Request):
     """Cancel invitation - stub for compatibility"""
+    return {'success': True}
+
+
+@router.get('/auth/organization/list-teams')
+async def list_teams_endpoint(request: Request):
+    """List teams within the organization - stub (no nested teams in this implementation)"""
+    return []
+
+
+@router.post('/auth/organization/set-active-team')
+async def set_active_team_endpoint(request: Request, response: Response):
+    """Set active team cookie - stub for Better Auth compatibility"""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    team_id = (payload or {}).get('teamId')
+    if team_id:
+        _set_cookie(response, key='ba_active_team', value=str(team_id), path='/')
     return {'success': True}
 
 
