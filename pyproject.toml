@@ -7,14 +7,14 @@ readme = "README.md"
 requires-python = ">=3.11,<3.13"
 
 dependencies = [
-  "fastapi[standard]>=0.127.0",
-  "fastapi-users[oauth,sqlalchemy]>=15.0.3",
-  "fastapi-pagination[sqlalchemy]>=0.15.4",
+  "fastapi[standard]>=0.135.0",
+  "fastapi-users[oauth,sqlalchemy]>=15.0.4",
+  "fastapi-pagination[sqlalchemy]>=0.15.10",
   "sqlalchemy>=2.0.45",
   "psycopg2-binary>=2.9.11",
   "pydantic[email]>=2.12.5",
-  "alembic>=1.17.2",
-  "uvicorn>=0.40.0",
+  "alembic>=1.18.4",
+  "uvicorn>=0.41.0",
   "pyjwt[crypto]>=2.10.1",
   "passlib[argon2]>=1.7.4",
   "bcrypt>=4.0.0,<5.0.0",
