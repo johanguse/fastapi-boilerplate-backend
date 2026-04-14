@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.models import User
 from tests.helpers.auth_helpers import (
     create_test_user_with_password,
-    get_auth_cookies,
     get_auth_headers,
     verify_user_password,
 )
@@ -204,11 +203,12 @@ async def test_multiple_users_same_email_fails(
 ):
     """Test that database unique constraint prevents duplicate emails."""
     from datetime import datetime, timezone
-    from sqlalchemy.exc import IntegrityError
+
     from passlib.context import CryptContext
-    
+    from sqlalchemy.exc import IntegrityError
+
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-    
+
     # Create first user directly (not using helper which deletes existing)
     user1 = User(
         email='duplicate_test@example.com',
@@ -243,11 +243,11 @@ async def test_multiple_users_same_email_fails(
         onboarding_step=0,
     )
     db_session.add(user2)
-    
+
     # Should fail with integrity error
     with pytest.raises(IntegrityError):
         await db_session.commit()
-    
+
     # Rollback to clean up
     await db_session.rollback()
 
@@ -308,4 +308,3 @@ async def test_onboarding_completion_updates_step(
     await db_session.refresh(user)
     assert user.onboarding_completed is True
     assert user.onboarding_step == 3
-

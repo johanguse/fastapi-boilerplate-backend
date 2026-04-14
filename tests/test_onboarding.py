@@ -5,7 +5,6 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.models import User
 from src.organizations.models import Organization, OrganizationMember
 from tests.helpers.auth_helpers import (
     create_test_user_with_password,
@@ -127,12 +126,12 @@ async def test_create_onboarding_organization(
 ):
     """Test creating organization during onboarding."""
     import uuid
-    
+
     # Use unique names to avoid conflicts
     unique_id = uuid.uuid4().hex[:8]
     org_name = f'My Organization {unique_id}'
     org_slug = f'my-org-{unique_id}'
-    
+
     user = await create_test_user_with_password(
         db_session,
         email='onboarding4@example.com',
@@ -187,16 +186,16 @@ async def test_create_onboarding_organization_auto_name(
     client: AsyncClient, db_session: AsyncSession
 ):
     """Test creating organization with auto-generated name.
-    
+
     When no name is provided, the organization uses:
     1. The company name if available
     2. Otherwise "{user.name}'s Organization"
     """
     import uuid
-    
+
     # Use unique company name to avoid conflicts
     unique_company = f'AutoTest Corp {uuid.uuid4().hex[:8]}'
-    
+
     user = await create_test_user_with_password(
         db_session,
         email='onboarding5@example.com',
@@ -304,10 +303,10 @@ async def test_onboarding_status_with_organization(
 ):
     """Test getting onboarding status when user has organization."""
     import uuid
-    
+
     unique_id = uuid.uuid4().hex[:8]
     org_name = f'My Org {unique_id}'
-    
+
     user = await create_test_user_with_password(
         db_session,
         email='onboarding8@example.com',
@@ -411,4 +410,3 @@ async def test_onboarding_flow_complete(
     assert data['onboarding_step'] == 3
     assert data['has_organization'] is True
     assert data['profile_complete'] is True
-

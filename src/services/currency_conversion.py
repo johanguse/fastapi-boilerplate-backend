@@ -14,7 +14,7 @@ from datetime import date, datetime
 from typing import Optional
 
 import httpx
-from stripe import BalanceTransaction, Charge, PaymentIntent, Stripe
+from stripe import Stripe
 
 from src.common.config import settings
 from src.utils.currencies import CURRENCIES, get_currency
@@ -126,9 +126,7 @@ class CurrencyConversionService:
 
             balance_transaction = charge.balance_transaction
 
-            if not balance_transaction or isinstance(
-                balance_transaction, str
-            ):
+            if not balance_transaction or isinstance(balance_transaction, str):
                 logger.info(
                     f'Balance transaction not available for charge {charge_id}'
                 )
@@ -219,8 +217,8 @@ class CurrencyConversionService:
 
             # BACEN PTAX API
             url = (
-                f"https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/"
-                f"CotacaoMoedaDia(moeda=@moeda,dataCotacao=@data)?"
+                f'https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/'
+                f'CotacaoMoedaDia(moeda=@moeda,dataCotacao=@data)?'
                 f"@moeda='{currency}'&@data='{formatted_date}'&$format=json"
             )
 
@@ -245,12 +243,8 @@ class CurrencyConversionService:
                     previous_day = target - timedelta(days=1)
 
                     # Only try 7 days back
-                    if (
-                        target - previous_day
-                    ).days <= 7:
-                        return await self.get_ptax_rate(
-                            currency, previous_day
-                        )
+                    if (target - previous_day).days <= 7:
+                        return await self.get_ptax_rate(currency, previous_day)
 
                     return None
 

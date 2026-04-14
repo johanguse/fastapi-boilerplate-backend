@@ -11,13 +11,14 @@ Environment Variables Required:
     BETTER_AUTH_URL - Better Auth base URL (e.g., http://localhost:3000)
 """
 
-from fastapi import HTTPException, status
-from jose import jwt, JWTError
-from functools import lru_cache
-from typing import Dict, Any
-import httpx
-import os
 import logging
+import os
+from functools import lru_cache
+from typing import Any, Dict
+
+import httpx
+from fastapi import HTTPException, status
+from jose import JWTError, jwt
 
 logger = logging.getLogger(__name__)
 

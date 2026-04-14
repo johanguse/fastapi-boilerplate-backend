@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.common.config import settings
 from src.common.session import get_db
 from src.fiscal.models import NFSe
-from src.fiscal.service import NFSeService
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ def verify_fiscal_webhook_signature(
 ) -> bool:
     """
     Verify Fiscal Nacional webhook signature.
-    
+
     NOTE: Update this implementation based on Fiscal Nacional's actual
     signature verification mechanism. This is a placeholder implementation.
     """
@@ -84,7 +83,7 @@ async def handle_fiscal_webhook(
 ) -> dict:
     """
     Handle webhook events from Fiscal Nacional.
-    
+
     Events:
     - nfse.authorized: NFS-e was successfully authorized
     - nfse.processing: NFS-e is being processed
@@ -125,9 +124,7 @@ async def handle_fiscal_webhook(
     # Find NFS-e by reference
     nfse = await _find_nfse_by_reference(db, event.reference)
     if not nfse:
-        logger.warning(
-            f'NFS-e not found for reference: {event.reference}'
-        )
+        logger.warning(f'NFS-e not found for reference: {event.reference}')
         # Return 200 to prevent retries for unknown references
         return {'status': 'ignored', 'reason': 'nfse_not_found'}
 
@@ -137,9 +134,7 @@ async def handle_fiscal_webhook(
         return {'status': 'processed', 'nfse_id': nfse.id}
 
     except Exception as e:
-        logger.error(
-            f'Error processing webhook for NFS-e {nfse.id}: {e}'
-        )
+        logger.error(f'Error processing webhook for NFS-e {nfse.id}: {e}')
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='Failed to process webhook',
@@ -158,9 +153,7 @@ async def _find_nfse_by_reference(
     from sqlalchemy import select
 
     result = await db.execute(
-        select(NFSe).where(
-            NFSe.fiscal_nacional_reference == reference
-        )
+        select(NFSe).where(NFSe.fiscal_nacional_reference == reference)
     )
     return result.scalar_one_or_none()
 
@@ -169,20 +162,18 @@ async def _handle_webhook_event(
     nfse: NFSe, event: FiscalNacionalWebhookEvent, db: AsyncSession
 ) -> None:
     """Handle different webhook event types."""
-    
+
     if event.event == 'nfse.authorized':
         # NFS-e successfully authorized
         nfse.status = 'authorized'
         nfse.nfse_number = event.nfse_number
-        
+
         if event.issued_at:
             try:
                 nfse.issued_at = datetime.fromisoformat(event.issued_at)
             except ValueError:
-                logger.warning(
-                    f'Invalid issued_at format: {event.issued_at}'
-                )
-        
+                logger.warning(f'Invalid issued_at format: {event.issued_at}')
+
         if event.pdf_url:
             nfse.pdf_url = event.pdf_url
         if event.xml_url:
@@ -201,10 +192,8 @@ async def _handle_webhook_event(
         # Error during generation
         nfse.status = 'error'
         nfse.error_message = event.error_message or 'Unknown error'
-        
-        logger.error(
-            f'NFS-e {nfse.id} failed: {nfse.error_message}'
-        )
+
+        logger.error(f'NFS-e {nfse.id} failed: {nfse.error_message}')
 
         # Send error notification to admin
         await _send_error_notification(nfse)
@@ -213,7 +202,7 @@ async def _handle_webhook_event(
         # NFS-e was cancelled
         nfse.status = 'cancelled'
         nfse.cancelled_at = datetime.fromisoformat(event.timestamp)
-        
+
         logger.info(f'NFS-e {nfse.id} cancelled')
 
     else:
@@ -238,7 +227,7 @@ async def _send_error_notification(nfse: NFSe) -> None:
         await email_service.send_email(
             to_email=admin_email,
             subject=f'NFS-e Error: {nfse.fiscal_nacional_reference}',
-            html_content=f'''
+            html_content=f"""
             <h2>NFS-e Webhook Error</h2>
             <p><strong>Reference:</strong> {nfse.fiscal_nacional_reference}</p>
             <p><strong>User:</strong> {nfse.user_id}</p>
@@ -246,7 +235,7 @@ async def _send_error_notification(nfse: NFSe) -> None:
             <p><strong>Amount:</strong> R$ {nfse.value_brl:.2f}</p>
             <p><strong>Error:</strong></p>
             <pre>{nfse.error_message}</pre>
-            ''',
+            """,
         )
     except Exception as e:
         logger.error(f'Failed to send error notification: {e}')

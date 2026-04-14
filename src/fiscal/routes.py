@@ -7,8 +7,8 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.auth.dependencies import current_active_user
+
 from src.auth.models import User
 from src.common.config import get_settings
 from src.common.session import get_db
@@ -70,7 +70,8 @@ async def create_tax_info(
 
     if existing:
         raise HTTPException(
-            status_code=400, detail='Tax info already exists. Use PUT to update.'
+            status_code=400,
+            detail='Tax info already exists. Use PUT to update.',
         )
 
     # Validate based on country
@@ -80,7 +81,8 @@ async def create_tax_info(
         # Validate Brazilian requirements
         if not data.cpf_cnpj:
             raise HTTPException(
-                status_code=400, detail='CPF/CNPJ is required for Brazilian users'
+                status_code=400,
+                detail='CPF/CNPJ is required for Brazilian users',
             )
 
         validation = validate_cpf_or_cnpj(data.cpf_cnpj)
@@ -88,28 +90,25 @@ async def create_tax_info(
             raise HTTPException(status_code=400, detail=validation['message'])
 
         # Address required for Brazilian users
-        if not all(
-            [
-                data.address,
-                data.number,
-                data.neighborhood,
-                data.city,
-                data.city_code,
-                data.state,
-                data.postal_code,
-            ]
-        ):
+        if not all([
+            data.address,
+            data.number,
+            data.neighborhood,
+            data.city,
+            data.city_code,
+            data.state,
+            data.postal_code,
+        ]):
             raise HTTPException(
                 status_code=400,
                 detail='Complete address is required for Brazilian users',
             )
-    else:
-        # International user
-        if not data.nif and data.nif_exemption_code != 1:
-            raise HTTPException(
-                status_code=400,
-                detail='NIF is required for international users (or exemption code)',
-            )
+    # International user
+    elif not data.nif and data.nif_exemption_code != 1:
+        raise HTTPException(
+            status_code=400,
+            detail='NIF is required for international users (or exemption code)',
+        )
 
     # Create tax info
     tax_info = UserTaxInfo(

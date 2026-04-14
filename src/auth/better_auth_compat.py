@@ -887,7 +887,9 @@ async def set_active_team_endpoint(request: Request, response: Response):
         payload = {}
     team_id = (payload or {}).get('teamId')
     if team_id:
-        _set_cookie(response, key='ba_active_team', value=str(team_id), path='/')
+        _set_cookie(
+            response, key='ba_active_team', value=str(team_id), path='/'
+        )
     return {'success': True}
 
 

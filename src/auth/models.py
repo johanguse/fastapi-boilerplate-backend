@@ -10,11 +10,11 @@ from src.common.database import Base
 if TYPE_CHECKING:
     # These are still needed because they're used in relationship annotations
     from src.activity_log.models import ActivityLog
+    from src.fiscal.models import NFSe, UserTaxInfo
     from src.organizations.models import (
         OrganizationInvitation,
         OrganizationMember,
     )
-    from src.fiscal.models import NFSe, UserTaxInfo
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):

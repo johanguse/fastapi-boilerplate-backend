@@ -32,7 +32,6 @@ async def test_send_email_success(monkeypatch):
     assert ok is True
 
 
-
 @pytest.mark.real_email  # Opt-out of auto email mocking - this test controls its own mock
 @pytest.mark.asyncio
 async def test_send_email_failure(monkeypatch):

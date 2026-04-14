@@ -35,6 +35,7 @@ API_URLS = {
 # Types
 # ============================================================================
 
+
 class FiscalNacionalConfig:
     """Configuration for Fiscal Nacional API."""
 
@@ -141,6 +142,7 @@ class CreateNFSeRequest:
 # Fiscal Nacional Client
 # ============================================================================
 
+
 class FiscalNacionalClient:
     """Client for Fiscal Nacional External API."""
 
@@ -148,9 +150,7 @@ class FiscalNacionalClient:
         self.config = config
         self.base_url = API_URLS[config.environment]
 
-    async def create_nfse(
-        self, request: CreateNFSeRequest
-    ) -> dict:
+    async def create_nfse(self, request: CreateNFSeRequest) -> dict:
         """Create a new NFS-e."""
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -239,7 +239,7 @@ class FiscalNacionalClient:
         detail = error.get('detail', 'Unknown error')
         if isinstance(detail, list):
             messages = [
-                f"{err.get('loc', ['unknown'])}: {err.get('msg', 'error')}"
+                f'{err.get("loc", ["unknown"])}: {err.get("msg", "error")}'
                 for err in detail
             ]
             return '; '.join(messages)
@@ -250,12 +250,11 @@ class FiscalNacionalClient:
 # Error Class
 # ============================================================================
 
+
 class FiscalNacionalApiError(Exception):
     """Exception raised for Fiscal Nacional API errors."""
 
-    def __init__(
-        self, message: str, status_code: int, response_data: dict
-    ):
+    def __init__(self, message: str, status_code: int, response_data: dict):
         super().__init__(message)
         self.status_code = status_code
         self.response_data = response_data
@@ -264,6 +263,7 @@ class FiscalNacionalApiError(Exception):
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 def build_brazilian_nfse_request(
     customer_name: str,
@@ -340,9 +340,7 @@ def build_international_nfse_request(
     )
 
 
-def generate_external_reference(
-    transaction_type: str, stripe_id: str
-) -> str:
+def generate_external_reference(transaction_type: str, stripe_id: str) -> str:
     """Generate unique external reference for NFS-e."""
     prefix = 'sub' if transaction_type == 'subscription' else 'pkg'
     return f'{prefix}_{stripe_id}'

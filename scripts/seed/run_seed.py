@@ -7,6 +7,9 @@ WARNING: This is for DEVELOPMENT ONLY and will DELETE ALL DATA!
 
 import asyncio
 
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
 from seed.activity_logs import create_activity_logs
 from seed.constants import DEFAULT_PASSWORD
 from seed.organizations import (
@@ -20,9 +23,6 @@ from seed.reset import reset_database
 from seed.subscription_plans import create_subscription_plans
 from seed.subscriptions import create_subscriptions_and_billing
 from seed.users import create_users
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
 from src.common.config import settings
 
 

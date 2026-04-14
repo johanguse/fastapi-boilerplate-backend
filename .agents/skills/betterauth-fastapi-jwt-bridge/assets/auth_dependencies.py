@@ -24,11 +24,13 @@ Example:
         return get_user_tasks(user_id)
 """
 
+from typing import Any, Dict
+from uuid import UUID
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from typing import Dict, Any
-from uuid import UUID
-from .jwt_verification import verify_jwt_token, extract_user_from_payload
+
+from .jwt_verification import extract_user_from_payload, verify_jwt_token
 
 # OAuth2 scheme for Swagger UI
 # This tells FastAPI to look for the token in the Authorization header

@@ -101,9 +101,12 @@ async def rate_limit_exceeded_handler(
             },
             message=f'Rate limit exceeded for {request.method} {request.url.path}',
         )
-    except Exception:
+    except Exception as e:
         # Don't let logging errors break the rate limit response
-        pass
+        # But at least try to print to stderr for debugging
+        import sys
+
+        print(f'Warning: Failed to log rate limit event: {e}', file=sys.stderr)
 
     return JSONResponse(
         status_code=429,

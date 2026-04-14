@@ -13,9 +13,11 @@ Example:
 
 import argparse
 import json
+import sys
+from typing import Any, Dict
+
 import httpx
-from jose import jwt, jwk, JWTError
-from typing import Dict, Any
+from jose import JWTError, jwt
 
 
 def get_jwks(jwks_url: str) -> Dict[str, Any]:
@@ -42,7 +44,7 @@ def get_signing_key(token: str, jwks_data: Dict[str, Any]) -> Dict[str, Any]:
 
         for key in jwks_data.get("keys", []):
             if key.get("kid") == kid:
-                print(f"✅ Found matching public key in JWKS")
+                print("✅ Found matching public key in JWKS")
                 return key
 
         raise ValueError(f"No matching key found for kid: {kid}")
@@ -65,12 +67,12 @@ def verify_token(token: str, jwks_url: str, audience: str = None, issuer: str = 
     Returns:
         Decoded token payload
     """
-    print(f"🔍 Verifying JWT token...")
+    print("🔍 Verifying JWT token...")
     print(f"📍 JWKS URL: {jwks_url}")
 
     # Fetch JWKS
     jwks_data = get_jwks(jwks_url)
-    print(f"✅ JWKS fetched successfully")
+    print("✅ JWKS fetched successfully")
 
     # Get signing key
     signing_key = get_signing_key(token, jwks_data)
@@ -93,13 +95,13 @@ def verify_token(token: str, jwks_url: str, audience: str = None, issuer: str = 
             options=options
         )
 
-        print(f"✅ Token signature verified")
-        print(f"✅ Token is valid")
+        print("✅ Token signature verified")
+        print("✅ Token is valid")
 
         return payload
 
     except jwt.ExpiredSignatureError:
-        print(f"❌ Token has expired")
+        print("❌ Token has expired")
         raise
     except jwt.JWTClaimsError as e:
         print(f"❌ Invalid token claims: {e}")
@@ -126,9 +128,9 @@ def main():
             issuer=args.issuer
         )
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("✅ JWT Verification Successful!")
-        print("="*60)
+        print("=" * 60)
 
         print("\n📋 Token Payload:")
         print(json.dumps(payload, indent=2))
@@ -141,9 +143,9 @@ def main():
         print(f"   - Expires At (exp): {payload.get('exp')}")
 
     except Exception as e:
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("❌ JWT Verification Failed")
-        print("="*60)
+        print("=" * 60)
         print(f"\nError: {e}")
         return 1
 
@@ -151,4 +153,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

@@ -5,10 +5,9 @@ These migrations ensure Better Auth tables have the correct schema for both
 core authentication (session management) and JWT plugin functionality.
 """
 
-from typing import Sequence, Union
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # ==============================================================================
 # Migration 1: Create Better Auth Core Tables
@@ -16,6 +15,7 @@ import sqlalchemy as sa
 # Revision ID: cdb86b478398
 # Revises: (your previous migration)
 # Create Date: 2026-01-02 02:35:50
+
 
 def create_better_auth_tables_upgrade() -> None:
     """Create all Better Auth tables with CORRECT schema including token column."""

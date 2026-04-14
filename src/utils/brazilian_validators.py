@@ -22,7 +22,7 @@ def validate_cpf(cpf: str) -> bool:
     for i in range(9):
         sum_val += int(clean_cpf[i]) * (10 - i)
     remainder = (sum_val * 10) % 11
-    if remainder in (10, 11):
+    if remainder in {10, 11}:
         remainder = 0
     if remainder != int(clean_cpf[9]):
         return False
@@ -32,7 +32,7 @@ def validate_cpf(cpf: str) -> bool:
     for i in range(10):
         sum_val += int(clean_cpf[i]) * (11 - i)
     remainder = (sum_val * 10) % 11
-    if remainder in (10, 11):
+    if remainder in {10, 11}:
         remainder = 0
     if remainder != int(clean_cpf[10]):
         return False

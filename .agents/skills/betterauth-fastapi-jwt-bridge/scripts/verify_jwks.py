@@ -7,10 +7,11 @@ Usage:
     python verify_jwks.py http://localhost:3000/api/auth/jwks
 """
 
-import sys
 import json
+import sys
+from typing import Any, Dict
+
 import httpx
-from typing import Dict, Any
 
 
 def verify_jwks(jwks_url: str) -> Dict[str, Any]:
@@ -45,7 +46,7 @@ def verify_jwks(jwks_url: str) -> Dict[str, Any]:
         if len(keys) == 0:
             raise ValueError("JWKS 'keys' list is empty")
 
-        print(f"✅ JWKS endpoint is accessible")
+        print("✅ JWKS endpoint is accessible")
         print(f"✅ Found {len(keys)} public key(s)")
 
         # Display each key
@@ -62,12 +63,12 @@ def verify_jwks(jwks_url: str) -> Dict[str, Any]:
             if missing:
                 print(f"   ⚠️  Missing fields: {', '.join(missing)}")
 
-        print(f"\n✅ JWKS structure is valid")
+        print("\n✅ JWKS structure is valid")
         return jwks_data
 
     except httpx.HTTPError as e:
         print(f"❌ HTTP Error: {e}")
-        print(f"   Make sure Better Auth is running and JWT plugin is enabled")
+        print("   Make sure Better Auth is running and JWT plugin is enabled")
         raise
     except json.JSONDecodeError as e:
         print(f"❌ Invalid JSON response: {e}")
@@ -86,19 +87,19 @@ def main():
     jwks_url = sys.argv[1]
 
     try:
-        jwks_data = verify_jwks(jwks_url)
-        print("\n" + "="*60)
+        verify_jwks(jwks_url)
+        print("\n" + "=" * 60)
         print("✅ JWKS Verification Complete!")
-        print("="*60)
+        print("=" * 60)
         print("\nNext steps:")
         print("1. Copy asset templates to your FastAPI project")
         print("2. Configure BETTER_AUTH_URL in backend .env")
         print("3. Test JWT verification with test_jwt_verification.py")
 
     except Exception:
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("❌ JWKS Verification Failed")
-        print("="*60)
+        print("=" * 60)
         sys.exit(1)
 
 

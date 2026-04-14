@@ -190,7 +190,10 @@ async def sign_up_email(
                     'message': error_msg,
                 },
             )
-        except Exception:
+        except HTTPException:
+            raise  # Re-raise HTTPException to return error to client
+        except Exception:  # noqa: S110
+            # User not found, continue with registration
             pass
 
         # Create user

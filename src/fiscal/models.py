@@ -1,7 +1,7 @@
 """Database models for fiscal information and NFS-e records."""
 
 from datetime import UTC, datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
     Boolean,
@@ -16,6 +16,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
 
+if TYPE_CHECKING:
+    from src.auth.models import User
+
 
 class UserTaxInfo(Base):
     """Store tax information for users (Brazilian and international)."""
@@ -24,14 +27,19 @@ class UserTaxInfo(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey('users.id', ondelete='CASCADE'), unique=True, index=True
+        Integer,
+        ForeignKey('users.id', ondelete='CASCADE'),
+        unique=True,
+        index=True,
     )
 
     # Country identification
     country: Mapped[str] = mapped_column(
         String(2), index=True
     )  # BR for Brazil, ISO 2-letter code for others
-    is_brazilian: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    is_brazilian: Mapped[bool] = mapped_column(
+        Boolean, default=False, index=True
+    )
 
     # Brazilian specific (required for BR)
     cpf_cnpj: Mapped[Optional[str]] = mapped_column(
@@ -55,8 +63,12 @@ class UserTaxInfo(Base):
     # Address (required for BR, optional for international)
     address: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-    complement: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    neighborhood: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    complement: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
+    neighborhood: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
     city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     city_code: Mapped[Optional[int]] = mapped_column(
         Integer, nullable=True
@@ -79,8 +91,6 @@ class UserTaxInfo(Base):
     )
 
     # Relationships
-    from src.auth.models import User
-
     user: Mapped['User'] = relationship(back_populates='tax_info')
     nfse_records: Mapped[list['NFSe']] = relationship(
         back_populates='user_tax_info', cascade='all, delete-orphan'
@@ -147,14 +157,18 @@ class NFSe(Base):
     # Values
     value_brl: Mapped[float] = mapped_column(Float)
     value_usd: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    original_amount: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    original_amount: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )
     original_currency: Mapped[Optional[str]] = mapped_column(
         String(3), nullable=True
     )
     currency_code: Mapped[Optional[str]] = mapped_column(
         String(3), nullable=True
     )  # BACEN code
-    exchange_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    exchange_rate: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True
+    )
 
     # Tax calculation
     iss_rate: Mapped[float] = mapped_column(Float, default=0.02)  # 2%
@@ -183,7 +197,9 @@ class NFSe(Base):
     cancelled_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    cancellation_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    cancellation_reason: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True
+    )
 
     # Timestamps
     issued_at: Mapped[Optional[datetime]] = mapped_column(
@@ -199,10 +215,10 @@ class NFSe(Base):
     )
 
     # Relationships
-    from src.auth.models import User
-
     user: Mapped['User'] = relationship(back_populates='nfse_records')
-    user_tax_info: Mapped['UserTaxInfo'] = relationship(back_populates='nfse_records')
+    user_tax_info: Mapped['UserTaxInfo'] = relationship(
+        back_populates='nfse_records'
+    )
 
     def __repr__(self) -> str:
         return f'<NFSe id={self.id} reference={self.fiscal_nacional_reference} status={self.status}>'

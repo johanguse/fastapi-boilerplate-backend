@@ -12,21 +12,25 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+from src.invitations.email_service import (
+    send_email_verification,
+    send_password_reset,
+    send_team_invitation,
+)
 from src.services.email_service import email_service
 from src.utils.email import send_email
-from src.invitations.email_service import send_email_verification, send_team_invitation, send_password_reset
 
 
 async def test_email_service():
     """Test the main email service functions."""
     print("=== Testing Email Service ===")
-    
+
     # Test configuration validation
     print(f"API Key configured: {email_service.api_key is not None}")
     print(f"FROM_EMAIL: {email_service.from_email}")
     print(f"APP_NAME: {email_service.app_name}")
     print(f"FRONTEND_URL: {email_service.frontend_url}")
-    
+
     # Test verification email
     print("\n--- Testing Verification Email ---")
     result = await email_service.send_verification_email(
@@ -35,7 +39,7 @@ async def test_email_service():
         name="Test User"
     )
     print(f"Verification email result: {result}")
-    
+
     # Test password reset email
     print("\n--- Testing Password Reset Email ---")
     result = await email_service.send_forgot_password_email(
@@ -44,7 +48,7 @@ async def test_email_service():
         name="Test User"
     )
     print(f"Password reset email result: {result}")
-    
+
     # Test welcome email
     print("\n--- Testing Welcome Email ---")
     result = await email_service.send_welcome_email(
@@ -57,7 +61,7 @@ async def test_email_service():
 async def test_utils_email():
     """Test the utils email function."""
     print("\n=== Testing Utils Email ===")
-    
+
     result = await send_email(
         to_email="test@example.com",
         subject="Test Email",
@@ -69,7 +73,7 @@ async def test_utils_email():
 async def test_invitations_email():
     """Test the invitations email functions."""
     print("\n=== Testing Invitations Email Service ===")
-    
+
     # Test email verification
     print("\n--- Testing Email Verification ---")
     await send_email_verification(
@@ -77,7 +81,7 @@ async def test_invitations_email():
         name="Test User",
         verification_link="https://example.com/verify?token=test123"
     )
-    
+
     # Test team invitation
     print("\n--- Testing Team Invitation ---")
     await send_team_invitation(
@@ -87,7 +91,7 @@ async def test_invitations_email():
         invitation_link="https://example.com/invite?token=invite123",
         role="member"
     )
-    
+
     # Test password reset
     print("\n--- Testing Password Reset ---")
     await send_password_reset(
@@ -101,25 +105,25 @@ async def main():
     """Run all email tests."""
     print("Email Function Test Script")
     print("=" * 50)
-    
+
     # Check environment variables
     print("Environment Check:")
     print(f"RESEND_API_KEY: {'Set' if os.getenv('RESEND_API_KEY') else 'NOT SET'}")
     print(f"RESEND_FROM_EMAIL: {os.getenv('RESEND_FROM_EMAIL', 'NOT SET')}")
     print(f"FRONTEND_URL: {os.getenv('FRONTEND_URL', 'NOT SET')}")
     print(f"APP_NAME: {os.getenv('APP_NAME', 'NOT SET')}")
-    
+
     if not os.getenv('RESEND_API_KEY'):
         print("\n❌ RESEND_API_KEY not set! Set it in your .env file to test email functionality.")
         return
-    
+
     try:
         await test_email_service()
         await test_utils_email()
         await test_invitations_email()
-        
+
         print("\n✅ All email tests completed! Check the logs above for any errors.")
-        
+
     except Exception as e:
         print(f"\n❌ Test failed with error: {e}")
         import traceback

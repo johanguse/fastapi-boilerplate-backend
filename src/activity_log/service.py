@@ -66,16 +66,23 @@ async def log_activity(
         try:
             if org_id:
                 await validate_org_exists(db, org_id)
-        except Exception:
+        except Exception as e:  # noqa: S110
             # Ignore validation errors - logging shouldn't fail if validation fails
-            pass
+            import sys
+
+            print(
+                f'Warning: Organization validation failed: {e}',
+                file=sys.stderr,
+            )
 
         try:
             if log_data.get('project_id'):
                 await validate_project_exists(db, log_data['project_id'])
-        except Exception:
+        except Exception as e:  # noqa: S110
             # Ignore validation errors - logging shouldn't fail if validation fails
-            pass
+            import sys
+
+            print(f'Warning: Project validation failed: {e}', file=sys.stderr)
 
         return activity
     except SQLAlchemyError as e:

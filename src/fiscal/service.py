@@ -1,16 +1,14 @@
 """Service layer for NFS-e (Brazilian electronic service invoices) management."""
 
-import asyncio
 import logging
 from datetime import UTC, datetime
 from typing import Optional
 
-from sqlalchemy import and_, desc, select
+from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.fiscal.models import NFSe, UserTaxInfo
 from src.services.currency_conversion import (
-    CurrencyConversionService,
     create_currency_conversion_service,
 )
 from src.services.email_service import EmailService
@@ -182,7 +180,7 @@ class NFSeService:
                 customer_nif=tax_info.nif,
                 nif_exemption_code=tax_info.nif_exemption_code,
                 original_currency_code=original_currency,
-                original_amount=amount_usd,
+                original_amount=original_amount,
                 external_reference=external_reference,
                 product_name=product_name,
             )
@@ -206,7 +204,9 @@ class NFSeService:
                 service_description=service_description,
                 product_name=product_name,
                 value_brl=amount_brl,
-                value_usd=original_amount if original_currency == 'USD' else None,
+                value_usd=original_amount
+                if original_currency == 'USD'
+                else None,
                 original_amount=original_amount,
                 original_currency=original_currency,
                 iss_rate=api_response.get('iss_rate', 0.02),
@@ -251,7 +251,9 @@ class NFSeService:
                 service_description=service_description,
                 product_name=product_name,
                 value_brl=amount_brl,
-                value_usd=original_amount if original_currency == 'USD' else None,
+                value_usd=original_amount
+                if original_currency == 'USD'
+                else None,
                 original_amount=original_amount,
                 original_currency=original_currency,
                 customer_name=tax_info.full_name,
@@ -265,9 +267,7 @@ class NFSeService:
             await self.db.commit()
             await self.db.refresh(nfse)
 
-            logger.error(
-                f'Failed to create NFS-e for user {user_id}: {e}'
-            )
+            logger.error(f'Failed to create NFS-e for user {user_id}: {e}')
 
             # Notify admin
             if self.admin_email:
@@ -299,9 +299,7 @@ class NFSeService:
             await self.db.commit()
             await self.db.refresh(nfse)
 
-            logger.info(
-                f'NFS-e {nfse.id} synced: status={nfse.status}'
-            )
+            logger.info(f'NFS-e {nfse.id} synced: status={nfse.status}')
 
             return nfse
 
@@ -309,18 +307,14 @@ class NFSeService:
             logger.error(f'Failed to sync NFS-e {nfse_id}: {e}')
             raise
 
-    async def cancel_nfse(
-        self, nfse_id: int, reason: str
-    ) -> NFSe:
+    async def cancel_nfse(self, nfse_id: int, reason: str) -> NFSe:
         """Cancel NFS-e (for refunds)."""
         nfse = await self._get_nfse_by_id(nfse_id)
         if not nfse:
             raise ValueError(f'NFS-e {nfse_id} not found')
 
         if nfse.status != 'authorized':
-            raise ValueError(
-                f'Cannot cancel NFS-e with status {nfse.status}'
-            )
+            raise ValueError(f'Cannot cancel NFS-e with status {nfse.status}')
 
         try:
             await self.fiscal_client.cancel_nfse(
@@ -334,9 +328,7 @@ class NFSeService:
             await self.db.commit()
             await self.db.refresh(nfse)
 
-            logger.info(
-                f'NFS-e {nfse.id} cancelled: {reason}'
-            )
+            logger.info(f'NFS-e {nfse.id} cancelled: {reason}')
 
             return nfse
 
@@ -344,9 +336,7 @@ class NFSeService:
             logger.error(f'Failed to cancel NFS-e {nfse_id}: {e}')
             raise
 
-    async def find_by_stripe_charge_id(
-        self, charge_id: str
-    ) -> Optional[NFSe]:
+    async def find_by_stripe_charge_id(self, charge_id: str) -> Optional[NFSe]:
         """Find NFS-e by Stripe charge ID."""
         result = await self.db.execute(
             select(NFSe).where(NFSe.stripe_charge_id == charge_id)
@@ -378,9 +368,7 @@ class NFSeService:
         )
         return list(result.scalars().all())
 
-    async def _get_user_tax_info(
-        self, user_id: int
-    ) -> Optional[UserTaxInfo]:
+    async def _get_user_tax_info(self, user_id: int) -> Optional[UserTaxInfo]:
         """Get user's tax information."""
         result = await self.db.execute(
             select(UserTaxInfo).where(UserTaxInfo.user_id == user_id)
@@ -389,14 +377,10 @@ class NFSeService:
 
     async def _get_nfse_by_id(self, nfse_id: int) -> Optional[NFSe]:
         """Get NFS-e by ID."""
-        result = await self.db.execute(
-            select(NFSe).where(NFSe.id == nfse_id)
-        )
+        result = await self.db.execute(select(NFSe).where(NFSe.id == nfse_id))
         return result.scalar_one_or_none()
 
-    async def _send_error_notification(
-        self, nfse: NFSe, error: str
-    ) -> None:
+    async def _send_error_notification(self, nfse: NFSe, error: str) -> None:
         """Send error notification to admin."""
         if not self.admin_email:
             return
@@ -405,7 +389,7 @@ class NFSeService:
             await self.email_service.send_email(
                 to_email=self.admin_email,
                 subject=f'NFS-e Error: {nfse.fiscal_nacional_reference}',
-                html_content=f'''
+                html_content=f"""
                 <h2>NFS-e Generation Error</h2>
                 <p><strong>Reference:</strong> {nfse.fiscal_nacional_reference}</p>
                 <p><strong>User:</strong> {nfse.user_id}</p>
@@ -413,7 +397,7 @@ class NFSeService:
                 <p><strong>Amount:</strong> R$ {nfse.value_brl:.2f}</p>
                 <p><strong>Error:</strong></p>
                 <pre>{error}</pre>
-                ''',
+                """,
             )
         except Exception as e:
             logger.error(f'Failed to send error notification: {e}')

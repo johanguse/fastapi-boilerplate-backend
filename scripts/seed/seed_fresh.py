@@ -13,7 +13,7 @@ from src.activity_log.models import ActivityLog
 from src.ai_core.usage import AIUsageLog
 
 # Import all models
-from src.auth.models import User, EmailToken
+from src.auth.models import EmailToken, User
 from src.common.config import settings
 from src.organizations.models import Organization, OrganizationMember
 from src.projects.models import Project
