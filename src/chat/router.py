@@ -5,7 +5,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from openai import AsyncOpenAI
 from pydantic import BaseModel
-from src.auth.dependencies import get_current_user_optional
+from src.auth.dependencies import current_active_user
 
 from src.common.config import Settings, get_settings
 
@@ -25,8 +25,7 @@ class ChatRequest(BaseModel):
 async def stream_chat(
     request: ChatRequest,
     settings: Settings = Depends(get_settings),
-    # Require user or allow optional? Assuming optional for demo, change if needed
-    user=Depends(get_current_user_optional),
+    user=Depends(current_active_user),
 ):
     """
     Stream chat completions from OpenRouter via standard Server-Sent Events (SSE).
