@@ -14,7 +14,7 @@ from datetime import date, datetime
 from typing import Optional
 
 import httpx
-from stripe import Stripe
+import stripe
 
 from src.common.config import settings
 from src.utils.currencies import CURRENCIES, get_currency
@@ -109,7 +109,7 @@ class CurrencyConversionService:
     def __init__(self, stripe_api_key: Optional[str] = None):
         """Initialize service with Stripe API key."""
         api_key = stripe_api_key or settings.STRIPE_SECRET_KEY
-        self.stripe = Stripe(api_key=api_key)
+        self._client = stripe.StripeClient(api_key)
 
     async def get_stripe_balance_info(
         self, charge_id: str
@@ -120,8 +120,8 @@ class CurrencyConversionService:
         """
         try:
             # Retrieve charge with balance transaction expanded
-            charge = self.stripe.charges.retrieve(
-                charge_id, expand=['balance_transaction']
+            charge = self._client.v1.charges.retrieve(
+                charge_id, params={'expand': ['balance_transaction']}
             )
 
             balance_transaction = charge.balance_transaction
@@ -174,9 +174,9 @@ class CurrencyConversionService:
         """Get balance info from payment intent."""
         try:
             # Retrieve payment intent with latest charge
-            payment_intent = self.stripe.payment_intents.retrieve(
+            payment_intent = self._client.v1.payment_intents.retrieve(
                 payment_intent_id,
-                expand=['latest_charge.balance_transaction'],
+                params={'expand': ['latest_charge.balance_transaction']},
             )
 
             charge = payment_intent.latest_charge

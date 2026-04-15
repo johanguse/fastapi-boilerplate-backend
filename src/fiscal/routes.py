@@ -11,7 +11,7 @@ from src.auth.dependencies import current_active_user
 
 from src.auth.models import User
 from src.common.config import get_settings
-from src.common.session import get_db
+from src.common.session import get_async_session
 from src.fiscal.models import NFSe, UserTaxInfo
 from src.fiscal.schemas import (
     NFSeListResponse,
@@ -41,7 +41,7 @@ settings = get_settings()
 @router.get('/tax-info', response_model=UserTaxInfoResponse)
 async def get_tax_info(
     current_user: Annotated[User, Depends(current_active_user)],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Get current user's tax information."""
     result = await db.execute(
@@ -59,7 +59,7 @@ async def get_tax_info(
 async def create_tax_info(
     data: UserTaxInfoCreate,
     current_user: Annotated[User, Depends(current_active_user)],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Create user's tax information."""
     # Check if already exists
@@ -143,7 +143,7 @@ async def create_tax_info(
 async def update_tax_info(
     data: UserTaxInfoUpdate,
     current_user: Annotated[User, Depends(current_active_user)],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Update user's tax information."""
     result = await db.execute(
@@ -185,7 +185,7 @@ async def update_tax_info(
 @router.delete('/tax-info', status_code=204)
 async def delete_tax_info(
     current_user: Annotated[User, Depends(current_active_user)],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Delete user's tax information."""
     result = await db.execute(
@@ -208,7 +208,7 @@ async def delete_tax_info(
 @router.get('/nfse', response_model=NFSeListResponse)
 async def list_nfse(
     current_user: Annotated[User, Depends(current_active_user)],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
@@ -242,7 +242,7 @@ async def list_nfse(
 async def get_nfse(
     nfse_id: int,
     current_user: Annotated[User, Depends(current_active_user)],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Get specific NFS-e record."""
     result = await db.execute(
@@ -260,7 +260,7 @@ async def get_nfse(
 async def sync_nfse(
     nfse_id: int,
     current_user: Annotated[User, Depends(current_active_user)],
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Sync NFS-e status with Fiscal Nacional API."""
     # Verify ownership

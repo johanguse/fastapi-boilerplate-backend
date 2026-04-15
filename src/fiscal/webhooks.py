@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.config import settings
-from src.common.session import get_db
+from src.common.session import get_async_session
 from src.fiscal.models import NFSe
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ def verify_fiscal_webhook_signature(
 @router.post('/fiscal-webhook')
 async def handle_fiscal_webhook(
     request: Request,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
     x_fiscal_signature: Optional[str] = Header(None),
 ) -> dict:
     """
