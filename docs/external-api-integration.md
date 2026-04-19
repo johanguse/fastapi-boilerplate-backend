@@ -7,9 +7,10 @@ This document describes how to integrate your SaaS application with the Fiscal N
 The External API allows your application to generate Brazilian electronic service invoices (NFS-e) programmatically using a simple REST API with API Key authentication. No user session or OAuth flow required.
 
 **Base URL:**
-- Production: `https://api.fiscalnacional.com.br`
-- Staging: `https://api-staging.fiscalnacional.com.br`
-- Local Development: `http://localhost:8000`
+
+Set the `NFSE_API_BASE_URL` environment variable to your NFS-e provider's API base URL:
+- Production: `https://api.your-nfse-provider.com` (replace with your provider's URL)
+- Staging/Development: `https://api-staging.your-nfse-provider.com` (replace with your provider's staging URL)
 
 ## When NOT to Generate NFS-e
 
@@ -367,7 +368,7 @@ The invoice is automatically generated when an NFS-e is authorized. This endpoin
 **Example Request:**
 
 ```bash
-curl -X GET "https://api.fiscalnacional.com.br/api/v1/external/nfse/EXT-20260103120000-A1B2C3D4/invoice?expires_in=7200" \
+curl -X GET "$NFSE_API_BASE_URL/api/v1/external/nfse/EXT-20260103120000-A1B2C3D4/invoice?expires_in=7200" \
   -H "X-API-Key: your_api_key_here"
 ```
 
@@ -424,7 +425,7 @@ The `/nfse/{id}/pdf` endpoint uses a fallback chain to ensure PDF availability:
 import requests
 
 API_KEY = "your_project_api_key_here"
-BASE_URL = "https://api.fiscalnacional.com.br"
+BASE_URL = os.environ["NFSE_API_BASE_URL"]  # Set via NFSE_API_BASE_URL env var
 
 headers = {
     "X-API-Key": API_KEY,
@@ -523,7 +524,7 @@ def wait_for_nfse(reference, max_attempts=30, interval=10):
 
 ```typescript
 const API_KEY = "your_project_api_key_here";
-const BASE_URL = "https://api.fiscalnacional.com.br";
+const BASE_URL = process.env.NFSE_API_BASE_URL!; // Set via NFSE_API_BASE_URL env var
 
 interface NFSeRequest {
   customer_name: string;
@@ -664,7 +665,7 @@ async function createInternationalNFSe() {
 
 ```bash
 # Create NFS-e for Brazilian customer
-curl -X POST "https://api.fiscalnacional.com.br/api/v1/external/nfse" \
+curl -X POST "$NFSE_API_BASE_URL/api/v1/external/nfse" \
   -H "X-API-Key: your_project_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{
@@ -685,7 +686,7 @@ curl -X POST "https://api.fiscalnacional.com.br/api/v1/external/nfse" \
   }'
 
 # Create NFS-e for international customer (export with NIF and foreign currency)
-curl -X POST "https://api.fiscalnacional.com.br/api/v1/external/nfse" \
+curl -X POST "$NFSE_API_BASE_URL/api/v1/external/nfse" \
   -H "X-API-Key: your_project_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{
@@ -708,15 +709,15 @@ curl -X POST "https://api.fiscalnacional.com.br/api/v1/external/nfse" \
   }'
 
 # Check NFS-e status
-curl -X GET "https://api.fiscalnacional.com.br/api/v1/external/nfse/EXT-20260103120000-A1B2C3D4" \
+curl -X GET "$NFSE_API_BASE_URL/api/v1/external/nfse/EXT-20260103120000-A1B2C3D4" \
   -H "X-API-Key: your_project_api_key_here"
 
 # List all NFS-e
-curl -X GET "https://api.fiscalnacional.com.br/api/v1/external/nfse?limit=50" \
+curl -X GET "$NFSE_API_BASE_URL/api/v1/external/nfse?limit=50" \
   -H "X-API-Key: your_project_api_key_here"
 
 # Cancel NFS-e
-curl -X POST "https://api.fiscalnacional.com.br/api/v1/external/nfse/EXT-20260103120000-A1B2C3D4/cancel" \
+curl -X POST "$NFSE_API_BASE_URL/api/v1/external/nfse/EXT-20260103120000-A1B2C3D4/cancel" \
   -H "X-API-Key: your_project_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{
@@ -884,9 +885,9 @@ Sent when NFS-e processing fails (e.g., validation error, rejected by prefecture
 
 ## Support
 
-- Documentation: https://docs.fiscalnacional.com.br
-- API Status: https://status.fiscalnacional.com.br
-- Email: suporte@fiscalnacional.com.br
+- Documentation: Add your NFS-e provider's documentation URL here
+- API Status: Add your NFS-e provider's status page URL here
+- Email: Add your NFS-e provider's support email here
 
 ---
 

@@ -215,9 +215,9 @@ async def list_nfse(
     """List user's NFS-e records."""
     nfse_service = NFSeService(
         db=db,
-        api_key=settings.fiscal_nacional_api_key,
-        environment=settings.fiscal_nacional_environment,
-        admin_email=settings.nfse_admin_email,
+        api_key=settings.FISCAL_NACIONAL_API_KEY,
+        base_url=settings.NFSE_API_BASE_URL,
+        admin_email=settings.NFSE_ADMIN_EMAIL,
     )
 
     skip = (page - 1) * page_size
@@ -272,9 +272,9 @@ async def sync_nfse(
 
     nfse_service = NFSeService(
         db=db,
-        api_key=settings.fiscal_nacional_api_key,
-        environment=settings.fiscal_nacional_environment,
-        admin_email=settings.nfse_admin_email,
+        api_key=settings.FISCAL_NACIONAL_API_KEY,
+        base_url=settings.NFSE_API_BASE_URL,
+        admin_email=settings.NFSE_ADMIN_EMAIL,
     )
 
     try:

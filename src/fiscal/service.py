@@ -32,13 +32,13 @@ class NFSeService:
         self,
         db: AsyncSession,
         api_key: str,
-        environment: str = 'staging',
+        base_url: str = '',
         admin_email: Optional[str] = None,
         stripe_api_key: Optional[str] = None,
     ):
         self.db = db
         self.fiscal_client = FiscalNacionalClient(
-            FiscalNacionalConfig(api_key=api_key, environment=environment)
+            FiscalNacionalConfig(api_key=api_key, base_url=base_url)
         )
         self.currency_service = create_currency_conversion_service(
             stripe_api_key

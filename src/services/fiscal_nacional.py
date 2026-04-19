@@ -1,6 +1,5 @@
-"""Fiscal Nacional External API Client for NFS-e Generation.
+"""NFS-e External API Client for Brazilian electronic service invoices.
 
-Integrates with Fiscal Nacional API for Brazilian electronic service invoices.
 See: docs/external-api-integration.md
 """
 
@@ -11,41 +10,16 @@ import httpx
 from src.utils.currencies import get_bacen_code
 
 # ============================================================================
-# Configuration
-# ============================================================================
-
-FISCAL_NACIONAL_CONFIG = {
-    # Company info - UPDATE WITH YOUR COMPANY DATA
-    'company_name': 'YOUR COMPANY NAME',
-    'cnpj': '00000000000000',
-    'inscricao_municipal': '000000',
-    'city_code': 0000000,  # IBGE code
-    'iss_rate': 0.02,  # 2% ISS rate
-}
-
-# API Base URLs
-API_URLS = {
-    'production': 'https://api.fiscalnacional.com.br',
-    'staging': 'https://api-staging.fiscalnacional.com.br',
-    'development': 'https://api-staging.fiscalnacional.com.br',
-}
-
-
-# ============================================================================
 # Types
 # ============================================================================
 
 
 class FiscalNacionalConfig:
-    """Configuration for Fiscal Nacional API."""
+    """Configuration for the NFS-e API client."""
 
-    def __init__(
-        self,
-        api_key: str,
-        environment: str = 'production',
-    ):
+    def __init__(self, api_key: str, base_url: str):
         self.api_key = api_key
-        self.environment = environment
+        self.base_url = base_url.rstrip('/')
 
 
 class CreateNFSeRequest:
@@ -144,11 +118,11 @@ class CreateNFSeRequest:
 
 
 class FiscalNacionalClient:
-    """Client for Fiscal Nacional External API."""
+    """Client for the NFS-e External API."""
 
     def __init__(self, config: FiscalNacionalConfig):
         self.config = config
-        self.base_url = API_URLS[config.environment]
+        self.base_url = config.base_url
 
     async def create_nfse(self, request: CreateNFSeRequest) -> dict:
         """Create a new NFS-e."""

@@ -31,25 +31,22 @@
 Add to your `.env` file:
 
 ```bash
-# NFS-e Configuration (Fiscal Nacional API)
-FISCAL_NACIONAL_API_KEY=your_fiscal_nacional_api_key
-FISCAL_NACIONAL_ENVIRONMENT=staging
+# NFS-e Configuration (optional - only needed if you use an NFS-e provider)
+FISCAL_NACIONAL_API_KEY=your_nfse_api_key
+NFSE_API_BASE_URL=https://api.your-nfse-provider.com
 NFSE_ADMIN_EMAIL=admin@yourcompany.com
 ```
 
-### 2. Update Company Information
+### 2. Configure API Base URL
 
-Edit `src/services/fiscal_nacional.py`:
+Add to your `.env` file:
 
-```python
-FISCAL_NACIONAL_CONFIG = {
-    'company_name': 'YOUR COMPANY LTDA',  # Your registered name
-    'cnpj': '00000000000000',             # 14 digits
-    'inscricao_municipal': '000000',      # Municipal registration
-    'city_code': 0000000,                 # IBGE code
-    'iss_rate': 0.02,                     # 2% ISS
-}
+```bash
+# NFS-e provider API base URL (contact your provider for the correct URL)
+NFSE_API_BASE_URL=https://api.your-nfse-provider.com
 ```
+
+Company-specific configuration (CNPJ, municipal registration, ISS rate, etc.) is managed directly in your NFS-e provider dashboard — no hardcoded values needed in the codebase.
 
 ### 3. Run Database Migration
 
@@ -85,7 +82,7 @@ curl http://localhost:8000/api/v1/fiscal/brazilian-states
 - [x] Database models created
 - [x] API routes registered in `main.py`
 - [x] Environment variables configured
-- [ ] Update company info in `FISCAL_NACIONAL_CONFIG`
+- [ ] Set `NFSE_API_BASE_URL` in `.env` (get URL from your NFS-e provider)
 - [ ] Integrate Stripe webhooks (see `docs/FISCAL_NACIONAL_INTEGRATION.md`)
 - [ ] Add currency conversion service (currently uses placeholder)
 - [ ] Set up periodic sync job for pending NFS-e
@@ -404,6 +401,6 @@ curl -X POST http://localhost:8000/api/v1/fiscal/tax-info \
 
 ## 📞 Support
 
-- Fiscal Nacional API: <https://fiscalnacional.com.br>
+- NFS-e Provider: Add your provider's website URL here
 - IBGE API: <https://servicodados.ibge.gov.br/api/docs>
 - Integration issues: Check logs and admin email notifications

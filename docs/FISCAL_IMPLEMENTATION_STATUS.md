@@ -35,8 +35,8 @@ Add to `.env`:
 
 ```bash
 # Existing
-FISCAL_NACIONAL_API_KEY=your_api_key
-FISCAL_NACIONAL_ENVIRONMENT=staging
+FISCAL_NACIONAL_API_KEY=your_nfse_api_key
+NFSE_API_BASE_URL=https://api.your-nfse-provider.com
 NFSE_ADMIN_EMAIL=admin@yourcompany.com
 
 # New (optional)
@@ -69,11 +69,8 @@ FISCAL_WEBHOOK_SECRET=your_webhook_secret
 ```typescript
 import type { Env } from "../lib/env";
 
-const FISCAL_API_URLS = {
- production: "https://api.fiscalnacional.com.br/v1",
- staging: "https://sandbox.fiscalnacional.com.br/v1",
- development: "https://sandbox.fiscalnacional.com.br/v1",
-};
+// API base URL is read from NFSE_API_BASE_URL environment variable
+const NFSE_API_BASE_URL = process.env.NFSE_API_BASE_URL!;
 
 export interface CreateNFSeRequest {
  externalReference: string;
@@ -106,8 +103,7 @@ export class FiscalNacionalClient {
 
  constructor(env: Env) {
   this.apiKey = env.FISCAL_NACIONAL_API_KEY;
-  this.baseUrl =
-   FISCAL_API_URLS[env.FISCAL_NACIONAL_ENVIRONMENT || "staging"];
+  this.baseUrl = env.NFSE_API_BASE_URL;
  }
 
  async createNFSe(request: CreateNFSeRequest) {
@@ -498,10 +494,9 @@ See separate files:
 
 ## 🚀 Production Setup
 
-1. **Update company information** in both backends
-2. **Set production environment**: `FISCAL_NACIONAL_ENVIRONMENT=production`
-3. **Get production API key** from Fiscal Nacional dashboard
-4. **Configure webhook URL** in Fiscal Nacional dashboard:
+1. **Set production API base URL**: `NFSE_API_BASE_URL=https://api.your-nfse-provider.com`
+2. **Get production API key** from your NFS-e provider dashboard
+3. **Configure webhook URL** in your NFS-e provider dashboard:
    - FastAPI: `https://api.yourapp.com/api/v1/fiscal/fiscal-webhook`
    - Bun Hono: `https://api.yourapp.com/api/v1/fiscal/webhook`
 5. **Set webhook secret** for signature verification
@@ -524,10 +519,9 @@ See separate files:
 
 ## 🆘 Support
 
-For Fiscal Nacional API documentation:
+For NFS-e provider API documentation:
 
-- Sandbox: <https://sandbox.fiscalnacional.com.br/docs>
-- Production: <https://api.fiscalnacional.com.br/docs>
+- Add your NFS-e provider's documentation URL here (set `NFSE_API_BASE_URL` in `.env`)
 
 For PTAX rates:
 

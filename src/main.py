@@ -30,7 +30,6 @@ from src.common.monitoring import add_performance_monitoring
 from src.common.openapi import custom_openapi
 from src.common.rate_limiter import limiter, rate_limit_exceeded_handler
 from src.common.session import engine
-from src.fiscal.routes import router as fiscal_router
 from src.invitations.routes import router as invitations_router
 from src.organizations.routes import router as org_router
 from src.payments.routes import router as payments_router
@@ -235,11 +234,15 @@ app.include_router(
     prefix=f'{settings.API_V1_STR}/ai-analytics',
     tags=['AI Analytics'],
 )
-app.include_router(
-    fiscal_router,
-    prefix=f'{settings.API_V1_STR}/fiscal',
-    tags=['Fiscal'],
-)
+if settings.FISCAL_NACIONAL_API_KEY and settings.NFSE_API_BASE_URL:
+    from src.fiscal.routes import router as fiscal_router
+
+    app.include_router(
+        fiscal_router,
+        prefix=f'{settings.API_V1_STR}/fiscal',
+        tags=['Fiscal'],
+    )
+
 app.include_router(
     chat_router,
     prefix=f'{settings.API_V1_STR}',

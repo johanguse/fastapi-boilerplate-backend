@@ -52,13 +52,13 @@ User Payment → Stripe Webhook → NFS-e Service → Fiscal Nacional API → Da
 Add these variables to your `.env` file:
 
 ```bash
-# NFS-e Configuration (Fiscal Nacional API)
-FISCAL_NACIONAL_API_KEY=your_fiscal_nacional_api_key
-FISCAL_NACIONAL_ENVIRONMENT=staging  # or production
+# NFS-e Configuration (optional - only needed if you use an NFS-e provider)
+FISCAL_NACIONAL_API_KEY=your_nfse_api_key
+NFSE_API_BASE_URL=https://api.your-nfse-provider.com
 NFSE_ADMIN_EMAIL=admin@yourcompany.com
 ```
 
-**Important**: Get your API key from Fiscal Nacional dashboard after registering your company.
+**Important**: Get your API key and base URL from your NFS-e provider's dashboard.
 
 ## Database Migration
 
@@ -72,19 +72,16 @@ uv run alembic upgrade head
 just migrate
 ```
 
-## Update Company Information
+## Configure API Base URL
 
-Before using in production, update the company information in `src/services/fiscal_nacional.py`:
+Add to your `.env` file:
 
-```python
-FISCAL_NACIONAL_CONFIG = {
-    'company_name': 'YOUR COMPANY NAME',  # Your registered company name
-    'cnpj': '00000000000000',            # Your company CNPJ (14 digits)
-    'inscricao_municipal': '000000',     # Your municipal registration
-    'city_code': 0000000,                # IBGE code of your city
-    'iss_rate': 0.02,                    # ISS tax rate (usually 2%)
-}
+```bash
+# NFS-e provider API base URL (contact your provider for the correct URL)
+NFSE_API_BASE_URL=https://api.your-nfse-provider.com
 ```
+
+Company-specific configuration (CNPJ, municipal registration, ISS rate, etc.) is managed in your NFS-e provider's dashboard — no hardcoded values are needed in the codebase.
 
 ## Stripe Webhook Integration
 
@@ -147,7 +144,7 @@ async def stripe_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         nfse_service = NFSeService(
             db=db,
             api_key=settings.FISCAL_NACIONAL_API_KEY,
-            environment=settings.FISCAL_NACIONAL_ENVIRONMENT,
+            base_url=settings.NFSE_API_BASE_URL,
             admin_email=settings.NFSE_ADMIN_EMAIL,
         )
         
@@ -197,7 +194,7 @@ if event['type'] == 'payment_intent.succeeded':
         nfse_service = NFSeService(
             db=db,
             api_key=settings.FISCAL_NACIONAL_API_KEY,
-            environment=settings.FISCAL_NACIONAL_ENVIRONMENT,
+            base_url=settings.NFSE_API_BASE_URL,
             admin_email=settings.NFSE_ADMIN_EMAIL,
         )
         
@@ -335,7 +332,7 @@ async function loadBillingHistory() {
 
 ### Staging Environment
 
-1. Use `FISCAL_NACIONAL_ENVIRONMENT=staging` in `.env`
+1. Use `NFSE_API_BASE_URL=https://api-staging.your-nfse-provider.com` in `.env`
 2. Test with both Brazilian and international customers
 3. Verify NFS-e generation in Fiscal Nacional staging dashboard
 
@@ -398,7 +395,7 @@ async def sync_pending_nfse():
         nfse_service = NFSeService(
             db=db,
             api_key=settings.FISCAL_NACIONAL_API_KEY,
-            environment=settings.FISCAL_NACIONAL_ENVIRONMENT,
+            base_url=settings.NFSE_API_BASE_URL,
             admin_email=settings.NFSE_ADMIN_EMAIL,
         )
         
@@ -428,14 +425,14 @@ Errors are automatically sent to `NFSE_ADMIN_EMAIL`. Review these regularly to f
 
 ## Support
 
-- **Fiscal Nacional API Docs**: <https://api.fiscalnacional.com.br/docs>
+- **NFS-e Provider API Docs**: Add your provider's API documentation URL here
 - **IBGE Cities API**: <https://servicodados.ibge.gov.br/api/docs/localidades>
 - **Integration Questions**: Check `docs/external-api-integration.md`
 
 ## Checklist Before Going Live
 
-- [ ] Update company info in `FISCAL_NACIONAL_CONFIG`
-- [ ] Set `FISCAL_NACIONAL_ENVIRONMENT=production`
+- [ ] Set `NFSE_API_BASE_URL` in `.env` (get URL from your NFS-e provider)
+- [ ] Set `NFSE_API_BASE_URL` to your production endpoint
 - [ ] Add real currency conversion service
 - [ ] Test with real Stripe payments
 - [ ] Verify emails are sent correctly

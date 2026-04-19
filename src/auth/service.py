@@ -18,7 +18,7 @@ async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
     """Get a user by email (case-insensitive)"""
     normalized_email = email.strip().lower()
     result = await db.execute(
-        select(User).filter(User.normalized_email == normalized_email)
+        select(User).filter(User.email == normalized_email)
     )
     return result.scalar_one_or_none()
 

@@ -110,6 +110,13 @@ class OnboardingDataComplete(BaseModel):
     )
 
 
+class ChangePasswordRequest(BaseModel):
+    """Schema for authenticated password change."""
+
+    current_password: str
+    new_password: str
+
+
 class OTPSendRequest(BaseModel):
     """Schema for sending OTP code."""
 
