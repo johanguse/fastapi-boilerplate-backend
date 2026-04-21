@@ -8,8 +8,6 @@ import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
-
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
@@ -118,20 +116,24 @@ def _cookie_options() -> Dict[str, Any]:
 
     - secure=True when FRONTEND_URL is https
     - samesite=None (sent as 'none') when secure, else 'lax'
-    - domain set to FRONTEND_URL hostname when not localhost
+    - domain is intentionally NOT set (host-only cookies)
+
+    Rationale: the cookie is set by the API server (e.g.
+    api-staging.example.com).  If we set domain= to the
+    FRONTEND_URL hostname (e.g. staging.example.com) the
+    browser rejects the Set-Cookie per RFC 6265 §5.2.3 because
+    staging.example.com is not a domain-suffix of
+    api-staging.example.com, so the cookie is silently
+    discarded and every subsequent request returns 401.
+    Omitting domain causes the browser to use a host-only cookie
+    bound to the API hostname; both subdomains share the same
+    eTLD+1 so they are same-site and the cookie is sent with
+    credentials:include requests.
     """
     frontend = settings.FRONTEND_URL or ''
     secure = frontend.startswith('https')
     samesite = 'none' if secure else 'lax'
-    domain: Optional[str] = None
-    try:
-        parsed = urlparse(frontend)
-        host = parsed.hostname
-        if host and host not in {'localhost', '127.0.0.1'}:
-            domain = host
-    except Exception:
-        domain = None
-    return {'secure': secure, 'samesite': samesite, 'domain': domain}
+    return {'secure': secure, 'samesite': samesite, 'domain': None}
 
 
 def _set_cookie(
