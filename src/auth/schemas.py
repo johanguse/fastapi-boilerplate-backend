@@ -117,6 +117,12 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
 
 
+class PushTokenBody(BaseModel):
+    """FCM / APNs registration token from the mobile client."""
+
+    token: str
+
+
 class OTPSendRequest(BaseModel):
     """Schema for sending OTP code."""
 

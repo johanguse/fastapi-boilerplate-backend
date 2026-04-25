@@ -1,8 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import Response
 
 from src.auth.models import User
-from src.auth.schemas import ChangePasswordRequest, UserRead, UserUpdate
+from src.auth.schemas import (
+    ChangePasswordRequest,
+    PushTokenBody,
+    UserRead,
+    UserUpdate,
+)
 from src.auth.service import get_user_by_email, get_users, update_user
 from src.auth.users import current_active_user, get_user_manager
 from src.common.exceptions import NotFoundError
@@ -34,6 +40,21 @@ async def update_current_user(
     Update current user profile
     """
     return await update_user(db, current_user.id, user_update)
+
+
+@router.post('/users/me/push-token', status_code=status.HTTP_204_NO_CONTENT)
+async def update_push_token(
+    body: PushTokenBody,
+    current_user: User = Depends(current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Store the device push notification token (e.g. FCM) for the current user.
+    """
+    current_user.push_token = body.token
+    db.add(current_user)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post('/users/me/change-password', status_code=status.HTTP_200_OK)

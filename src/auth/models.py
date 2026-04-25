@@ -86,6 +86,11 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         Integer, default=0, nullable=False
     )
 
+    # FCM device token (mobile push)
+    push_token: Mapped[Optional[str]] = mapped_column(
+        String(512), nullable=True
+    )
+
     # Relationships
     activities: Mapped[list['ActivityLog']] = relationship(
         'ActivityLog',
