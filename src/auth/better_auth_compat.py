@@ -395,6 +395,9 @@ async def sign_in_email(
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
 
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            seconds=settings.JWT_LIFETIME_SECONDS
+        )
         response_data = AuthResponse(
             user={
                 'id': str(user.id),
@@ -416,16 +419,13 @@ async def sign_in_email(
                 else None,
             },
             session={
-                'expiresAt': (
-                    datetime.now(timezone.utc)
-                    + timedelta(seconds=settings.JWT_LIFETIME_SECONDS)
-                ).isoformat(),
+                'token': token,
+                'expiresAt': expires_at.isoformat(),
             },
         )
 
-        # Set HTTP-only cookie for session persistence (secure/samesite set dynamically)
+        # Set HTTP-only cookie for web clients; native clients use the body token
         _set_cookie(response, key='ba_session', value=token)
-        # Clear any previous active organization selection from other sessions/users
         _delete_cookie(response, key='ba_active_org', path='/')
         logger.info(f'Successful login for: {request.email}')
         return response_data
@@ -538,6 +538,9 @@ async def sign_up_email(
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
 
+        sign_up_expires_at = datetime.now(timezone.utc) + timedelta(
+            seconds=settings.JWT_LIFETIME_SECONDS
+        )
         resp = AuthResponse(
             user={
                 'id': str(user.id),
@@ -559,14 +562,11 @@ async def sign_up_email(
                 else None,
             },
             session={
-                'expiresAt': (
-                    datetime.now(timezone.utc)
-                    + timedelta(seconds=settings.JWT_LIFETIME_SECONDS)
-                ).isoformat(),
+                'token': token,
+                'expiresAt': sign_up_expires_at.isoformat(),
             },
         )
 
-        # Set HTTP-only cookie for session persistence (secure/samesite set dynamically)
         _set_cookie(response, key='ba_session', value=token)
         logger.info(f'Successful registration for: {request.email}')
         return resp
@@ -616,7 +616,7 @@ async def get_session(
             status_code=401, detail='User not found or inactive'
         )
 
-    # Include active org in session response
+    # Include active org in session response; include token for native clients
     return {
         'user': {
             'id': str(user.id),
@@ -638,10 +638,10 @@ async def get_session(
             else None,
         },
         'session': {
+            'token': token,
             'expiresAt': datetime.fromtimestamp(
                 payload['exp'], tz=timezone.utc
             ).isoformat(),
-            # Read "active" selections from cookies only
             'activeOrganizationId': request.cookies.get('ba_active_org'),
         },
     }
