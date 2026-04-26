@@ -40,6 +40,33 @@ router = APIRouter()
 INVALID_CREDENTIALS_MSG = 'Invalid email or password'
 
 
+def _user_dict(user: 'User') -> Dict[str, Any]:
+    """Build the full user payload returned to clients in every auth response."""
+    return {
+        'id': str(user.id),
+        'email': user.email,
+        'name': getattr(user, 'name', user.email.split('@')[0]),
+        'emailVerified': user.is_verified,
+        'role': getattr(user, 'role', 'member'),
+        'is_verified': user.is_verified,
+        'is_superuser': user.is_superuser,
+        'onboarding_completed': getattr(user, 'onboarding_completed', False),
+        'onboarding_step': getattr(user, 'onboarding_step', 0),
+        # Profile fields
+        'bio': getattr(user, 'bio', None),
+        'job_title': getattr(user, 'job_title', None),
+        'avatar_url': getattr(user, 'avatar_url', None),
+        'country': getattr(user, 'country', None),
+        # Timestamps
+        'createdAt': user.created_at.isoformat()
+        if hasattr(user, 'created_at') and user.created_at
+        else None,
+        'updatedAt': user.updated_at.isoformat()
+        if hasattr(user, 'updated_at') and user.updated_at
+        else None,
+    }
+
+
 # Better Auth compatible models
 class EmailSignInRequest(BaseModel):
     email: EmailStr
@@ -399,25 +426,7 @@ async def sign_in_email(
             seconds=settings.JWT_LIFETIME_SECONDS
         )
         response_data = AuthResponse(
-            user={
-                'id': str(user.id),
-                'email': user.email,
-                'name': getattr(user, 'name', user.email.split('@')[0]),
-                'emailVerified': user.is_verified,
-                'role': getattr(user, 'role', 'member'),
-                'is_verified': user.is_verified,
-                'is_superuser': user.is_superuser,
-                'onboarding_completed': getattr(
-                    user, 'onboarding_completed', False
-                ),
-                'onboarding_step': getattr(user, 'onboarding_step', 0),
-                'createdAt': user.created_at.isoformat()
-                if hasattr(user, 'created_at') and user.created_at
-                else None,
-                'updatedAt': user.updated_at.isoformat()
-                if hasattr(user, 'updated_at') and user.updated_at
-                else None,
-            },
+            user=_user_dict(user),
             session={
                 'token': token,
                 'expiresAt': expires_at.isoformat(),
@@ -542,25 +551,7 @@ async def sign_up_email(
             seconds=settings.JWT_LIFETIME_SECONDS
         )
         resp = AuthResponse(
-            user={
-                'id': str(user.id),
-                'email': user.email,
-                'name': getattr(
-                    user, 'name', request.name or user.email.split('@')[0]
-                ),
-                'emailVerified': user.is_verified,
-                'role': getattr(user, 'role', 'member'),
-                'is_verified': user.is_verified,
-                'is_superuser': user.is_superuser,
-                'onboarding_completed': user.onboarding_completed,
-                'onboarding_step': user.onboarding_step,
-                'createdAt': user.created_at.isoformat()
-                if hasattr(user, 'created_at') and user.created_at
-                else None,
-                'updatedAt': user.updated_at.isoformat()
-                if hasattr(user, 'updated_at') and user.updated_at
-                else None,
-            },
+            user=_user_dict(user),
             session={
                 'token': token,
                 'expiresAt': sign_up_expires_at.isoformat(),
@@ -618,25 +609,7 @@ async def get_session(
 
     # Include active org in session response; include token for native clients
     return {
-        'user': {
-            'id': str(user.id),
-            'email': user.email,
-            'name': getattr(user, 'name', user.email.split('@')[0]),
-            'emailVerified': user.is_verified,
-            'role': getattr(user, 'role', 'member'),
-            'is_verified': user.is_verified,
-            'is_superuser': user.is_superuser,
-            'onboarding_completed': getattr(
-                user, 'onboarding_completed', False
-            ),
-            'onboarding_step': getattr(user, 'onboarding_step', 0),
-            'createdAt': user.created_at.isoformat()
-            if hasattr(user, 'created_at') and user.created_at
-            else None,
-            'updatedAt': user.updated_at.isoformat()
-            if hasattr(user, 'updated_at') and user.updated_at
-            else None,
-        },
+        'user': _user_dict(user),
         'session': {
             'token': token,
             'expiresAt': datetime.fromtimestamp(
