@@ -83,7 +83,7 @@ async def test_user_update_profile_with_database(
 
     # Update profile
     response = await client.patch(
-        '/api/v1/me',
+        '/api/v1/users/me',
         headers=headers,
         json={
             'name': 'Updated Name',

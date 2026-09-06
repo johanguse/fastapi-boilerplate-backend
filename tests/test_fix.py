@@ -15,7 +15,7 @@ async def test_get_me_endpoint(client: AsyncClient, test_user: Dict[str, Any]):
 
     try:
         # Make the request
-        response = await client.get('/api/v1/me')
+        response = await client.get('/api/v1/users/me')
 
         # Check the response
         assert response.status_code == 200
