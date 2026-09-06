@@ -1,6 +1,6 @@
 """Seed data for activity logs."""
 
-import random
+import secrets
 from datetime import UTC, datetime, timedelta
 
 from src.activity_log.models import ActivityLog
@@ -54,7 +54,7 @@ def create_activity_logs(users, organizations, organization_members, projects):
         0,
     ]
     for days_ago in login_times:
-        user = random.choice(users[:5])  # Only active users
+        user = secrets.choice(users[:5])  # Only active users
         activities.append(
             ActivityLog(
                 action='user.login',
@@ -64,7 +64,7 @@ def create_activity_logs(users, organizations, organization_members, projects):
                 ip_address=random_ip(),
                 user_agent=random_user_agent(),
                 created_at=datetime.now(UTC)
-                - timedelta(days=days_ago, hours=random.randint(0, 23)),
+                - timedelta(days=days_ago, hours=secrets.randbelow(24)),
             )
         )
 
@@ -100,7 +100,7 @@ def create_activity_logs(users, organizations, organization_members, projects):
                 ip_address=random_ip(),
                 user_agent=random_user_agent(),
                 created_at=datetime.now(UTC)
-                - timedelta(days=random.randint(10, 30)),
+                - timedelta(days=10 + secrets.randbelow(21)),
             )
         )
 
@@ -126,13 +126,13 @@ def create_activity_logs(users, organizations, organization_members, projects):
                 action='project.updated',
                 action_type='project',
                 description=f"Project '{project.name}' settings updated",
-                user_id=random.choice(users[:4]).id,
+                user_id=secrets.choice(users[:4]).id,
                 organization_id=project.organization_id,
                 project_id=project.id,
                 ip_address=random_ip(),
                 user_agent=random_user_agent(),
                 created_at=project.created_at
-                + timedelta(days=random.randint(1, 10)),
+                + timedelta(days=1 + secrets.randbelow(10)),
             )
         )
 

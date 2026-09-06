@@ -249,9 +249,12 @@ class MockAIProvider(AIProvider):
     async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Generate mock embeddings for development."""
         # Return random embeddings of dimension 1536 (OpenAI's embedding dimension)
-        import random
+        import secrets
 
-        return [[random.random() for _ in range(1536)] for _ in texts]
+        return [
+            [secrets.randbelow(1000) / 1000.0 for _ in range(1536)]
+            for _ in texts
+        ]
 
     def count_tokens(self, text: str) -> int:
         """Count tokens using simple word count."""

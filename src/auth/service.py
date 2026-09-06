@@ -2,7 +2,8 @@ import logging
 from typing import Optional
 
 from fastapi import HTTPException
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import or_, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +19,7 @@ async def get_user_by_email(db: AsyncSession, email: str) -> Optional[User]:
     """Get a user by email (case-insensitive)"""
     normalized_email = email.strip().lower()
     result = await db.execute(
-        select(User).filter(User.normalized_email == normalized_email)
+        select(User).filter(User.email == normalized_email)
     )
     return result.scalar_one_or_none()
 

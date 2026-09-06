@@ -11,6 +11,23 @@ APP_NAME="fastapi-boilerplate-backend-staging"
 REGION="iad"
 CONFIG_FILE="fly.staging.toml"
 ENV_FILE=".env.staging"
+SET_VARS=false
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --set-vars)
+            SET_VARS=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--set-vars]"
+            echo "  --set-vars    Update environment variables from $ENV_FILE"
+            exit 1
+            ;;
+    esac
+done
 
 # Check if flyctl is installed
 if ! command -v flyctl &> /dev/null; then
@@ -34,20 +51,24 @@ else
     echo "✅ Staging app already exists"
 fi
 
-# Check if .env.staging exists and load it
-if [ -f "$ENV_FILE" ]; then
-    echo "🔧 Found $ENV_FILE file"
-    echo "📋 Loading STAGING environment variables from $ENV_FILE..."
-    
-    # Source the load-env function
-    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-    source "$SCRIPT_DIR/load-env.sh"
-    
-    # Load environment variables
-    load_env_file "$ENV_FILE" "$APP_NAME"
+# Only set secrets when --set-vars is passed
+if [ "$SET_VARS" = true ]; then
+    if [ -f "$ENV_FILE" ]; then
+        echo "🔧 Found $ENV_FILE file"
+        echo "📋 Loading STAGING environment variables from $ENV_FILE..."
+
+        # Source the load-env function
+        SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+        source "$SCRIPT_DIR/load-env.sh"
+
+        # Load environment variables
+        load_env_file "$ENV_FILE" "$APP_NAME"
+    else
+        echo "⚠️  $ENV_FILE file not found. Skipping secrets setup."
+        echo "   Please create $ENV_FILE or set secrets manually."
+    fi
 else
-    echo "⚠️  $ENV_FILE file not found. Skipping secrets setup."
-    echo "   Please create $ENV_FILE or set secrets manually."
+    echo "⏭️  Skipping secrets update (use --set-vars to update environment variables)"
 fi
 
 # Deploy the application

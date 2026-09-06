@@ -188,7 +188,7 @@ async def verify_email(
     token_result = await session.execute(
         select(EmailToken).where(
             EmailToken.token_hash == token_hash,
-            EmailToken.token_type == 'verification',
+            EmailToken.token_type == 'verification',  # noqa: S105
         )
     )
     email_token_record = token_result.scalars().first()

@@ -42,6 +42,11 @@ class Settings(BaseSettings):
         FRONTEND_URL,
         'http://localhost:5173',
         'http://127.0.0.1:5173',
+        # Expo / React Native dev servers
+        'http://localhost:8081',
+        'http://127.0.0.1:8081',
+        'http://localhost:19006',
+        'http://localhost:19000',
     ]
 
     DATABASE_URL: Union[str, PostgresDsn] = os.getenv(
@@ -203,6 +208,11 @@ class Settings(BaseSettings):
         'AI_MODEL_EMBEDDINGS', 'text-embedding-3-small'
     )
     AI_MAX_TOKENS: int = int(os.getenv('AI_MAX_TOKENS', '4096'))
+
+    # NFS-e Configuration (optional - only needed if you use an NFS-e provider)
+    FISCAL_NACIONAL_API_KEY: str = os.getenv('FISCAL_NACIONAL_API_KEY', '')
+    NFSE_API_BASE_URL: str = os.getenv('NFSE_API_BASE_URL', '')
+    NFSE_ADMIN_EMAIL: str = os.getenv('NFSE_ADMIN_EMAIL', '')
 
 
 settings = Settings()

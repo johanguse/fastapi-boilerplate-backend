@@ -1,6 +1,7 @@
 """Seed data for subscription plans."""
 from src.subscriptions.models import SubscriptionPlan
 
+
 def create_subscription_plans():
     """Create subscription plan seed data."""
     plans = [

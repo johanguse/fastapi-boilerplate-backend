@@ -45,7 +45,7 @@ async def test_login_success(client: AsyncClient, test_user: Dict[str, Any]):
 
     try:
         # Make the request
-        response = await client.get('/api/v1/me')
+        response = await client.get('/api/v1/users/me')
 
         # Check the response
         assert response.status_code == 200
@@ -146,7 +146,7 @@ async def test_get_current_user(
 
     try:
         # Make the request
-        response = await client.get('/api/v1/me')
+        response = await client.get('/api/v1/users/me')
 
         # Check the response
         assert response.status_code == 200
@@ -259,7 +259,7 @@ async def test_update_user_profile(client: AsyncClient):
     try:
         # Make the request (which will be intercepted by our mock)
         response = await client.patch(
-            '/api/v1/me',
+            '/api/v1/users/me',
             json={
                 'name': 'Updated Name',
             },

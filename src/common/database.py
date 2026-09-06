@@ -15,3 +15,4 @@ from src.subscriptions import models as subscription_models
 from src.ai_analytics import models as ai_analytics_models
 from src.ai_content import models as ai_content_models
 from src.ai_documents import models as ai_documents_models
+from src.fiscal import models as fiscal_models

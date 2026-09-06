@@ -8,7 +8,6 @@ import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -40,6 +39,33 @@ router = APIRouter()
 
 # Constants
 INVALID_CREDENTIALS_MSG = 'Invalid email or password'
+
+
+def _user_dict(user: 'User') -> Dict[str, Any]:
+    """Build the full user payload returned to clients in every auth response."""
+    return {
+        'id': str(user.id),
+        'email': user.email,
+        'name': getattr(user, 'name', user.email.split('@')[0]),
+        'emailVerified': user.is_verified,
+        'role': getattr(user, 'role', 'member'),
+        'is_verified': user.is_verified,
+        'is_superuser': user.is_superuser,
+        'onboarding_completed': getattr(user, 'onboarding_completed', False),
+        'onboarding_step': getattr(user, 'onboarding_step', 0),
+        # Profile fields
+        'bio': getattr(user, 'bio', None),
+        'job_title': getattr(user, 'job_title', None),
+        'avatar_url': getattr(user, 'avatar_url', None),
+        'country': getattr(user, 'country', None),
+        # Timestamps
+        'createdAt': user.created_at.isoformat()
+        if hasattr(user, 'created_at') and user.created_at
+        else None,
+        'updatedAt': user.updated_at.isoformat()
+        if hasattr(user, 'updated_at') and user.updated_at
+        else None,
+    }
 
 
 # Better Auth compatible models
@@ -118,20 +144,24 @@ def _cookie_options() -> Dict[str, Any]:
 
     - secure=True when FRONTEND_URL is https
     - samesite=None (sent as 'none') when secure, else 'lax'
-    - domain set to FRONTEND_URL hostname when not localhost
+    - domain is intentionally NOT set (host-only cookies)
+
+    Rationale: the cookie is set by the API server (e.g.
+    api-staging.example.com).  If we set domain= to the
+    FRONTEND_URL hostname (e.g. staging.example.com) the
+    browser rejects the Set-Cookie per RFC 6265 §5.2.3 because
+    staging.example.com is not a domain-suffix of
+    api-staging.example.com, so the cookie is silently
+    discarded and every subsequent request returns 401.
+    Omitting domain causes the browser to use a host-only cookie
+    bound to the API hostname; both subdomains share the same
+    eTLD+1 so they are same-site and the cookie is sent with
+    credentials:include requests.
     """
     frontend = settings.FRONTEND_URL or ''
     secure = frontend.startswith('https')
     samesite = 'none' if secure else 'lax'
-    domain: Optional[str] = None
-    try:
-        parsed = urlparse(frontend)
-        host = parsed.hostname
-        if host and host not in {'localhost', '127.0.0.1'}:
-            domain = host
-    except Exception:
-        domain = None
-    return {'secure': secure, 'samesite': samesite, 'domain': domain}
+    return {'secure': secure, 'samesite': samesite, 'domain': None}
 
 
 def _set_cookie(
@@ -393,38 +423,19 @@ async def sign_in_email(
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
 
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            seconds=settings.JWT_LIFETIME_SECONDS
+        )
         response_data = AuthResponse(
-            user={
-                'id': str(user.id),
-                'email': user.email,
-                'name': getattr(user, 'name', user.email.split('@')[0]),
-                'emailVerified': user.is_verified,
-                'role': getattr(user, 'role', 'member'),
-                'is_verified': user.is_verified,
-                'is_superuser': user.is_superuser,
-                'onboarding_completed': getattr(
-                    user, 'onboarding_completed', False
-                ),
-                'onboarding_step': getattr(user, 'onboarding_step', 0),
-                'createdAt': user.created_at.isoformat()
-                if hasattr(user, 'created_at') and user.created_at
-                else None,
-                'updatedAt': user.updated_at.isoformat()
-                if hasattr(user, 'updated_at') and user.updated_at
-                else None,
-            },
+            user=_user_dict(user),
             session={
                 'token': token,
-                'expiresAt': (
-                    datetime.now(timezone.utc)
-                    + timedelta(seconds=settings.JWT_LIFETIME_SECONDS)
-                ).isoformat(),
+                'expiresAt': expires_at.isoformat(),
             },
         )
 
-        # Set HTTP-only cookie for session persistence (secure/samesite set dynamically)
+        # Set HTTP-only cookie for web clients; native clients use the body token
         _set_cookie(response, key='ba_session', value=token)
-        # Clear any previous active organization selection from other sessions/users
         _delete_cookie(response, key='ba_active_org', path='/')
         logger.info(f'Successful login for: {request.email}')
         return response_data
@@ -537,36 +548,17 @@ async def sign_up_email(
         # Create Better Auth compatible JWT
         token = create_better_auth_jwt(user)
 
+        sign_up_expires_at = datetime.now(timezone.utc) + timedelta(
+            seconds=settings.JWT_LIFETIME_SECONDS
+        )
         resp = AuthResponse(
-            user={
-                'id': str(user.id),
-                'email': user.email,
-                'name': getattr(
-                    user, 'name', request.name or user.email.split('@')[0]
-                ),
-                'emailVerified': user.is_verified,
-                'role': getattr(user, 'role', 'member'),
-                'is_verified': user.is_verified,
-                'is_superuser': user.is_superuser,
-                'onboarding_completed': user.onboarding_completed,
-                'onboarding_step': user.onboarding_step,
-                'createdAt': user.created_at.isoformat()
-                if hasattr(user, 'created_at') and user.created_at
-                else None,
-                'updatedAt': user.updated_at.isoformat()
-                if hasattr(user, 'updated_at') and user.updated_at
-                else None,
-            },
+            user=_user_dict(user),
             session={
                 'token': token,
-                'expiresAt': (
-                    datetime.now(timezone.utc)
-                    + timedelta(seconds=settings.JWT_LIFETIME_SECONDS)
-                ).isoformat(),
+                'expiresAt': sign_up_expires_at.isoformat(),
             },
         )
 
-        # Set HTTP-only cookie for session persistence (secure/samesite set dynamically)
         _set_cookie(response, key='ba_session', value=token)
         logger.info(f'Successful registration for: {request.email}')
         return resp
@@ -585,9 +577,10 @@ async def sign_out(response: Response):
     """Better Auth compatible sign out"""
     # For JWT-based auth, we just return success
     # Token invalidation would happen on the frontend
-    # Clear cookie
+    # Clear all ba_* cookies (ba_session, ba_active_org, ba_active_team)
     _delete_cookie(response, key='ba_session', path='/')
     _delete_cookie(response, key='ba_active_org', path='/')
+    _delete_cookie(response, key='ba_active_team', path='/')
     return {'success': True}
 
 
@@ -615,33 +608,14 @@ async def get_session(
             status_code=401, detail='User not found or inactive'
         )
 
-    # Include active org in session response
+    # Include active org in session response; include token for native clients
     return {
-        'user': {
-            'id': str(user.id),
-            'email': user.email,
-            'name': getattr(user, 'name', user.email.split('@')[0]),
-            'emailVerified': user.is_verified,
-            'role': getattr(user, 'role', 'member'),
-            'is_verified': user.is_verified,
-            'is_superuser': user.is_superuser,
-            'onboarding_completed': getattr(
-                user, 'onboarding_completed', False
-            ),
-            'onboarding_step': getattr(user, 'onboarding_step', 0),
-            'createdAt': user.created_at.isoformat()
-            if hasattr(user, 'created_at') and user.created_at
-            else None,
-            'updatedAt': user.updated_at.isoformat()
-            if hasattr(user, 'updated_at') and user.updated_at
-            else None,
-        },
+        'user': _user_dict(user),
         'session': {
             'token': token,
             'expiresAt': datetime.fromtimestamp(
                 payload['exp'], tz=timezone.utc
             ).isoformat(),
-            # Read "active" selections from cookies only
             'activeOrganizationId': request.cookies.get('ba_active_org'),
         },
     }
@@ -871,6 +845,27 @@ async def reject_invitation_endpoint(request: Request):
 @router.post('/auth/organization/cancel-invitation')
 async def cancel_invitation_endpoint(request: Request):
     """Cancel invitation - stub for compatibility"""
+    return {'success': True}
+
+
+@router.get('/auth/organization/list-teams')
+async def list_teams_endpoint(request: Request):
+    """List teams within the organization - stub (no nested teams in this implementation)"""
+    return []
+
+
+@router.post('/auth/organization/set-active-team')
+async def set_active_team_endpoint(request: Request, response: Response):
+    """Set active team cookie - stub for Better Auth compatibility"""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    team_id = (payload or {}).get('teamId')
+    if team_id:
+        _set_cookie(
+            response, key='ba_active_team', value=str(team_id), path='/'
+        )
     return {'success': True}
 
 

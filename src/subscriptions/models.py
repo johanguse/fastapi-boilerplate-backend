@@ -1,12 +1,15 @@
 """Database models for subscription management."""
 
 from datetime import UTC, datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
+
+if TYPE_CHECKING:
+    from src.organizations.models import Organization
 
 
 class SubscriptionPlan(Base):
@@ -146,8 +149,6 @@ class CustomerSubscription(Base):
     )
 
     # Relationships
-    from src.organizations.models import Organization
-
     organization: Mapped['Organization'] = relationship(
         back_populates='subscription'
     )

@@ -9,7 +9,6 @@ from src.auth.models import User
 from tests.helpers.auth_helpers import (
     create_test_user_with_password,
     get_auth_cookies,
-    get_auth_headers,
     verify_user_password,
 )
 
@@ -18,7 +17,7 @@ from tests.helpers.auth_helpers import (
 async def test_sign_in_email_success(client: AsyncClient, db_session: AsyncSession):
     """Test successful email sign-in."""
     # Create a test user
-    user = await create_test_user_with_password(
+    await create_test_user_with_password(
         db_session,
         email='signin@example.com',
         password='TestPassword123!',
@@ -113,7 +112,7 @@ async def test_sign_in_email_unverified_user(
     client: AsyncClient, db_session: AsyncSession
 ):
     """Test sign-in with unverified user.
-    
+
     Note: Unverified users CAN log in - they will see a verification banner
     in the frontend. This is intentional to improve user experience.
     """
@@ -154,7 +153,7 @@ async def test_sign_up_email_success(
     if existing_user:
         await db_session.delete(existing_user)
         await db_session.commit()
-    
+
     response = await client.post(
         '/api/v1/auth/sign-up/email',
         json={
@@ -168,7 +167,7 @@ async def test_sign_up_email_success(
         # Print error details for debugging
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.text}")
-    
+
     assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
     data = response.json()
     assert 'user' in data
@@ -184,20 +183,23 @@ async def test_sign_up_email_success(
     result = await db_session.execute(stmt)
     user = result.scalar_one_or_none()
     assert user is not None
-    
+
     # Verify password using FastAPI Users password helper (same as sign-up endpoint)
     # User is unverified so sign-in would fail, but we can verify the password hash
-    from src.auth.users import UserManager
     from fastapi_users.db import SQLAlchemyUserDatabase
-    
+
+    from src.auth.users import UserManager
+
     user_db = SQLAlchemyUserDatabase(db_session, User)
     user_manager = UserManager(user_db)
-    
+
     # Use the same password verification method as the sign-in endpoint
     valid_password = user_manager.password_helper.verify_and_update(
         'TestPassword123!', user.hashed_password
     )
-    assert valid_password is not None and valid_password[0], \
+    assert valid_password is not None, \
+        "Password verification returned None"
+    assert valid_password[0], \
         "Password was not hashed correctly by FastAPI Users"
 
 
@@ -239,7 +241,7 @@ async def test_sign_up_email_minimum_password_length(
     if existing_user:
         await db_session.delete(existing_user)
         await db_session.commit()
-    
+
     response = await client.post(
         '/api/v1/auth/sign-up/email',
         json={
@@ -252,7 +254,7 @@ async def test_sign_up_email_minimum_password_length(
     # The validation should catch this (if password validation is enabled)
     # Some implementations might allow short passwords and hash them anyway
     # So we'll accept either 400/422 (validation error) or 200 (allowed but not recommended)
-    assert response.status_code in [400, 422, 200]
+    assert response.status_code in {400, 422, 200}
 
 
 @pytest.mark.asyncio
@@ -280,20 +282,20 @@ async def test_sign_out(client: AsyncClient, db_session: AsyncSession):
     # httpx may or may not include deleted cookies in response.cookies
     # Check for cookie deletion in Set-Cookie headers as a fallback
     set_cookie_header = response.headers.get('Set-Cookie', '')
-    
+
     # The cookie should be deleted via Set-Cookie header
     # This is the primary way cookie deletion works
     cookie_deleted_via_header = (
-        'ba_session' in set_cookie_header and 
+        'ba_session' in set_cookie_header and
         ('Max-Age=0' in set_cookie_header or 'expires=' in set_cookie_header.lower())
     )
-    
+
     # Or it might appear as an empty value in response.cookies
     cookie_in_response = (
-        'ba_session' in response.cookies and 
-        (response.cookies.get('ba_session') == '' or response.cookies.get('ba_session') is None)
+        'ba_session' in response.cookies and
+        (not response.cookies.get('ba_session') or response.cookies.get('ba_session') is None)
     )
-    
+
     # At least one of these should be true
     assert cookie_deleted_via_header or cookie_in_response, \
         f"Cookie deletion should be indicated. Set-Cookie: {set_cookie_header[:100]}, " \
@@ -378,7 +380,7 @@ async def test_get_oauth_providers(client: AsyncClient):
     data = response.json()
     assert 'providers' in data
     assert isinstance(data['providers'], list)
-    
+
     # Check expected providers
     provider_ids = [p['id'] for p in data['providers']]
     assert 'google' in provider_ids
@@ -425,8 +427,7 @@ async def test_user_password_hashing(client: AsyncClient, db_session: AsyncSessi
     # Password should be hashed, not plain text
     assert user.hashed_password != 'HashedPassword123!'
     assert len(user.hashed_password) > 20  # Hashed passwords are longer
-    
+
     # But we should be able to verify it
     is_valid = await verify_user_password(db_session, user, 'HashedPassword123!')
     assert is_valid is True
-

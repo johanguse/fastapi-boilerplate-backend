@@ -10,6 +10,7 @@ from src.common.database import Base
 if TYPE_CHECKING:
     # These are still needed because they're used in relationship annotations
     from src.activity_log.models import ActivityLog
+    from src.fiscal.models import NFSe, UserTaxInfo
     from src.organizations.models import (
         OrganizationInvitation,
         OrganizationMember,
@@ -85,6 +86,11 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         Integer, default=0, nullable=False
     )
 
+    # FCM device token (mobile push)
+    push_token: Mapped[Optional[str]] = mapped_column(
+        String(512), nullable=True
+    )
+
     # Relationships
     activities: Mapped[list['ActivityLog']] = relationship(
         'ActivityLog',
@@ -113,6 +119,17 @@ class User(SQLAlchemyBaseUserTable[int], Base):
             foreign_keys='[OrganizationInvitation.invitee_id]',
             cascade='all, delete-orphan',
         )
+    )
+    tax_info: Mapped[Optional['UserTaxInfo']] = relationship(
+        'UserTaxInfo',
+        back_populates='user',
+        uselist=False,
+        cascade='all, delete-orphan',
+    )
+    nfse_records: Mapped[list['NFSe']] = relationship(
+        'NFSe',
+        back_populates='user',
+        cascade='all, delete-orphan',
     )
 
     def __repr__(self) -> str:

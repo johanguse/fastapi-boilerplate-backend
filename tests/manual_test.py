@@ -51,7 +51,7 @@ async def test_me_endpoint():
             transport=ASGITransport(app=app), base_url='http://test'
         ) as client:
             # Make the request
-            response = await client.get('/api/v1/me')
+            response = await client.get('/api/v1/users/me')
 
             # Print the results
             print(f'Status code: {response.status_code}')

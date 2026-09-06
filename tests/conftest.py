@@ -1,5 +1,5 @@
 from typing import Any, AsyncGenerator, Dict
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -47,7 +47,7 @@ def with_email(request):
 @pytest.fixture(autouse=True)
 def mock_email_services(request, monkeypatch):
     """Mock all email services by default unless --with-email flag is provided.
-    
+
     Tests can opt-out of this auto-mocking by using the @pytest.mark.real_email marker.
     """
     # Check if --with-email flag is set
@@ -144,9 +144,9 @@ async def clean_test_data():
                 await session.execute(
                     text(
                         """
-                        DELETE FROM organization_members 
+                        DELETE FROM organization_members
                         WHERE organization_id IN (
-                            SELECT id FROM organizations 
+                            SELECT id FROM organizations
                             WHERE name LIKE '%Organization%'
                             OR name LIKE 'My Org%'
                             OR name LIKE 'Test Org%'
@@ -160,7 +160,7 @@ async def clean_test_data():
                 await session.execute(
                     text(
                         """
-                        DELETE FROM organizations 
+                        DELETE FROM organizations
                         WHERE name LIKE '%Organization%'
                         OR name LIKE 'My Org%'
                         OR name LIKE 'Test Org%'

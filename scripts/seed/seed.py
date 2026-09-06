@@ -10,20 +10,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.activity_log.models import ActivityLog
-from src.ai_core.usage import AIUsageLog
-
-# Import all models
-from src.auth.models import User, EmailToken
-from src.common.config import settings
-from src.organizations.models import Organization, OrganizationMember
-from src.projects.models import Project
-from src.subscriptions.models import (
-    BillingHistory,
-    CustomerSubscription,
-    SubscriptionPlan,
-)
-
 # Import modular seed functions
 from scripts.seed import (
     ai_usage,
@@ -35,6 +21,13 @@ from scripts.seed import (
     users,
 )
 from scripts.seed.activity_logs import create_activity_logs
+
+# Import all models
+from src.auth.models import User
+from src.common.config import settings
+from src.subscriptions.models import (
+    SubscriptionPlan,
+)
 
 # Password context for hashing (same as FastAPI Users)
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')

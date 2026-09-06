@@ -1,6 +1,5 @@
 """Helper functions for authentication tests."""
 
-import hashlib
 from datetime import datetime, timezone
 from typing import Dict, Optional
 
@@ -32,9 +31,9 @@ async def create_test_user_with_password(
     onboarding_step: int = 0,
 ) -> User:
     """Create a test user with a hashed password.
-    
+
     If a user with the given email already exists, it will be deleted first.
-    
+
     Args:
         session: Database session
         email: User email
@@ -44,7 +43,7 @@ async def create_test_user_with_password(
         is_verified: Whether user email is verified
         is_superuser: Whether user is superuser
         role: User role
-        
+
     Returns:
         Created user
     """
@@ -55,14 +54,14 @@ async def create_test_user_with_password(
     if existing_user:
         await session.delete(existing_user)
         await session.commit()
-    
+
     # Hash the password using the same method as the app
     # FastAPI Users uses passlib for password hashing
     from passlib.context import CryptContext
-    
+
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
     hashed_password = pwd_context.hash(password)
-    
+
     # Create user
     user = User(
         email=email,
@@ -86,11 +85,11 @@ async def create_test_user_with_password(
         onboarding_completed=onboarding_completed,
         onboarding_step=onboarding_step,
     )
-    
+
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    
+
     return user
 
 
@@ -101,13 +100,13 @@ async def get_auth_headers(
     password: str = 'Password123!',
 ) -> Dict[str, str]:
     """Generate authentication headers for API requests.
-    
+
     Args:
         session: Database session
         user: Optional existing user
         email: User email
         password: User password
-        
+
     Returns:
         Dictionary with Authorization header
     """
@@ -116,17 +115,17 @@ async def get_auth_headers(
         stmt = select(User).where(User.email == email)
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
-        
+
         if user is None:
             user = await create_test_user_with_password(
                 session, email=email, password=password
             )
-    
+
     # Generate a JWT token
     from src.auth.better_auth.jwt_utils import create_better_auth_jwt
-    
+
     token = create_better_auth_jwt(user)
-    
+
     return {'Authorization': f'Bearer {token}'}
 
 
@@ -137,13 +136,13 @@ async def get_auth_cookies(
     password: str = 'Password123!',
 ) -> Dict[str, str]:
     """Generate authentication cookies for API requests.
-    
+
     Args:
         session: Database session
         user: Optional existing user
         email: User email
         password: User password
-        
+
     Returns:
         Dictionary with auth cookie
     """
@@ -152,17 +151,17 @@ async def get_auth_cookies(
         stmt = select(User).where(User.email == email)
         result = await session.execute(stmt)
         user = result.scalar_one_or_none()
-        
+
         if user is None:
             user = await create_test_user_with_password(
                 session, email=email, password=password
             )
-    
+
     # Generate a JWT token
     from src.auth.better_auth.jwt_utils import create_better_auth_jwt
-    
+
     token = create_better_auth_jwt(user)
-    
+
     return {'ba_session': token}
 
 
@@ -172,19 +171,19 @@ async def verify_user_password(
     password: str,
 ) -> bool:
     """Verify a user's password.
-    
+
     Args:
         session: Database session
         user: User to verify
         password: Plain text password
-        
+
     Returns:
         True if password is correct
     """
     from passlib.context import CryptContext
-    
+
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-    
+
     return pwd_context.verify(password, user.hashed_password)
 
 
@@ -193,11 +192,11 @@ def create_mock_oauth_provider_data(
     user_data: Optional[Dict] = None,
 ) -> Dict:
     """Create mock OAuth provider response data.
-    
+
     Args:
         provider: OAuth provider name (google, github, microsoft, apple)
         user_data: Optional custom user data
-        
+
     Returns:
         Mock OAuth provider data
     """
@@ -206,7 +205,7 @@ def create_mock_oauth_provider_data(
         'name': f'{provider.capitalize()} User',
         'id': f'{provider}_12345',
     }
-    
+
     provider_specific = {
         'google': {
             'email': 'google_user@gmail.com',
@@ -230,11 +229,10 @@ def create_mock_oauth_provider_data(
             'name': {'firstName': 'Apple', 'lastName': 'User'},
         },
     }
-    
+
     base_data = provider_specific.get(provider, default_data)
-    
+
     if user_data:
         base_data.update(user_data)
-    
-    return base_data
 
+    return base_data

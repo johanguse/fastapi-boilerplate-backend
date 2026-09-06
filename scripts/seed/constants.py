@@ -1,6 +1,6 @@
 """Constants and configuration for seed data."""
 
-import random
+import secrets
 
 # Password for all seed users
 DEFAULT_PASSWORD = 'admin123'
@@ -32,9 +32,9 @@ IP_ADDRESSES = [
 
 def random_ip():
     """Get a random IP address."""
-    return random.choice(IP_ADDRESSES)
+    return secrets.choice(IP_ADDRESSES)
 
 
 def random_user_agent():
     """Get a random user agent."""
-    return random.choice(USER_AGENTS)
+    return secrets.choice(USER_AGENTS)

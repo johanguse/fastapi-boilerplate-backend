@@ -6,15 +6,39 @@ set -e
 
 echo "🚀 Environment-based Deployment for Better Agent AI"
 
-# Check parameters
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <environment>"
+# Default values
+SET_VARS=false
+
+# Parse command-line arguments
+ENVIRONMENT=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --set-vars)
+            SET_VARS=true
+            shift
+            ;;
+        staging|production)
+            ENVIRONMENT=$1
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 <environment> [--set-vars]"
+            echo "Example: $0 staging"
+            echo "Example: $0 production --set-vars"
+            echo "  --set-vars    Update environment variables from .env file"
+            exit 1
+            ;;
+    esac
+done
+
+# Check if environment was provided
+if [ -z "$ENVIRONMENT" ]; then
+    echo "Usage: $0 <environment> [--set-vars]"
     echo "Example: $0 staging"
-    echo "Example: $0 production"
+    echo "Example: $0 production --set-vars"
     exit 1
 fi
-
-ENVIRONMENT=$1
 
 # Validate environment
 case $ENVIRONMENT in
@@ -75,40 +99,44 @@ else
     echo "✅ App already exists"
 fi
 
-# Load environment variables
-if [ -f "$ENV_FILE" ]; then
-    echo "📋 Loading environment variables from $ENV_FILE..."
-    
-    # Source the load-env function if it exists
-    if [ -f "./load-env.sh" ]; then
-        source ./load-env.sh
-        load_env_file "$ENV_FILE" "$APP_NAME"
+# Only set secrets when --set-vars is passed
+if [ "$SET_VARS" = true ]; then
+    if [ -f "$ENV_FILE" ]; then
+        echo "📋 Loading environment variables from $ENV_FILE..."
+        
+        # Source the load-env function if it exists
+        if [ -f "./load-env.sh" ]; then
+            source ./load-env.sh
+            load_env_file "$ENV_FILE" "$APP_NAME"
+        else
+            echo "📋 Setting environment variables manually..."
+            # Read .env file and set secrets
+            while IFS='=' read -r key value; do
+                # Skip comments and empty lines
+                [[ $key =~ ^[[:space:]]*# ]] && continue
+                [[ -z $key ]] && continue
+                
+                # Remove quotes from value if present
+                value=$(echo "$value" | sed 's/^"\(.*\)"$/\1/' | sed "s/^'\(.*\)'$/\1/")
+                
+                echo "Setting $key..."
+                flyctl secrets set "$key=$value" --app $APP_NAME
+            done < "$ENV_FILE"
+        fi
     else
-        echo "📋 Setting environment variables manually..."
-        # Read .env file and set secrets
-        while IFS='=' read -r key value; do
-            # Skip comments and empty lines
-            [[ $key =~ ^[[:space:]]*# ]] && continue
-            [[ -z $key ]] && continue
-            
-            # Remove quotes from value if present
-            value=$(echo "$value" | sed 's/^"\(.*\)"$/\1/' | sed "s/^'\(.*\)'$/\1/")
-            
-            echo "Setting $key..."
-            flyctl secrets set "$key=$value" --app $APP_NAME
-        done < "$ENV_FILE"
+        echo "❌ Environment file $ENV_FILE not found"
+        echo "Please create $ENV_FILE with your environment variables"
+        echo ""
+        echo "Example $ENV_FILE content:"
+        echo "DATABASE_URL=postgresql://user:pass@host:5432/dbname"
+        echo "JWT_SECRET=your-secret-key"
+        echo "OPENAI_API_KEY=your-openai-key"
+        echo "QDRANT_URL=https://your-qdrant-cluster.qdrant.cloud:6333"
+        echo "QDRANT_API_KEY=your-qdrant-api-key"
+        exit 1
     fi
 else
-    echo "❌ Environment file $ENV_FILE not found"
-    echo "Please create $ENV_FILE with your environment variables"
-    echo ""
-    echo "Example $ENV_FILE content:"
-    echo "DATABASE_URL=postgresql://user:pass@host:5432/dbname"
-    echo "JWT_SECRET=your-secret-key"
-    echo "OPENAI_API_KEY=your-openai-key"
-    echo "QDRANT_URL=https://your-qdrant-cluster.qdrant.cloud:6333"
-    echo "QDRANT_API_KEY=your-qdrant-api-key"
-    exit 1
+    echo "⏭️  Skipping secrets update (use --set-vars to update environment variables)"
 fi
 
 # Deploy the application
