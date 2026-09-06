@@ -16,6 +16,10 @@ class HealthResponse(BaseModel):
     version: str
 
 
+class PublicConfigResponse(BaseModel):
+    fiscal_enabled: bool
+
+
 class PerformanceMetrics(BaseModel):
     uptime_seconds: float
     total_requests: int
@@ -36,6 +40,20 @@ async def health_check():
     return HealthResponse(
         status='ok',
         version=settings.PROJECT_VERSION,
+    )
+
+
+@router.get('/config', response_model=PublicConfigResponse)
+async def public_config():
+    """
+    Public, unauthenticated feature flags the frontend needs before login
+    to decide what UI to show (e.g. hide settings for integrations that
+    aren't configured on this deployment).
+    """
+    return PublicConfigResponse(
+        fiscal_enabled=bool(
+            settings.FISCAL_NACIONAL_API_KEY and settings.NFSE_API_BASE_URL
+        ),
     )
 
 
