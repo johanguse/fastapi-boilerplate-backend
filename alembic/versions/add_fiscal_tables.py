@@ -1,7 +1,7 @@
 """Add fiscal tables for NFS-e management
 
 Revision ID: add_fiscal_tables
-Revises:
+Revises: 0b79c1911baa
 Create Date: 2026-02-06
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = 'add_fiscal_tables'
-down_revision: Union[str, None] = None  # UPDATE THIS TO YOUR LAST MIGRATION
+down_revision: Union[str, None] = '0b79c1911baa'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
