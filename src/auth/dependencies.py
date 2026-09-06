@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,8 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.models import User
 from src.common.config import settings
 from src.common.security import (
-    _decode_hs256_token,
-    get_current_user,
+    decode_hs256_token,
     get_current_active_user,
 )
 from src.common.session import get_async_session
@@ -34,7 +33,7 @@ async def get_current_user_optional(
     if token is None:
         return None
 
-    payload = _decode_hs256_token(token)
+    payload = decode_hs256_token(token)
     if payload is None:
         return None
 

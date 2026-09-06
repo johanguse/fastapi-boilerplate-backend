@@ -5,8 +5,8 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from openai import AsyncOpenAI
 from pydantic import BaseModel
-from src.auth.dependencies import current_active_user
 
+from src.auth.dependencies import current_active_user
 from src.common.config import Settings, get_settings
 
 router = APIRouter(prefix='/chat', tags=['AI Chat'])

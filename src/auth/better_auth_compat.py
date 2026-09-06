@@ -8,6 +8,7 @@ import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
+
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse

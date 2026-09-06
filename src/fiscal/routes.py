@@ -7,8 +7,8 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.auth.dependencies import current_active_user
 
+from src.auth.dependencies import current_active_user
 from src.auth.models import User
 from src.common.config import get_settings
 from src.common.session import get_async_session

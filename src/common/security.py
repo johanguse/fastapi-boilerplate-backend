@@ -36,7 +36,7 @@ def create_refresh_token(data: dict[str, Any]) -> str:
     return create_access_token(data, expires_delta)
 
 
-def _decode_hs256_token(token: str) -> Optional[dict[str, Any]]:
+def decode_hs256_token(token: str) -> Optional[dict[str, Any]]:
     """Decode an HS256 JWT signed with JWT_SECRET (or SECRET_KEY as fallback).
 
     Tries JWT_SECRET first (issued by better_auth_compat), then SECRET_KEY
@@ -70,7 +70,7 @@ async def get_current_user(
         headers={'WWW-Authenticate': 'Bearer'},
     )
 
-    payload = _decode_hs256_token(token)
+    payload = decode_hs256_token(token)
     if payload is None:
         raise credentials_exception
 

@@ -52,7 +52,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         # fastapi-users 13+ requires update(user, update_dict)
         if updated_password_hash is not None:
             await self.user_db.update(
-                user, {"hashed_password": updated_password_hash}
+                user, {'hashed_password': updated_password_hash}
             )
 
         # Skip the is_verified check - allow unverified users to login
