@@ -1,15 +1,21 @@
-2FROM python:3.11 AS builder
+FROM python:3.11-slim AS builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 
-RUN pip install poetry
-RUN poetry config virtualenvs.in-project true
-COPY pyproject.toml poetry.lock ./
-RUN poetry install
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+COPY . .
+RUN uv sync --frozen --no-dev
+
 FROM python:3.11-slim
 WORKDIR /app
 COPY --from=builder /app/.venv .venv/
 COPY . .
-CMD ["/app/.venv/bin/fastapi", "run"]
+
+ENV PATH="/app/.venv/bin:$PATH"
+CMD ["fastapi", "run"]
