@@ -5,9 +5,10 @@ This guide covers optimized deployment configurations for high-performance FastA
 ## 🚀 Quick Start
 
 ### Option 1: Gunicorn (Recommended)
+
 ```bash
 # Install dependencies
-poetry install --only=main
+uv sync --no-dev
 
 # Set environment variables
 export DATABASE_URL="postgresql://user:pass@host:5432/dbname"
@@ -20,33 +21,85 @@ gunicorn -c gunicorn.conf.py src.main:app
 ```
 
 ### Option 2: FastAPI CLI
+
 ```bash
 fastapi run src/main.py --workers 4 --host 0.0.0.0 --port 8000
 ```
 
 ### Option 3: Production Script
+
 ```bash
 chmod +x scripts/start-production.sh
 ./scripts/start-production.sh
 ```
 
+## 🚀 Deployment to Fly.io
+
+### Deployment Commands
+
+```bash
+# Deploy to staging (code only - faster)
+./scripts/deploy/deploy-staging.sh
+
+# Deploy to staging and update environment variables
+./scripts/deploy/deploy-staging.sh --set-vars
+
+# Deploy to production (code only - faster)
+./scripts/deploy/deploy-production.sh
+
+# Deploy to production and update environment variables
+./scripts/deploy/deploy-production.sh --set-vars
+```
+
+### Understanding `--set-vars` Flag
+
+The `--set-vars` flag controls whether environment variables are updated during deployment:
+
+**Without `--set-vars` (default)**:
+- ✅ Faster deployments
+- ✅ Skips environment variable updates
+- ✅ Ideal for code-only changes
+- ✅ Won't accidentally overwrite secrets
+- ⏱️ Typical deployment: 2-3 minutes
+
+**With `--set-vars`**:
+- 📋 Loads variables from `.env.staging` or `.env.production`
+- 🔄 Updates all secrets on Fly.io
+- ⚠️  Required for first deployment
+- ⚠️  Use when secrets have changed
+- ⏱️ Typical deployment: 5-8 minutes
+
+**When to use `--set-vars`**:
+1. **First deployment** - Initial setup requires all secrets
+2. **Updated secrets** - Changed API keys, database credentials, etc.
+3. **New variables** - Added new environment variables to your app
+4. **Troubleshooting** - Environment variable issues
+
+**When to skip `--set-vars`**:
+1. **Code changes only** - Just updated application code
+2. **Regular deployments** - Daily/weekly code updates
+3. **Quick hotfixes** - Bug fixes that don't need config changes
+
 ## ⚡ Performance Optimizations
 
 ### Installed Optimizations
+
 - ✅ **ORJSON**: 20-50% faster JSON serialization
 - ✅ **GZip Compression**: 80-90% bandwidth reduction for large responses
 - ✅ **Async Middleware**: 40% faster than BaseHTTPMiddleware
 
 ### Additional Optimizations (Install if needed)
+
 ```bash
 # For Linux/macOS (Windows not supported)
-poetry add uvloop httptools
+uv add uvloop httptools
 
 # All platforms
-poetry add orjson  # Already installed
+uv add orjson  # Already installed
 ```
 
 ### Performance Features
+
 - 🔄 **Dependency Caching**: `@lru_cache` on expensive operations
 - 📡 **Streaming Responses**: Memory-efficient large data exports
 - 🏗️ **Multi-worker**: Utilizes all CPU cores
@@ -55,6 +108,7 @@ poetry add orjson  # Already installed
 ## 🐳 Docker Deployment
 
 ### Dockerfile Optimization
+
 ```dockerfile
 FROM python:3.11-slim
 
@@ -63,11 +117,12 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Install UV
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # Install Python dependencies
-COPY pyproject.toml poetry.lock ./
-RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --only=main
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Copy application
 COPY . .
@@ -86,6 +141,7 @@ CMD ["./scripts/start-production.sh"]
 ```
 
 ### Docker Compose
+
 ```yaml
 version: '3.8'
 services:
@@ -133,6 +189,7 @@ volumes:
 ### Worker Configuration
 
 The application automatically calculates optimal workers based on your CPU:
+
 - **I/O-heavy workloads** (most APIs): `CPU cores × 2 + 1`
 - **CPU-heavy workloads**: `CPU cores`
 - **Mixed workloads**: `CPU cores × 1.5`
@@ -142,6 +199,7 @@ Override with: `WORKERS=8`
 ## 📈 Performance Monitoring
 
 ### Built-in Endpoints
+
 - `GET /api/v1/health` - Health check with response time
 - `GET /api/v1/metrics` - Overall performance metrics
 - `GET /api/v1/metrics/endpoints` - Per-endpoint statistics  
@@ -152,6 +210,7 @@ Override with: `WORKERS=8`
 - `GET /api/v1/projects/export/csv` - Streaming project CSV
 
 ### Metrics to Monitor
+
 - Response times (via logging middleware)
 - Memory usage per worker
 - Database connection pool usage
@@ -160,6 +219,7 @@ Override with: `WORKERS=8`
 ## 🚦 Load Balancing
 
 ### Nginx Configuration
+
 ```nginx
 upstream fastapi_backend {
     server 127.0.0.1:8000;
@@ -185,6 +245,7 @@ server {
 ## 🔒 Security
 
 ### Production Security Checklist
+
 - [ ] Use HTTPS in production
 - [ ] Set strong SECRET_KEY and JWT_SECRET
 - [ ] Configure CORS properly
@@ -194,6 +255,7 @@ server {
 - [ ] Regular security updates
 
 ### Rate Limiting
+
 ```python
 # Add to your requirements if needed
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -212,6 +274,7 @@ async def limited_endpoint(request: Request):
 ## 📊 Expected Performance
 
 With all optimizations:
+
 - **20-50% faster JSON responses** (ORJSON)
 - **2-4x better throughput** under high concurrency (uvloop)
 - **40% faster HTTP parsing** (httptools)
@@ -222,12 +285,14 @@ With all optimizations:
 ## 🐛 Troubleshooting
 
 ### Common Issues
+
 1. **High memory usage**: Enable streaming for large responses
 2. **Slow startup**: Check database connection and migrations
 3. **Poor performance**: Verify uvloop and httptools are installed
 4. **Worker crashes**: Increase memory limits or reduce max_requests
 
 ### Debug Commands
+
 ```bash
 # Check if performance packages are installed
 python -c "import uvloop; print('uvloop OK')"

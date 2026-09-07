@@ -7,21 +7,36 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import ORJSONResponse
 from fastapi_pagination import add_pagination
+from slowapi.errors import RateLimitExceeded
 
+from src.ai_analytics.routes import router as ai_analytics_router
+from src.ai_content.routes import router as ai_content_router
+from src.ai_core.billing_routes import router as ai_billing_router
+from src.ai_core.dashboard_routes import router as ai_dashboard_router
+from src.ai_core.routes import router as ai_usage_router
+from src.ai_documents.routes import router as ai_documents_router
+from src.auth.admin_routes import router as admin_router
 from src.auth.email_routes import router as auth_email_router
+from src.auth.onboarding_routes import router as onboarding_router
+from src.auth.profile_routes import router as profile_router
 from src.auth.routes import router as auth_router
 from src.auth.user_routes import router as user_router
+from src.chat.router import router as chat_router
 from src.common.config import settings
 from src.common.database import Base
 from src.common.health import router as health_router
 from src.common.middleware import add_i18n_middleware, add_logging_middleware
 from src.common.monitoring import add_performance_monitoring
 from src.common.openapi import custom_openapi
+from src.common.rate_limiter import limiter, rate_limit_exceeded_handler
 from src.common.session import engine
+from src.invitations.routes import router as invitations_router
 from src.organizations.routes import router as org_router
 from src.payments.routes import router as payments_router
 from src.payments.webhooks import router as payments_webhook_router
 from src.projects.routes import router as project_router
+from src.subscriptions.routes import router as subscriptions_router
+from src.subscriptions.webhooks import router as subscriptions_webhook_router
 from src.uploads.routes import router as uploads_router
 
 # Production optimizations
@@ -29,19 +44,25 @@ IS_PRODUCTION = os.getenv('ENVIRONMENT', 'development') == 'production'
 
 # Configure logging for production
 if IS_PRODUCTION:
+    # Structured JSON logging for production
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format='{"timestamp":"%(asctime)s","name":"%(name)s","level":"%(levelname)s","message":"%(message)s"}',
         handlers=[
             logging.StreamHandler(),
+            logging.FileHandler('logs/app.log'),
         ],
     )
 else:
+    # Human-readable logging for development
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     )
 logger = logging.getLogger(__name__)
+
+# Create logs directory if it doesn't exist
+os.makedirs('logs', exist_ok=True)
 
 # Update the database URL to use the correct format
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL.replace(
@@ -55,12 +76,30 @@ SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL.replace(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    from src.common.audit_logger import AuditLogger, EventStatus
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info('Database tables created')
+
+    # Log application startup
+    AuditLogger.log_system_event(
+        action='application_startup',
+        status=EventStatus.SUCCESS,
+        metadata={
+            'environment': 'production' if IS_PRODUCTION else 'development',
+            'version': settings.PROJECT_VERSION,
+        },
+    )
+
     yield
+
     # Shutdown
     logger.info('Application shutting down')
+    AuditLogger.log_system_event(
+        action='application_shutdown',
+        status=EventStatus.SUCCESS,
+    )
 
 
 app = FastAPI(
@@ -68,16 +107,20 @@ app = FastAPI(
     description=settings.PROJECT_DESCRIPTION,
     version=settings.PROJECT_VERSION,
     lifespan=lifespan,
-    docs_url='/docs',
-    redoc_url='/redoc',
-    openapi_url='/openapi.json',
+    # Hide API docs in production for security
+    docs_url='/docs' if not IS_PRODUCTION else None,
+    redoc_url='/redoc' if not IS_PRODUCTION else None,
+    openapi_url='/openapi.json' if not IS_PRODUCTION else None,
     default_response_class=ORJSONResponse,
 )
 
-# Add middleware
-add_performance_monitoring(app)  # Add first for accurate timing
-add_i18n_middleware(app)
-add_logging_middleware(app)
+# Add rate limiter to app state
+app.state.limiter = limiter
+
+# Add rate limit exception handler
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# Add middleware - CORS must be FIRST to handle preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -85,6 +128,9 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+add_performance_monitoring(app)  # Add for accurate timing
+add_i18n_middleware(app)
+add_logging_middleware(app)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 add_pagination(app)
@@ -106,6 +152,24 @@ app.include_router(
     user_router,
     prefix=settings.API_V1_STR,
 )
+app.include_router(
+    admin_router,
+    prefix=settings.API_V1_STR,
+)
+app.include_router(
+    profile_router,
+    prefix=settings.API_V1_STR,
+)
+app.include_router(
+    onboarding_router,
+    prefix=settings.API_V1_STR,
+    tags=['onboarding'],
+)
+app.include_router(
+    invitations_router,
+    prefix=f'{settings.API_V1_STR}/invitations',
+    tags=['invitations'],
+)
 # Legacy Teams router removed from public API (replaced by Organizations)
 app.include_router(
     org_router,
@@ -126,7 +190,62 @@ app.include_router(
     tags=['payments'],
 )
 app.include_router(
+    subscriptions_router,
+    prefix=f'{settings.API_V1_STR}/subscriptions',
+    tags=['subscriptions'],
+)
+app.include_router(
+    subscriptions_webhook_router,
+    prefix=f'{settings.API_V1_STR}/webhooks',
+    tags=['webhooks'],
+)
+app.include_router(
     uploads_router, prefix=f'{settings.API_V1_STR}/uploads', tags=['uploads']
+)
+
+# AI Features
+app.include_router(
+    ai_usage_router,
+    prefix=f'{settings.API_V1_STR}/ai-usage',
+    tags=['AI Usage'],
+)
+app.include_router(
+    ai_billing_router,
+    prefix=f'{settings.API_V1_STR}/ai-billing',
+    tags=['AI Billing'],
+)
+app.include_router(
+    ai_dashboard_router,
+    prefix=f'{settings.API_V1_STR}/ai-dashboard',
+    tags=['AI Dashboard'],
+)
+app.include_router(
+    ai_documents_router,
+    prefix=f'{settings.API_V1_STR}/ai-documents',
+    tags=['AI Documents'],
+)
+app.include_router(
+    ai_content_router,
+    prefix=f'{settings.API_V1_STR}/ai-content',
+    tags=['AI Content'],
+)
+app.include_router(
+    ai_analytics_router,
+    prefix=f'{settings.API_V1_STR}/ai-analytics',
+    tags=['AI Analytics'],
+)
+if settings.FISCAL_NACIONAL_API_KEY and settings.NFSE_API_BASE_URL:
+    from src.fiscal.routes import router as fiscal_router
+
+    app.include_router(
+        fiscal_router,
+        prefix=f'{settings.API_V1_STR}/fiscal',
+        tags=['Fiscal'],
+    )
+
+app.include_router(
+    chat_router,
+    prefix=f'{settings.API_V1_STR}',
 )
 
 # Custom OpenAPI schema

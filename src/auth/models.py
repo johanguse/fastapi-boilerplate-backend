@@ -10,6 +10,7 @@ from src.common.database import Base
 if TYPE_CHECKING:
     # These are still needed because they're used in relationship annotations
     from src.activity_log.models import ActivityLog
+    from src.fiscal.models import NFSe, UserTaxInfo
     from src.organizations.models import (
         OrganizationInvitation,
         OrganizationMember,
@@ -22,6 +23,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=True)
     role: Mapped[str] = mapped_column(String(50), default='member')
+    status: Mapped[str] = mapped_column(
+        String(20), default='active', nullable=False
+    )  # active, invited, suspended
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -43,6 +47,48 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     )
     avatar_url: Mapped[Optional[str]] = mapped_column(
         String(500), nullable=True
+    )
+
+    # Profile fields for onboarding
+    phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    company: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    job_title: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
+    country: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    timezone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    bio: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    website: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+
+    # Billing fields
+    tax_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    address_street: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+    address_city: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
+    address_state: Mapped[Optional[str]] = mapped_column(
+        String(100), nullable=True
+    )
+    address_postal_code: Mapped[Optional[str]] = mapped_column(
+        String(20), nullable=True
+    )
+    company_name: Mapped[Optional[str]] = mapped_column(
+        String(255), nullable=True
+    )
+
+    # Onboarding completion tracking
+    onboarding_completed: Mapped[bool] = mapped_column(
+        default=False, nullable=False
+    )
+    onboarding_step: Mapped[int] = mapped_column(
+        Integer, default=0, nullable=False
+    )
+
+    # FCM device token (mobile push)
+    push_token: Mapped[Optional[str]] = mapped_column(
+        String(512), nullable=True
     )
 
     # Relationships
@@ -73,6 +119,17 @@ class User(SQLAlchemyBaseUserTable[int], Base):
             foreign_keys='[OrganizationInvitation.invitee_id]',
             cascade='all, delete-orphan',
         )
+    )
+    tax_info: Mapped[Optional['UserTaxInfo']] = relationship(
+        'UserTaxInfo',
+        back_populates='user',
+        uselist=False,
+        cascade='all, delete-orphan',
+    )
+    nfse_records: Mapped[list['NFSe']] = relationship(
+        'NFSe',
+        back_populates='user',
+        cascade='all, delete-orphan',
     )
 
     def __repr__(self) -> str:

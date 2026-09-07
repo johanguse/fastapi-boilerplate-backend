@@ -1,0 +1,570 @@
+{
+  "info": {
+    "name": "SaaS Boilerplate API",
+    "description": "Complete API collection for FastAPI SaaS Boilerplate with Subscriptions, Invitations, Auth, and Organizations",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "api_v1",
+      "value": "{{base_url}}/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organization_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "invitation_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"admin123\",\n  \"name\": \"Test User\"\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/auth/register",
+              "host": ["{{api_v1}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set(\"access_token\", jsonData.access_token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "admin@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "admin123",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{api_v1}}/auth/login",
+              "host": ["{{api_v1}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/users/me",
+              "host": ["{{api_v1}}"],
+              "path": ["users", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "List Subscription Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/subscriptions/plans",
+              "host": ["{{api_v1}}"],
+              "path": ["subscriptions", "plans"]
+            }
+          }
+        },
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 2,\n  \"billing_cycle\": \"monthly\",\n  \"success_url\": \"http://localhost:5173/billing/success\",\n  \"cancel_url\": \"http://localhost:5173/pricing\"\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/subscriptions/organizations/{{organization_id}}/checkout",
+              "host": ["{{api_v1}}"],
+              "path": ["subscriptions", "organizations", "{{organization_id}}", "checkout"]
+            }
+          }
+        },
+        {
+          "name": "Get Organization Subscription",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/subscriptions/organizations/{{organization_id}}/subscription",
+              "host": ["{{api_v1}}"],
+              "path": ["subscriptions", "organizations", "{{organization_id}}", "subscription"]
+            }
+          }
+        },
+        {
+          "name": "Get Usage Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/subscriptions/organizations/{{organization_id}}/usage",
+              "host": ["{{api_v1}}"],
+              "path": ["subscriptions", "organizations", "{{organization_id}}", "usage"]
+            }
+          }
+        },
+        {
+          "name": "Get Billing History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/subscriptions/organizations/{{organization_id}}/billing-history",
+              "host": ["{{api_v1}}"],
+              "path": ["subscriptions", "organizations", "{{organization_id}}", "billing-history"]
+            }
+          }
+        },
+        {
+          "name": "Create Customer Portal Session",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/subscriptions/organizations/{{organization_id}}/portal",
+              "host": ["{{api_v1}}"],
+              "path": ["subscriptions", "organizations", "{{organization_id}}", "portal"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/subscriptions/organizations/{{organization_id}}/cancel",
+              "host": ["{{api_v1}}"],
+              "path": ["subscriptions", "organizations", "{{organization_id}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Stripe-Signature",
+                "value": "{{stripe_signature}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"customer.subscription.updated\",\n  \"data\": {}\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/webhooks/stripe",
+              "host": ["{{api_v1}}"],
+              "path": ["webhooks", "stripe"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invitations & Email",
+      "item": [
+        {
+          "name": "Resend Email Verification",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/invitations/verify-email/resend",
+              "host": ["{{api_v1}}"],
+              "path": ["invitations", "verify-email", "resend"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email with Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/invitations/verify-email/:token",
+              "host": ["{{api_v1}}"],
+              "path": ["invitations", "verify-email", ":token"],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "your-verification-token"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Invite Team Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newmember@example.com\",\n  \"role\": \"member\",\n  \"message\": \"Welcome to our team!\"\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/invitations/organizations/{{organization_id}}/invitations",
+              "host": ["{{api_v1}}"],
+              "path": ["invitations", "organizations", "{{organization_id}}", "invitations"]
+            }
+          }
+        },
+        {
+          "name": "List Pending Invitations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/invitations/organizations/{{organization_id}}/invitations",
+              "host": ["{{api_v1}}"],
+              "path": ["invitations", "organizations", "{{organization_id}}", "invitations"]
+            }
+          }
+        },
+        {
+          "name": "Accept Invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/invitations/invitations/{{invitation_token}}/accept",
+              "host": ["{{api_v1}}"],
+              "path": ["invitations", "invitations", "{{invitation_token}}", "accept"]
+            }
+          }
+        },
+        {
+          "name": "Decline Invitation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/invitations/invitations/{{invitation_token}}/decline",
+              "host": ["{{api_v1}}"],
+              "path": ["invitations", "invitations", "{{invitation_token}}", "decline"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Invitation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/invitations/organizations/{{organization_id}}/invitations/:invitation_id",
+              "host": ["{{api_v1}}"],
+              "path": ["invitations", "organizations", "{{organization_id}}", "invitations", ":invitation_id"],
+              "variable": [
+                {
+                  "key": "invitation_id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        {
+          "name": "List Organizations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/organizations",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations"]
+            }
+          }
+        },
+        {
+          "name": "Create Organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Organization\",\n  \"description\": \"Test organization\"\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/organizations",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations"]
+            }
+          }
+        },
+        {
+          "name": "Get Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/organizations/{{organization_id}}",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations", "{{organization_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Organization",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Organization\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/organizations/{{organization_id}}",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations", "{{organization_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Organization",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/organizations/{{organization_id}}",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations", "{{organization_id}}"]
+            }
+          }
+        },
+        {
+          "name": "List Organization Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/organizations/{{organization_id}}/members",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations", "{{organization_id}}", "members"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "List Projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/projects",
+              "host": ["{{api_v1}}"],
+              "path": ["projects"]
+            }
+          }
+        },
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Project\",\n  \"description\": \"Test project\",\n  \"organization_id\": {{organization_id}}\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/projects",
+              "host": ["{{api_v1}}"],
+              "path": ["projects"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_v1}}/health",
+          "host": ["{{api_v1}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Organization Members",
+      "item": [
+        {
+          "name": "Get Organization Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/organizations/{{organization_id}}/members",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations", "{{organization_id}}", "members"]
+            }
+          }
+        },
+        {
+          "name": "Remove Organization Member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_v1}}/organizations/{{organization_id}}/members/:member_id",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations", "{{organization_id}}", "members", ":member_id"],
+              "variable": [
+                {
+                  "key": "member_id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Member Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{api_v1}}/organizations/{{organization_id}}/members/:member_id",
+              "host": ["{{api_v1}}"],
+              "path": ["organizations", "{{organization_id}}", "members", ":member_id"],
+              "variable": [
+                {
+                  "key": "member_id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

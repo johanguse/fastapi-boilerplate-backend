@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.activity_log.models import ActivityLog
     from src.auth.models import User
     from src.projects.models import Project
+    from src.subscriptions.models import CustomerSubscription
 
 
 class OrganizationMemberRole(str, enum.Enum):
@@ -26,6 +27,7 @@ class Organization(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     slug: Mapped[Optional[str]] = mapped_column(String(120), unique=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     logo_url: Mapped[Optional[str]] = mapped_column(Text)
     stripe_customer_id: Mapped[Optional[str]] = mapped_column(
         Text, unique=True
@@ -64,6 +66,9 @@ class Organization(Base):
     )
     projects: Mapped[list['Project']] = relationship(
         'Project', back_populates='organization'
+    )
+    subscription: Mapped[Optional['CustomerSubscription']] = relationship(
+        'CustomerSubscription', back_populates='organization', uselist=False
     )
 
     def __repr__(self) -> str:

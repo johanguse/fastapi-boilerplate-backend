@@ -17,6 +17,7 @@ async def reset_db():
     # Use the same Python interpreter and environment
     result = subprocess.run(
         [sys.executable, '-m', 'alembic', 'upgrade', 'head'],
+        check=False,
         capture_output=True,
         text=True,
         cwd=None,

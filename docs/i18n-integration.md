@@ -7,18 +7,21 @@ This guide demonstrates how to integrate the backend FastAPI i18n system with th
 ## Architecture Overview
 
 ### Backend (FastAPI)
+
 - File-based translation system with JSON locale files
 - Cookie-based language persistence
 - Automatic language detection from headers/cookies/query params
 - RESTful API endpoints with localized responses
 
 ### Frontend (React + TypeScript)
+
 - react-i18next for component translations
 - localStorage for language persistence
 - Language switcher component
 - Form validation with localized messages
 
 ### Integration Points
+
 1. **Language Selection**: Frontend language switcher sets backend cookie
 2. **API Responses**: Backend returns localized error/success messages
 3. **Shared Language State**: Both systems use the same language codes
@@ -173,7 +176,7 @@ Combine frontend validation with backend error messages:
 
 ```tsx
 // components/forms/LoginForm.tsx
-import { z } from 'zod'
+import { z } from 'zod/v4'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
@@ -401,26 +404,31 @@ test('language switcher updates both frontend and backend', async () => {
 ## Best Practices
 
 ### 1. Language Synchronization
+
 - Always update both frontend and backend when language changes
 - Use cookies for backend persistence, localStorage for frontend
 - Include credentials in API requests to maintain cookie state
 
 ### 2. Error Handling
+
 - Backend should return localized error messages
 - Frontend should display backend errors without re-translation
 - Provide fallbacks for network failures
 
 ### 3. Performance
+
 - Cache translations on both frontend and backend
 - Use CDN for translation files in production
 - Lazy load language-specific content
 
 ### 4. SEO Considerations
+
 - Use language prefixes in URLs (`/en/dashboard`, `/es/dashboard`)
 - Set appropriate `lang` attributes on HTML elements
 - Provide language-specific meta tags
 
 ### 5. Testing
+
 - Test language switching end-to-end
 - Mock backend responses for frontend tests
 - Verify cookie persistence across requests

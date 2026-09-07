@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "betterauth-fastapi-jwt-bridge": {
+      "source": "bilalmk/todo_correct",
+      "sourceType": "github",
+      "computedHash": "00313f49fc21a2d295e2ae2ac0c04234f2189f79ca272cd7b309eb223350b748"
+    },
+    "security-fastapi": {
+      "source": "igorwarzocha/opencode-workflows",
+      "sourceType": "github",
+      "computedHash": "58216506cf5960e648cbe4acd1bcd608d5421225061d72c0fae4b374f1f2bac1"
+    }
+  }
+}

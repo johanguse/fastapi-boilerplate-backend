@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 
@@ -14,12 +14,12 @@ class APIError(HTTPException):
         detail: str,
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        headers: dict | None = None,
-        **translation_params,
+        headers: dict[str, str] | None = None,
+        **translation_params: Any,
     ):
         # Use translated message if translation_key is provided
         if translation_key:
-            detail = i18n.translate(
+            detail = i18n.translate(  # type: ignore
                 translation_key, language, **translation_params
             )
 
@@ -36,7 +36,7 @@ class NotFoundError(APIError):
         detail: str = 'Resource not found',
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        **translation_params,
+        **translation_params: Any,
     ):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -55,7 +55,7 @@ class PermissionError(APIError):
         detail: str = 'Permission denied',
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        **translation_params,
+        **translation_params: Any,
     ):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -74,7 +74,7 @@ class ValidationError(APIError):
         detail: str = 'Validation error',
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        **translation_params,
+        **translation_params: Any,
     ):
         super().__init__(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -93,7 +93,7 @@ class AuthenticationError(APIError):
         detail: str = 'Authentication failed',
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        **translation_params,
+        **translation_params: Any,
     ):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -112,7 +112,7 @@ class OrganizationError(APIError):
         detail: str = 'Organization error',
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        **translation_params,
+        **translation_params: Any,
     ):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -131,7 +131,7 @@ class ProjectError(APIError):
         detail: str = 'Project error',
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        **translation_params,
+        **translation_params: Any,
     ):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -150,7 +150,7 @@ class PaymentError(APIError):
         detail: str = 'Payment error',
         translation_key: Optional[str] = None,
         language: Optional[str] = None,
-        **translation_params,
+        **translation_params: Any,
     ):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
