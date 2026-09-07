@@ -4,7 +4,7 @@ version = "1.1.0"
 description = "AI-Powered SaaS Boilerplate Backend"
 authors = [{ name = "Johan Guse", email = "johanguse@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+requires-python = ">=3.13,<3.14"
 
 dependencies = [
   "fastapi[standard]>=0.141.1",

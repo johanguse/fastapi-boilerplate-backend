@@ -29,8 +29,8 @@ fastapi run src/main.py --workers 4 --host 0.0.0.0 --port 8000
 ### Option 3: Production Script
 
 ```bash
-chmod +x scripts/start-production.sh
-./scripts/start-production.sh
+chmod +x scripts/deploy/start-production.sh
+./scripts/deploy/start-production.sh
 ```
 
 ## 🚀 Deployment to Fly.io
@@ -80,6 +80,47 @@ The `--set-vars` flag controls whether environment variables are updated during 
 2. **Regular deployments** - Daily/weekly code updates
 3. **Quick hotfixes** - Bug fixes that don't need config changes
 
+## 🚂 Deployment to Railway
+
+Railway is supported as an alternative to Fly.io via [`railway.toml`](../railway.toml), [`nixpacks.toml`](../nixpacks.toml), and [`Dockerfile.railway`](../Dockerfile.railway).
+
+### Option A: Nixpacks (default)
+
+Railway auto-detects `railway.toml` and builds with Nixpacks using `nixpacks.toml`, which installs dependencies with `uv sync --frozen --no-dev` and starts the app via `scripts/deploy/start-production.sh`.
+
+1. Create a new Railway project and connect this repository
+2. Railway picks up `railway.toml` automatically — no extra configuration needed
+3. Add a Postgres plugin (or point `DATABASE_URL` at an external database)
+
+### Option B: Custom Dockerfile
+
+If Nixpacks builds fail (e.g. native dependency compilation issues), switch the service's builder to "Dockerfile" in the Railway dashboard and set the Dockerfile path to `Dockerfile.railway`. This multi-stage build compiles native dependencies (`asyncpg`, etc.) in a builder stage and ships a slim, non-root runtime image.
+
+### Environment Variables (Railway)
+
+Set these in the Railway dashboard (Variables tab):
+
+```bash
+DATABASE_URL=postgresql+asyncpg://user:password@host:port/database
+SECRET_KEY=your-secret-key-here
+JWT_SECRET=your-jwt-secret-here
+RESEND_API_KEY=re_xxxxx
+RESEND_FROM_EMAIL=noreply@yourdomain.com
+FRONTEND_URL=https://yourdomain.com
+```
+
+### Health Check
+
+Both `railway.toml` and `Dockerfile.railway` point at `/api/v1/health` — Railway uses this to determine when a deployment is healthy.
+
+### Post-Deployment
+
+Run migrations from the Railway shell (or a one-off command):
+
+```bash
+railway run uv run alembic upgrade head
+```
+
 ## ⚡ Performance Optimizations
 
 ### Installed Optimizations
@@ -110,7 +151,7 @@ uv add orjson  # Already installed
 ### Dockerfile Optimization
 
 ```dockerfile
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -137,7 +178,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
 # Start application
-CMD ["./scripts/start-production.sh"]
+CMD ["./scripts/deploy/start-production.sh"]
 ```
 
 ### Docker Compose
