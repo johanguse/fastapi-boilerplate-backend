@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "chmod +x scripts/start-production.sh && ./scripts/start-production.sh"
+startCommand = "chmod +x scripts/deploy/start-production.sh && ./scripts/deploy/start-production.sh"
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"

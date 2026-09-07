@@ -725,6 +725,10 @@ flyctl ssh console --app fastapi-boilerplate-backend-staging
 
 The GitHub Actions workflow (`.github/workflows/fly-deploy.yml`) automatically deploys to staging when pushing to the `main` branch. Make sure `FLY_API_TOKEN` is set in your repository secrets.
 
+### Alternative: Railway
+
+Railway is also supported via `railway.toml`, `nixpacks.toml`, and `Dockerfile.railway` — see the [Production Deployment Guide](docs/production-deployment.md#-deployment-to-railway) for setup steps.
+
 ### Environment Variables (Production)
 
 - Production secrets are stored in Fly.io using `flyctl secrets set`

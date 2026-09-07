@@ -1,8 +1,8 @@
 [build]
-cmd = 'poetry install --only=main --no-root'
+cmd = 'uv sync --frozen --no-dev'
 
 [start]
-cmd = 'chmod +x scripts/start-production.sh && ./scripts/start-production.sh'
+cmd = 'chmod +x scripts/deploy/start-production.sh && ./scripts/deploy/start-production.sh'
 
 [variables]
 PYTHONPATH = '/app/src'
