@@ -1,0 +1,10 @@
+[build]
+cmd = 'uv sync --frozen --no-dev'
+
+[start]
+cmd = 'chmod +x scripts/deploy/start-production.sh && ./scripts/deploy/start-production.sh'
+
+[variables]
+PYTHONPATH = '/app/src'
+SERVER = 'uvicorn'
+WORKERS = '1'
