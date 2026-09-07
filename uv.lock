@@ -281,7 +281,7 @@ requires-dist = [
     { name = "chardet", specifier = ">=7.4.3" },
     { name = "cryptography", specifier = ">=48.0.1" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.141.1" },
-    { name = "fastapi-pagination", extras = ["sqlalchemy"], specifier = ">=0.15.12" },
+    { name = "fastapi-pagination", extras = ["sqlalchemy"], specifier = ">=0.15.16" },
     { name = "fastapi-users", extras = ["oauth", "sqlalchemy"], specifier = ">=15.0.5" },
     { name = "httptools", specifier = ">=0.7.1" },
     { name = "httpx-oauth", specifier = ">=0.17.0" },
@@ -795,16 +795,16 @@ wheels = [
 
 [[package]]
 name = "fastapi-pagination"
-version = "0.15.12"
+version = "0.15.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastapi" },
     { name = "pydantic" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/11/71/7381bf08f9fb6a890ec41a7ee5191ca564e0af94b899c2006fddaf07d78f/fastapi_pagination-0.15.12.tar.gz", hash = "sha256:914b41e07b8556de34c12d3568c9b7137eb62a3558420061a4acbebf7e729a08", size = 595227, upload-time = "2026-03-28T12:51:03.14Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/42/65/9c2f1c324fa7a83b328b024c45e70471007b165a1d56ab237fe0e574e36f/fastapi_pagination-0.15.16.tar.gz", hash = "sha256:739a4e904729dc01e03ce95e260ed9be050d48a3659be8463e5c4fcdd0cf25b0", size = 614997, upload-time = "2026-07-28T18:41:07.421Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/2f/644fd77ecac100da965221751ae4f7604e149c58c46c1d96c37e828bb5f7/fastapi_pagination-0.15.12-py3-none-any.whl", hash = "sha256:758e21157b2844feecb2409072f1433e24f2dc9526ae7906aa1a1b28622a970a", size = 60921, upload-time = "2026-03-28T12:51:04.288Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/d1/9725ec62421dcfe430d874cba9f82c0288baee0c4b7dd8aa8dcca2b0394e/fastapi_pagination-0.15.16-py3-none-any.whl", hash = "sha256:86dc73620812d47c297a7b8baca4eba2bac5d3f1d73aa75dc6e3bb12c0b803f7", size = 65991, upload-time = "2026-07-28T18:41:06.076Z" },
 ]
 
 [package.optional-dependencies]
