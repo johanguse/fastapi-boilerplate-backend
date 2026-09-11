@@ -1,5 +1,5 @@
-# Use Python 3.13 since that's what's specified in pyproject.toml
-FROM python:3.13-slim
+# Keep in sync with requires-python in pyproject.toml
+FROM python:3.14.7-slim
 
 WORKDIR /app
 

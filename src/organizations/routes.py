@@ -1,5 +1,5 @@
 import logging
-import uuid
+from uuid import uuid7
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
@@ -215,7 +215,7 @@ async def upload_organization_logo(
             file.filename.split('.')[-1] if file.filename else 'jpg'
         )
         unique_filename = (
-            f'logos/{organization_id}/{uuid.uuid4()}.{file_extension}'
+            f'logos/{organization_id}/{uuid7().hex}.{file_extension}'
         )
 
         # Upload to R2

@@ -6,6 +6,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from uuid import uuid7
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,7 +54,7 @@ class TokenService:
 
         # Create token record
         email_token = EmailToken(
-            id=secrets.token_urlsafe(16),
+            id=uuid7().hex,
             user_email=email,
             token_type='verification',
             token_hash=token_hash,
@@ -93,7 +94,7 @@ class TokenService:
 
         # Create token record
         email_token = EmailToken(
-            id=secrets.token_urlsafe(16),
+            id=uuid7().hex,
             user_email=email,
             token_type='password_reset',
             token_hash=token_hash,
@@ -133,7 +134,7 @@ class TokenService:
 
         # Create token record
         email_token = EmailToken(
-            id=secrets.token_urlsafe(16),
+            id=uuid7().hex,
             user_email=email,
             token_type='otp',
             token_hash=token_hash,

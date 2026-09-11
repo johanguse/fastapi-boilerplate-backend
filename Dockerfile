@@ -1,4 +1,4 @@
-FROM python:3.13-slim AS builder
+FROM python:3.14.7-slim AS builder
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
@@ -12,7 +12,7 @@ RUN uv sync --frozen --no-install-project --no-dev
 COPY . .
 RUN uv sync --frozen --no-dev
 
-FROM python:3.13-slim
+FROM python:3.14.7-slim
 WORKDIR /app
 COPY --from=builder /app/.venv .venv/
 COPY . .

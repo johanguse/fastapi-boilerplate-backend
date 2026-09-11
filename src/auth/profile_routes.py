@@ -3,8 +3,8 @@ User profile management routes including image upload.
 """
 
 import logging
-import uuid
 from typing import Optional
+from uuid import uuid7
 
 from fastapi import (
     APIRouter,
@@ -124,7 +124,7 @@ async def upload_user_profile_image(
             file.filename.split('.')[-1] if file.filename else 'jpg'
         )
         unique_filename = (
-            f'avatars/{current_user.id}/{uuid.uuid4()}.{file_extension}'
+            f'avatars/{current_user.id}/{uuid7().hex}.{file_extension}'
         )
 
         # Upload to R2
